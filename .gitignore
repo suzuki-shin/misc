@@ -1,5 +1,6 @@
 code_snippet/haskell/*.o
 code_snippet/haskell/*.hi
+code_snippet/haskell/a.out
 code_snippet/haskell/test.hs
 code_snippet/php/test.php
 code_snippet/javascript/test.js
