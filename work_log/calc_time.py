@@ -65,4 +65,4 @@ logs = [{'title': l['title'], 'time': l['time'], 'td': td}
          for l, td in zip(_logs, timedelta_list)]
 
 for l in logs:
-    print l
+    print '|' + str(l['td']) + '|' + l['title'] + '|'
