@@ -14,4 +14,3 @@ float   = do a <- number
 number :: Parser Int
 number  = do n <- many1 digit
              return $ read n
-
