@@ -80,3 +80,7 @@ def csvfile2list(csvfile):
         dic[headers[j]] = col
     data.append(dic)
   return data
+
+# [subprocess] shellコマンド等実行
+import subprocess
+subprocess.call(['ls', '-l'])

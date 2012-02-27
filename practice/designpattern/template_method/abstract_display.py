@@ -3,7 +3,7 @@ from abc import abstractmethod, ABCMeta
 class AbstractReport(object):
   __metaclass__ = ABCMeta
   def __init__(self, data):
-    self.data = data
+    self._data = data
 
   def output_report(self):
     self._output_header()
@@ -27,7 +27,7 @@ class ListReport(AbstractReport):
     print '<dl>'
 
   def _output_body(self):
-    for d in self.data:
+    for d in self._data:
       print '<dd>' + d + '</dd>'
 
   def _output_footer(self):
@@ -39,7 +39,7 @@ class TableReport(AbstractReport):
     print '<table border="1" cellpadding="2" cellspacing="2">'
 
   def _output_body(self):
-    for d in self.data:
+    for d in self._data:
       print '<tr><td>' + d + '</td></tr>'
 
   def _output_footer(self):
