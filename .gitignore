@@ -5,4 +5,4 @@ code_snippet/haskell/test.hs
 code_snippet/php/test.php
 code_snippet/javascript/test.js
 code_snippet/python/test.py
-*.pyc
+.DS_Store
