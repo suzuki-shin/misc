@@ -1,9 +1,9 @@
 (function() {
-  var fullchar2halfchar, glbal, outPut, selectFile;
+  var fullchar2halfchar, global, selectFile;
 
-  glbal = this;
+  global = this;
 
-  glbal.ftoh = function(str) {
+  global.ftoh = function(str) {
     var c;
     return ((function() {
       var _i, _len, _results;
@@ -31,31 +31,17 @@
     reader = new FileReader();
     reader.readAsText(file);
     reader.onload = function(ev) {
-      var file_name, textData;
+      var textData;
       console.log('readeronload');
       textData = reader.result;
       alert(textData);
-      alert(glbal.ftoh(textData));
+      alert(global.ftoh(textData));
       console.log(textData.split("\n"));
-      file_name = (file.name.match(/^(\w+)/))[0];
-      file_name || (file_name = 'xxxxx');
-      console.log(file_name);
-      $('#download-link').attr('href', "data:application/octet-stream," + encodeURIComponent(reader.result));
+      $('#download-link').attr('href', "data:application/octet-stream," + encodeURIComponent(global.ftoh(reader.result)));
       return $('#download-link').show();
     };
     return reader.onerror = function(ev) {
       return alert('error');
-    };
-  };
-
-  outPut = function(ev) {
-    var file, reader;
-    file = ev.target.files[0];
-    alert(file.name + ' is selected!');
-    reader = new FileReader();
-    reader.readAsText(file);
-    return reader.onload = function(ev) {
-      return this.attr('href', "data:application/octet-stream," + encodeURIComponent(reader.result));
     };
   };
 
@@ -64,8 +50,7 @@
   */
 
   $(function() {
-    $(document).on('change', '#selectFile', selectFile);
-    return $(document).on('click', '#download-link', outPut);
+    return $(document).on('change', '#selectFile', selectFile);
   });
 
 }).call(this);
