@@ -1,7 +1,8 @@
-ftoh = (str) -> (fullchar2halfchar(c) for c in str).join('')
+# 文字列を変換テーブルに従って変換する
+ftoh = (str) -> (ftohchar(c) for c in str).join('')
 
-
-fullchar2halfchar = (char) -> if @table[char]? then @table[char] else char
+# 文字を変換テーブルに従って変換する
+ftohchar = (char) -> if @table[char]? then @table[char] else char
 
 
 selectFile = (ev) ->
@@ -27,8 +28,7 @@ _drop = (files) ->
   reader = new FileReader()
   for f in files
     reader.readAsText(f)
-    reader.onload =->
-      $('body').empty().append(ftoh(reader.result))
+    reader.onload =-> $('body').empty().append(ftoh(reader.result))
 
 drop = (e) ->
   console?.log 'drop'

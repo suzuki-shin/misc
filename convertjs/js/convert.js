@@ -1,5 +1,5 @@
 (function() {
-  var drop, ftoh, fullchar2halfchar, selectFile, _drop;
+  var drop, ftoh, ftohchar, selectFile, _drop;
 
   ftoh = function(str) {
     var c;
@@ -8,13 +8,13 @@
       _results = [];
       for (_i = 0, _len = str.length; _i < _len; _i++) {
         c = str[_i];
-        _results.push(fullchar2halfchar(c));
+        _results.push(ftohchar(c));
       }
       return _results;
     })()).join('');
   };
 
-  fullchar2halfchar = function(char) {
+  ftohchar = function(char) {
     if (this.table[char] != null) {
       return this.table[char];
     } else {
