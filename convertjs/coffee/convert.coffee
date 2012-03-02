@@ -30,10 +30,26 @@ selectFile = (ev) ->
     alert 'error'
 
 
+_drop = (files) ->
+  console?.log '_drop'
+  reader = new FileReader()
+  for f in files
+    reader.readAsText(f)
+    reader.onload =->
+      $('#data-area').empty().append(global.ftoh(reader.result))
 
+drop = (e) ->
+  console?.log 'drop'
+  if e.preventDefault
+    e.preventDefault()
+  _drop e.originalEvent.dataTransfer.files
 
 ###
 # event
 ###
 $ ->
   $(document).on 'change', '#selectFile', selectFile
+
+  $("body").bind "drop", drop
+  $("body").bind "dragenter", -> console?.log 'aaa'; false
+  $("body").bind "dragover", -> console?.log 'bbb'; false

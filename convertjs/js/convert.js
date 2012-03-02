@@ -1,5 +1,5 @@
 (function() {
-  var fullchar2halfchar, global, selectFile;
+  var drop, fullchar2halfchar, global, selectFile, _drop;
 
   global = this;
 
@@ -39,12 +39,42 @@
     };
   };
 
+  _drop = function(files) {
+    var f, reader, _i, _len, _results;
+    if (typeof console !== "undefined" && console !== null) console.log('_drop');
+    reader = new FileReader();
+    _results = [];
+    for (_i = 0, _len = files.length; _i < _len; _i++) {
+      f = files[_i];
+      reader.readAsText(f);
+      _results.push(reader.onload = function() {
+        return $('#data-area').empty().append(global.ftoh(reader.result));
+      });
+    }
+    return _results;
+  };
+
+  drop = function(e) {
+    if (typeof console !== "undefined" && console !== null) console.log('drop');
+    if (e.preventDefault) e.preventDefault();
+    return _drop(e.originalEvent.dataTransfer.files);
+  };
+
   /*
   # event
   */
 
   $(function() {
-    return $(document).on('change', '#selectFile', selectFile);
+    $(document).on('change', '#selectFile', selectFile);
+    $("body").bind("drop", drop);
+    $("body").bind("dragenter", function() {
+      if (typeof console !== "undefined" && console !== null) console.log('aaa');
+      return false;
+    });
+    return $("body").bind("dragover", function() {
+      if (typeof console !== "undefined" && console !== null) console.log('bbb');
+      return false;
+    });
   });
 
 }).call(this);
