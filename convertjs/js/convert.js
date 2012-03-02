@@ -1,9 +1,7 @@
 (function() {
-  var drop, fullchar2halfchar, global, selectFile, _drop;
+  var drop, ftoh, fullchar2halfchar, selectFile, _drop;
 
-  global = this;
-
-  global.ftoh = function(str) {
+  ftoh = function(str) {
     var c;
     return ((function() {
       var _i, _len, _results;
@@ -30,9 +28,9 @@
     reader = new FileReader();
     reader.readAsText(file);
     reader.onload = function(ev) {
-      $('#download-link').attr('href', "data:application/octet-stream," + encodeURIComponent(global.ftoh(reader.result)));
+      $('#download-link').attr('href', "data:application/octet-stream," + encodeURIComponent(ftoh(reader.result)));
       $('#download-link').show();
-      return $('#data-area').empty().append(global.ftoh(reader.result));
+      return $('#data-area').empty().append(ftoh(reader.result));
     };
     return reader.onerror = function(ev) {
       return alert('error');
@@ -48,7 +46,7 @@
       f = files[_i];
       reader.readAsText(f);
       _results.push(reader.onload = function() {
-        return $('#data-area').empty().append(global.ftoh(reader.result));
+        return $('body').empty().append(ftoh(reader.result));
       });
     }
     return _results;
