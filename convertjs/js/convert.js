@@ -27,18 +27,12 @@
   selectFile = function(ev) {
     var file, reader;
     file = ev.target.files[0];
-    alert(file.name + ' is selected!');
     reader = new FileReader();
     reader.readAsText(file);
     reader.onload = function(ev) {
-      var textData;
-      console.log('readeronload');
-      textData = reader.result;
-      alert(textData);
-      alert(global.ftoh(textData));
-      console.log(textData.split("\n"));
       $('#download-link').attr('href', "data:application/octet-stream," + encodeURIComponent(global.ftoh(reader.result)));
-      return $('#download-link').show();
+      $('#download-link').show();
+      return $('#data-area').empty().append(global.ftoh(reader.result));
     };
     return reader.onerror = function(ev) {
       return alert('error');
