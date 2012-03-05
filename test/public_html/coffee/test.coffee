@@ -1,0 +1,1 @@
+@hoge =-> alert 'hoge'
