@@ -84,3 +84,10 @@ def csvfile2list(csvfile):
 # [subprocess] shellコマンド等実行
 import subprocess
 subprocess.call(['ls', '-l'])
+
+# [requests] urlをGET/POST (ref http://coreblog.org/ats/python-http-module-request)
+import requests
+r = requests.get('http://www.example.com/')
+print r.content
+r = requests.post('http://www.example.com/register', {'param1':'foo', 'param2': 'bar'})
+print r.content
