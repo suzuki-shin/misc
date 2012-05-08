@@ -91,3 +91,7 @@ r = requests.get('http://www.example.com/')
 print r.content
 r = requests.post('http://www.example.com/register', {'param1':'foo', 'param2': 'bar'})
 print r.content
+
+# [random]1から10までの整数をランダムで返す
+import random
+random.randint(1,10)
