@@ -4,6 +4,7 @@ main = do c <- getContents
 type Pos = (Int, Int)
 type Board = [Pos]
 
+-- actions
 beep :: IO ()
 beep = putStr "\BEL"
 
@@ -25,7 +26,7 @@ writeat p xs = do goto p
 life :: Board -> IO ()
 life b = do cls
             showcells b
-            wait 5000
+            wait 200000
             life (nextgen b)
 
 showcells :: Board -> IO ()
@@ -34,9 +35,26 @@ showcells b = seqn [writeat p "##" |p <- b]
 wait :: Int -> IO ()
 wait n = seqn [return () | _ <- [1..n]]
 
+
 nextgen :: Board -> Board
-nextgen b = randomb b
+nextgen b = do down b
+
+down :: Board -> Board
+down b = map (\(x,y) -> (x,y+1)) b
+
+up :: Board -> Board
+up b = map (\(x,y) -> (x,y-1)) b
+
+left :: Board -> Board
+left b = map (\(x,y) -> (x-1,y)) b
+
+right :: Board -> Board
+right b = map (\(x,y) -> (x+1,y)) b
 
 randomb :: Board -> Board
-randomb [(x,y)] = [(x,y+1)]
+randomb [] = []
+randomb p = map (\(x, y) -> (x, y-1)) p
 -- randomb [(x,y)] = map (_,+1) [(x,y)]
+
+b :: Board
+b = [(10, 9), (10,10), (10,11), (12,11)]
