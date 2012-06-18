@@ -149,7 +149,7 @@
   "remember-the-milk-inbox"
   (interactive)
   (compose-mail mailaddress-rememberthemilk-inbox))
-(defun rtm (text)
+(defun remember-the-milk (text)
   "remember-the-milk-inbox"
   (interactive "sTo Inbox: ")
   (shell-command (concat "mail -s '" text "' -F " mailaddress-rememberthemilk-inbox)))
@@ -160,5 +160,50 @@
   (beginning-of-line)
   (insert "*** ")
   (just-one-space))
+
+
+;; http://stackoverflow.com/questions/9288181/converting-from-camelcase-to-in-emacs
+(defun camel-to-snake (beg end)
+  (interactive "r")
+  (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil beg end)
+		 (downcase-region beg end)))
+
+;; http://www.emacswiki.org/emacs/CamelCase
+(defalias 'snake-to-camel 'camelize-previous-snake)
+(defun camelize-previous-snake (&optional beg end)
+  "Camelize the previous snake cased string.
+    If transient-mark-mode is active and a region is activated,
+    camelize the region."
+  (interactive "r")
+  (unless (and (boundp 'transient-mark-mode) transient-mark-mode mark-active)
+	(setq end (point)
+		  beg (+ (point) (skip-chars-backward "[:alnum:]_"))))
+  (save-excursion
+	(let ((c (camelize (buffer-substring-no-properties beg end))))
+	  (delete-region beg end)
+	  (goto-char beg)
+	  (insert c))))
+(defun mapcar-head (fn-head fn-rest list)
+  "Like MAPCAR, but applies a different function to the first element."
+  (if list
+	  (cons (funcall fn-head (car list)) (mapcar fn-rest (cdr list)))))
+(defun camelize (s)
+  "Convert under_score string S to CamelCase string."
+  (mapconcat 'identity (mapcar
+						'(lambda (word) (capitalize (downcase word)))
+						(split-string s "_")) ""))
+(defun camelize-method (s)
+  "Convert under_score string S to camelCase string."
+  (mapconcat 'identity (mapcar-head
+						'(lambda (word) (downcase word))
+						'(lambda (word) (capitalize (downcase word)))
+						(split-string s "_")) ""))
+
+(defun psql-phparray (beg end)
+  (interactive "r")
+;;   (shell-command (concat "cat " "~/tmp/hoge.php")))
+;;   (shell-command (concat "echo " (buffer-substring-no-properties beg end))))
+  (shell-command (concat (buffer-substring-no-properties beg end) " |python psql2json.py")))
+;;   (shell-command (concat "python psql2json.py < " (buffer-substring-no-properties beg end))))
 
 (provide 'my-utils)
