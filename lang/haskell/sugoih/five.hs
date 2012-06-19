@@ -138,11 +138,23 @@ list_of_funs = map (*) [0..]    -- 1匹数関数のリストを返す [(*0),(*1)
 -- [3,8,9,8,7]
 
 -- flipの定義lambda版
-flip' :: (a -> b -> c) -> b -> a -> c
-flip' f = \x y -> f y x
+flip'' :: (a -> b -> c) -> b -> a -> c
+flip'' f = \x y -> f y x
 
 -- flipの一番多い使い方は引数として関数のみ、または関数と引数1つだけを渡し、生成された関数をmapやzipWithに渡す方法
 -- *Main> zipWith (flip (++)) ["love you", "love me"] ["i ", "you "]
 -- ["i love you","you love me"]
 -- *Main> map (flip subtract 20) [1..4]
 -- [19,18,17,16]
+
+-- foldlで左畳込み
+sum' :: (Num a) => [a] -> a
+sum' xs = foldl (+) 0 xs
+-- もしくは
+-- sum' xs = foldl (\acc x -> acc + x) 0 xs
+-- *Main> sum' [1..5]
+-- 15
+
+-- foldrで右畳込み
+map' :: (a -> b) -> [a] -> [b]
+map' f xs = foldr (\x acc -> f x : acc) [] xs
