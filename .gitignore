@@ -1,8 +1,9 @@
-code_snippet/haskell/*.o
-code_snippet/haskell/*.hi
-code_snippet/haskell/a.out
-code_snippet/haskell/test.hs
-code_snippet/php/test.php
-code_snippet/javascript/test.js
-code_snippet/python/test.py
+lang/haskell/*.o
+lang/haskell/*.hi
+lang/haskell/a.out
+lang/haskell/test.hs
+lang/php/test.php
+lang/javascript/test.js
+lang/python/test.py
+*.pyc
 .DS_Store
