@@ -1,4 +1,5 @@
 import Text.ParserCombinators.Parsec
+import Char
 
 main = do c <- getContents
           print c
@@ -79,8 +80,8 @@ delete xs = calc (init xs)
 eval :: String -> IO ()
 eval xs = case parse expr xs of
   [(n,"")] -> calc (show n)
-  _ -> do beep
-          calc xs
+  _        -> do beep
+                 calc xs
 
 clear :: IO ()
 clear = calc ""
@@ -92,3 +93,34 @@ run :: IO ()
 run = do cls
          showbox
          clear
+
+expr :: Parser Int
+expr = do t <- term
+          do symbol "+"
+             e <- expr
+             return (t + e)
+           <|> return t
+
+term :: Parser Int
+term = do f <- factor
+          do symbol "*"
+             t <- term
+             return (f * t)
+           <|> return f
+
+factor :: Parser Int
+factor = do symbol "("
+            e <- expr
+            symbol ")"
+            return e
+         <|> natural
+
+symbol :: String -> Parser String
+symbol xs = token (string xs)
+
+natural :: Parser Int
+natural = token nat
+
+nat :: Parser Int
+nat = do xs <- many1 digit
+         return (read xs)

@@ -51,10 +51,6 @@ left b = map (\(x,y) -> (x-1,y)) b
 right :: Board -> Board
 right b = map (\(x,y) -> (x+1,y)) b
 
-randomb :: Board -> Board
-randomb [] = []
-randomb p = map (\(x, y) -> (x, y-1)) p
--- randomb [(x,y)] = map (_,+1) [(x,y)]
 
 b :: Board
 b = [(10, 9), (10,10), (10,11), (12,11)]
