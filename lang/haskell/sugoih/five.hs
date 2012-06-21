@@ -138,8 +138,8 @@ list_of_funs = map (*) [0..]    -- 1匹数関数のリストを返す [(*0),(*1)
 -- [3,8,9,8,7]
 
 -- flipの定義lambda版
-flip'' :: (a -> b -> c) -> b -> a -> c
-flip'' f = \x y -> f y x
+-- flip'' :: (a -> b -> c) -> b -> a -> c
+-- flip'' f = \x y -> f y x
 
 -- flipの一番多い使い方は引数として関数のみ、または関数と引数1つだけを渡し、生成された関数をmapやzipWithに渡す方法
 -- *Main> zipWith (flip (++)) ["love you", "love me"] ["i ", "you "]
@@ -148,13 +148,45 @@ flip'' f = \x y -> f y x
 -- [19,18,17,16]
 
 -- foldlで左畳込み
+-- foldlとは
+-- foldl f init [1..5] -- fは2引数関数で引数の順番はアキュムレイタ–、各要素の順
+-- の場合  (f (f (f (f init 1) 2) 3 4) 5) ってやつ
 sum' :: (Num a) => [a] -> a
-sum' xs = foldl (+) 0 xs
+sum' = foldl (+) 0
 -- もしくは
 -- sum' xs = foldl (\acc x -> acc + x) 0 xs
 -- *Main> sum' [1..5]
 -- 15
 
 -- foldrで右畳込み
+-- foldrとは
+-- foldr f init [1..5] -- fは2引数関数で引数の順番は各要素、アキュムレイターの順
+-- で (f 1 (f 2 (f 3 (f 4 (f 5 init)))))
 map' :: (a -> b) -> [a] -> [b]
-map' f xs = foldr (\x acc -> f x : acc) [] xs
+map' f = foldr (\x acc -> f x : acc) []
+-- foldlでも実装できるが、++は:に比べて遥かにおそい
+map'' :: (a -> b) -> [a] -> [b]
+map'' f = foldl (\acc x -> acc ++ [f x]) []
+-- foldrによるelemの実装
+elem' :: (Eq a) => a -> [a] -> Bool
+elem' y = foldr (\x acc -> ((x == y) || acc)) False
+
+-- foldl1 初期値の代わりにリストの先頭要素を使う
+maximum' :: (Ord a) => [a] -> a
+maximum' = foldl1 max
+
+-- 畳み込みの例
+reverse' :: [a] -> [a]
+reverse' = foldl (\acc x -> x : acc) []
+-- もしくは
+reverse'' :: [a] -> [a]
+reverse'' = foldl (flip (:)) []
+
+product' :: (Num a) => [a] -> a
+product' = foldl (*) 1
+
+filter'' :: (a -> Bool) -> [a] -> [a]
+filter'' p = foldr (\x acc -> if p x then x : acc else acc) []
+
+last' :: [a] -> a
+last' = foldl1 (\_ x -> x)
