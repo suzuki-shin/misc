@@ -6,5 +6,7 @@ lang/php/test.php
 lang/javascript/test.js
 lang/python/test.py
 *.pyc
+*.hi
+*.o
 TAGS
 .DS_Store
