@@ -7,6 +7,7 @@ import Directory
 import Data.Tree
 import System.FilePath
 
+-- Tree [path]でtreeコマンドに似た出力をする
 main :: IO ()
 main = do
   args <- getArgs
