@@ -5,6 +5,7 @@ import System.FilePath ((</>), addTrailingPathSeparator)
 import System
 import Directory
 import Data.Tree
+import System.FilePath
 
 target_dirs :: [FilePath]
 target_dirs = ["/Users/ent-imac/projects/misc/lang/haskell/", "/Users/ent-imac/projects/moapps_addon/"]
@@ -15,21 +16,24 @@ filename = "project.filelist.test"
 main :: IO ()
 main = do
   args <- getArgs
-  let parent = args!!0
-      path = args!!1
-  putStrDirTree parent path
+  let path = args!!0
+  putStrDirTree path
 
-putStrDirTree :: FilePath -> FilePath -> IO ()
-putStrDirTree parent path = do
+putStrDirTree :: FilePath -> IO ()
+putStrDirTree path = do
 --   putStrLn parent
 --   putStrLn path
-  t <- tree parent path
+  t <- tree1 path
   putStrLn $ drawTree t
 
 -- 再帰的にディレクトリツリーを扱う
 --
 -- http://codereview.stackexchange.com/questions/8431/how-can-i-make-this-recursive-directory-tree-printer-i-wrote-in-haskell-more-idi
 --
+tree1 :: FilePath -> IO (Tree FilePath)
+tree1 fullPath = tree parent path
+  where (parent, path) = splitFileName fullPath
+
 tree :: FilePath -> FilePath -> IO (Tree FilePath)
 tree parent path = do
   let fullPath = parent </> path
