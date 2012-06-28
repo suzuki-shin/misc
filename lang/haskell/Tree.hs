@@ -16,11 +16,16 @@ main = do
 printTree :: FilePath -> IO ()
 printTree path = do
   t <- tree1 path
-  putStrLn $ drawTree t
+--   putStrLn $ unlines $ filter (not . (allIn "| ")) $ lines $ drawTree t         -- ここに'|'と' 'と'\n'だけの行はfilterではじくという処理を挟みたい
+  putStrLn $ drawTree t         -- ここに'|'と' 'と'\n'だけの行はfilterではじくという処理を挟みたい
 
 tree1 :: FilePath -> IO (Tree FilePath)
 tree1 fullPath = tree parent path
   where (parent, path) = splitFileName fullPath
+
+-- 指定した要素以外が入っていたらFalseを返す 
+allIn :: (Eq a ) => [a] -> [a] -> Bool
+allIn needles heystack = all (`elem` heystack) needles
 
 -- 再帰的にディレクトリツリーを扱う
 --
