@@ -1,3 +1,4 @@
+module Hoge where
 import qualified Data.Map as Map
 
 type PhoneBook = [(Name, PhoneNumber)]
@@ -40,3 +41,47 @@ lockers = Map.fromList
 -- Right "JAH3I"
 -- *Main> lockerLookup 105 lockers
 -- Right "!QD87"
+
+--
+-- 7.7 再帰的なデータ構造 
+--
+-- -- 独自のリスト型
+-- data List a = Empty | Cons a (List a) deriving (Show, Read, Eq, Ord)
+-- -- もしくは
+-- data List a = Empty | Cons {listHead :: a, listTail :: List a} deriving (Show, Read, Eq, Ord)
+-- 記号文字だけを使って関数に名前をつけると自動的に中置関数になる。ただし関数名は:で始まる必要がある
+infixr 5 :-:
+data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
+-- *Main> 3 :-: 4 :-: 5 :-: Empty
+-- 3 :-: (4 :-: (5 :-: Empty))
+-- *Main> let a = 3 :-: 4 :-: 5 :-: Empty
+-- *Main> a
+-- 3 :-: (4 :-: (5 :-: Empty))
+-- *Main> 100 :-: a
+-- 100 :-: (3 :-: (4 :-: (5 :-: Empty)))
+
+infixr 5 ^++
+(^++) :: List a -> List a -> List a
+Empty ^++ ys = ys
+(x :-: xs) ^++ ys = x :-: (xs ^++ ys)
+-- *Main> let a = 3 :-: 4 :-: 5 :-: Empty
+-- *Main> let b = 100 :-: a
+-- *Main> b
+-- 100 :-: (3 :-: (4 :-: (5 :-: Empty)))
+-- *Main> a ^++ b
+-- 3 :-: (4 :-: (5 :-: (100 :-: (3 :-: (4 :-: (5 :-: Empty))))))
+-- *Main> a ^++ Empty
+-- 3 :-: (4 :-: (5 :-: Empty))
+-- *Main> Empty ^++ a
+-- 3 :-: (4 :-: (5 :-: Empty))
+
+-- infixr 5 ++
+-- (++) :: List a -> List a -> List a
+-- Empty ++ ys = ys
+-- (x :-: xs) ++ ys = x :-: (xs ++ ys)
+-- 上のようにやろうとしたら下のようにエラーになった
+-- /Users/ent-imac/projects/misc/lang/haskell/sugoih/seven/type_type_class.hs:20:31:
+--     Ambiguous occurrence `++'
+--     It could refer to either `Main.++',
+--                              defined at /Users/ent-imac/projects/misc/lang/haskell/sugoih/seven/type_type_class.hs:79:7
+--                           or `Prelude.++', imported from Prelude
