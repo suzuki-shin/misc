@@ -85,3 +85,113 @@ Empty ^++ ys = ys
 --     It could refer to either `Main.++',
 --                              defined at /Users/ent-imac/projects/misc/lang/haskell/sugoih/seven/type_type_class.hs:79:7
 --                           or `Prelude.++', imported from Prelude
+
+data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show)
+
+singleton :: a -> Tree a
+singleton x = Node x EmptyTree EmptyTree
+
+treeInsert :: (Ord a) => a -> Tree a -> Tree a
+treeInsert x EmptyTree = singleton x
+treeInsert x (Node a left right)
+ | x == a = Node x left right
+ | x < a  = Node a (treeInsert x left) right
+ | x > a  = Node a left (treeInsert x right)
+
+treeElem :: (Ord a) => a -> Tree a -> Bool
+treeElem x EmptyTree = False
+treeElem x (Node a left right)
+  | x == a = True
+  | x < a  = treeElem x left
+  | x > a  = treeElem x right
+
+-- *Hoge> let nums = [8,6,4,1,7,3,5]
+-- *Hoge> let numsTree = foldr treeInsert EmptyTree nums
+-- *Hoge> numsTree
+-- Node 5 (Node 3 (Node 1 EmptyTree EmptyTree) (Node 4 EmptyTree EmptyTree)) (Node 7 (Node 6 EmptyTree EmptyTree) (Node 8 EmptyTree EmptyTree))
+-- *Hoge> 8 `treeElem` numsTree
+-- True
+-- *Hoge> 100 `treeElem` numsTree
+-- False
+-- *Hoge> 1 `treeElem` numsTree
+-- True
+-- *Hoge> 10 `treeElem` numsTree
+-- False
+
+-- 交通信号データ型
+data TrafficLight = Red | Yellow | Green
+-- Eq型クラスのインスタンスにする
+instance Eq TrafficLight where
+  -- Eqのメソッドを実装する
+  Red == Red = True
+  Green == Green = True
+  Yellow == Yellow = True
+  _ == _ = False
+-- Show型クラスのインスタンスにする
+instance Show TrafficLight where
+  -- Showのメソッドを実装する
+  show Red = "Red light"
+  show Yellow = "Yellow light"
+  show Green = "Green light"
+
+-- *Hoge> Red == Red
+-- True
+-- *Hoge> Red == Green
+-- False
+-- *Hoge> Red `elem` [Red, Yellow, Green]
+-- True
+-- *Hoge> Red
+-- Red light
+-- *Hoge> [Red, Yellow, Green]
+-- [Red light,Yellow light,Green light]
+
+-- instance (Eq m) => Eq (Maybe m) where
+--   Just x == Just y = x == y
+--   Nothing == Nothing = True
+--   _ == _ = False
+
+-- YesとNoの型クラス
+class YesNo a where
+  yesno :: a -> Bool
+
+instance YesNo Int where
+  yesno 0 = False
+  yesno _ = True
+
+instance YesNo [a] where
+  yesno [] = False
+  yesno _ = True
+
+instance YesNo Bool where
+  yesno = id
+
+instance YesNo (Maybe a) where
+  yesno (Just _) = True
+  yesno Nothing = False
+
+instance YesNo (Tree a) where
+  yesno EmptyTree = False
+  yesno _ = True
+
+instance YesNo TrafficLight where
+  yesno Red = False
+  yesno _ = True
+
+-- *Hoge> yesno $ length []
+-- False
+-- *Hoge> yesno "haha"
+-- True
+-- *Hoge> yesno ""
+-- False
+-- *Hoge> yesno $ Just 0
+-- True
+-- *Hoge> yesno True
+-- True
+-- *Hoge> yesno EmptyTree
+-- False
+-- *Hoge> yesno []
+-- False
+-- *Hoge> yesno [0,0,0]
+-- True
+-- *Hoge> :t yesno
+-- yesno :: YesNo a => a -> Bool
