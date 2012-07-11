@@ -20,27 +20,27 @@ class Test_Of_Utils extends UnitTestCase
             "id                 | integer                     | not null default nextval('settlement_sbps_logs_id_seq'::regclass)",
             "settlement_log_id  | integer                     | ",
             "pay_method         | text                        | ",
-            "merchant_id        | text                        | ",
-            "service_id         | text                        | ",
-            "cust_code          | text                        | ",
-            "sps_cust_no        | text                        | ",
+            "merchant_id        | text ",
+            "service_id         | text ",
+            "cust_code          | text ",
+            "sps_cust_no        | text  ",
         );
         $expected = array(
             array(
-                'id'                => "integer                     | not null default nextval('settlement_sbps_logs_id_seq'::regclass)",
-                'settlement_log_id' => "integer                     | ",
-                'pay_method'        => "text                        | ",
-                'merchant_id'       => "text                        | ",
-                'service_id'        => "text                        | ",
+                'id'                => array("integer", "not null default nextval('settlement_sbps_logs_id_seq'::regclass)"),
+                'settlement_log_id' => array("integer", ""),
+                'pay_method'        => array("text", ""),
+                'merchant_id'       => array("text", ""),
+                'service_id'        => array("text", ""),
             ),
             array(
-                'id'                => "integer                     | not null default nextval('settlement_sbps_logs_id_seq'::regclass)",
-                'settlement_log_id' => "integer                     | ",
-                'pay_method'        => "text                        | ",
-                'merchant_id'       => "text                        | ",
-                'service_id'        => "text                        | ",
-                'cust_code'         => "text                        | ",
-                'sps_cust_no'       => "text                        | ",
+                'id'                => array("integer", "not null default nextval('settlement_sbps_logs_id_seq'::regclass)"),
+                'settlement_log_id' => array("integer", ""),
+                'pay_method'        => array("text", ""),
+                'merchant_id'       => array("text"),
+                'service_id'        => array("text"),
+                'cust_code'         => array("text"),
+                'sps_cust_no'       => array("text"),
             ));
         $this->assertEqual(psql2array($input), $expected);
     }

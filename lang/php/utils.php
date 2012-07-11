@@ -6,8 +6,12 @@ function psql2array($input) {
         if (strlen($line) === 0 || substr($line, 0, 1) === '-') {
             if (count($d) !== 0) $data[] = $d;
             $d = array();
-        } elseif (preg_match('/^\s*(\w+)\s*\|\s*(\S+.*)?\s*$/', $line, $m)) {
-            $d[$m[1]] = $m[2] ?: '';
+/*         } elseif (preg_match('/^\s*(\w+)\s*\|\s*(\S+.*)?\s*$/', $line, $m)) { */
+/*             $d[$m[1]] = $m[2] ?: ''; */
+        } elseif ($m = explode('|', $line)) {
+            $key = trim($m[0]);
+            $values = array_map(trim, array_slice($m, 1));
+            $d[$key] = $values;
         } else {
         }
     }
