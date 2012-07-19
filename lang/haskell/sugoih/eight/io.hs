@@ -39,12 +39,14 @@ reverseWords = unwords . map reverse . words
 -- when
 -- whenはBoolとIOアクションを受け取り、Boolの値がTrueの場合には渡されたIOと同じものを返す。
 -- Falseの場合には何もしないreturn ()を返す
+{-
 import Control.Monad
 
 main = do
   input <- getLine
   when (input == "SWORDFISH") $ do
     putStrLn input
+-}
 {-
 -- whenを使わない場合
 main = do
@@ -63,9 +65,11 @@ main = do
   print [a,b,c]
 -}
 -- seqenceを使って上と同じ処理を書くと
+{-
 main = do
   rs <- seqence [getLine, getLine, getLine]
   print rs
+-}
 
 -- sequenceを使った良くあるパターン。リストに対してprintやputStrLnのような関数をmapするとき
 -- Prelude> sequence $ map print [1..5]
@@ -75,3 +79,31 @@ main = do
 -- 4
 -- 5
 -- [(),(),(),(),()]
+
+-- mapM
+-- 「リストに対してIOアクションを返す関数をマップし、それからシーケンスにする」
+-- という操作は頻出なので、mapMとmapM_がある。mapM_は結果を捨てる
+{-
+Prelude> mapM print [1,2,3]
+1
+2
+3
+[(),(),()]
+Prelude> mapM_ print [1,2,3]
+1
+2
+3
+Prelude>
+-}
+
+-- forever
+-- IOアクションを受け取り、そのIOアクションを永遠に繰り返すIOアクションを返す
+import Control.Monad
+import Data.Char
+
+main = forever $ do
+  putStr "Give me some input: "
+  l <- getLine
+  putStrLn $ map toUpper l
+
+-- forM
