@@ -195,3 +195,17 @@ instance YesNo TrafficLight where
 -- True
 -- *Hoge> :t yesno
 -- yesno :: YesNo a => a -> Bool
+
+-- 7.10 Functor型クラス
+-- Functorは全体を写せる(map over)ものの型クラス
+
+-- class Functor f where
+--   fmap :: (a -> b) -> f a -> f b
+
+instance Functor Tree where
+  fmap f EmptyTree = EmptyTree
+  fmap f (Node x left right) = Node (f x) (fmap f left) (fmap f right)
+
+-- instance Functor (Either a) where
+--   fmap f (Right x) = Right (f x)
+--   fmap f (Left x) = Left x
