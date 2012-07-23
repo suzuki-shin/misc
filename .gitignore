@@ -10,3 +10,7 @@ lang/python/test.py
 *.o
 TAGS
 .DS_Store
+/lang/haskell/Tree
+/lang/haskell/ctags.log
+lang/php/simpletest
+/lang/haskell/sugoih/eight/io
