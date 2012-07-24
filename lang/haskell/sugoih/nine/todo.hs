@@ -8,7 +8,7 @@ dispatch :: String -> [String] -> IO ()
 dispatch "add" = add
 dispatch "view" = view
 dispatch "remove" = remove
-dispatch _ = error "bad command"
+dispatch command = doesntExist command
 
 main :: IO ()
 main = do
@@ -46,3 +46,6 @@ remove [fileName, numberString] = do
         removeFile "todo.txt"
         renameFile tempName "todo.txt")
 remove _ = error "bad args"
+
+doesntExist :: String -> [String] -> IO ()
+doesntExist command _ = putStrLn $ "The " ++ command ++ " command doesn't exist"
