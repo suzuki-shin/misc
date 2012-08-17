@@ -1,3 +1,5 @@
+{-# OPTIONS -Wall #-}
+
 lucky :: Int -> String
 lucky 7 = "LUCKY NUMBER SEVEN!"
 lucky _ = "Sorry, you're out of luck, pal!"

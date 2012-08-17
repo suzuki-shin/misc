@@ -61,3 +61,7 @@ doubleMe x = if x > 100
 
 -- todoアプリを作ってるプロジェクト
 -- https://github.com/seizans/todo/commits/master/
+
+-- [2012-07-22 13:03]
+
+hoge (x:_) = x ++ _
