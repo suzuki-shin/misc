@@ -9,8 +9,8 @@ import Network.HTTP
 import Network.URI
 import Data.Maybe
 
-test :: String -> String ->IO ()
-test url body = do
+httpPost :: String -> String ->IO ()
+httpPost url body = do
   res <- simpleHTTP req
   case res of
     Left x -> return ()
@@ -18,6 +18,8 @@ test url body = do
   where req = Request {
           rqURI = fromJust $ parseURI url,
           rqMethod = POST,
-          rqHeaders = [ mkHeader HdrContentType "application/x-www-form-urlencoded" ,
-                        mkHeader HdrContentLength (show $ Prelude.length body) ],
+          rqHeaders = [
+            mkHeader HdrContentType "application/x-www-form-urlencoded",
+            mkHeader HdrContentLength (show $ Prelude.length body)
+            ],
           rqBody = body}
