@@ -6,11 +6,11 @@ data State = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
 type Board = M.Map Pos State
 
-size :: Int
-size = 3
+boardSize :: Int
+boardSize = 3
 
 initBoard :: Board
-initBoard = M.fromList [((x, y) , E) | x <- [1..size], y <- [1..size]]
+initBoard = M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
 rev :: State -> State
 rev O = X
@@ -18,23 +18,21 @@ rev X = O
 rev E = E
 
 canPut :: Board -> Pos -> Bool
-canPut b p = (onBoard p) && (M.lookup p b == Just E)
+canPut board pos = (onBoard pos) && (M.lookup pos board == Just E)
 
 onBoard :: Pos -> Bool
-onBoard (x, y) = (x >= 1 && x <= size) && (y >= 1 && y <= size)
+onBoard (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
 
 put :: Board -> Pos -> State -> Either String Board
-put b p s
-  | onBoard p = if canPut b p
-                then Right (M.insert p s b)
+put board pos state
+  | onBoard pos = if canPut board pos
+                then Right (M.insert pos state board)
                 else Left "can't put there."
   | otherwise = Left "out of board."
 
 roop :: Board -> State -> IO b
 roop board state = do
-  putStrLn "---"
   renderBoard board
-  putStrLn "---"
   board' <- tern board state
   case board' of
     Right board1 -> roop board1 (rev state)
@@ -42,11 +40,11 @@ roop board state = do
       print err
       roop board state
 
+-- 標準入力から座標を入力させて、正しい入力でない場合は正しくなるまで繰り返す
 tern :: Board -> State -> IO (Either String Board)
-tern b s = do
+tern board state = do
   [x, y] <- inputToPos
-  let b' = put b ((read x , read y) :: (Int, Int)) s
-  return b'
+  return $ put board ((read x , read y) :: (Int, Int)) state
     where
       inputToPos = do
         l <- getLine
@@ -55,15 +53,19 @@ tern b s = do
           else inputToPos
 
 renderBoard :: M.Map Pos State -> IO ()
-renderBoard board = mapM_ renderCol $ M.toList board
+renderBoard board = do
+  putStrLn " 123\n ---"
+  mapM_ renderCol $ M.toList board
+  putStrLn " ---\n"
   where
     renderCol :: (Pos, State) -> IO ()
     renderCol ((x,y), state)
-      | y == 3 = putStrLn $ show state
-      | otherwise = putStr $ show state
+      | y == 1 = putStr $ " " ++ show state
+      | y == 2 = putStr $ show state
+      | y == 3 = putStrLn $ show state ++ " " ++ show x
 
 main :: IO ()
 main = do
-  let b = initBoard
-  roop b O
+  let board = initBoard
+  roop board O
 
