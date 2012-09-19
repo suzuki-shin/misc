@@ -27,7 +27,7 @@ put :: Board -> Pos -> State -> Either String Board
 put b p s
   | onBoard p = if canPut b p
                 then Right (M.insert p s b)
-                else Left "can put there."
+                else Left "can't put there."
   | otherwise = Left "out of board."
 
 roop :: Board -> State -> IO b
@@ -44,18 +44,23 @@ roop board state = do
 
 tern :: Board -> State -> IO (Either String Board)
 tern b s = do
-  l <- getLine
-  let [x,y] =  words l
+  [x, y] <- inputToPos
   let b' = put b ((read x , read y) :: (Int, Int)) s
   return b'
+    where
+      inputToPos = do
+        l <- getLine
+        if length (words l) == 2
+          then return $ words l
+          else inputToPos
 
+renderBoard :: M.Map Pos State -> IO ()
 renderBoard board = mapM_ renderCol $ M.toList board
   where
     renderCol :: (Pos, State) -> IO ()
     renderCol ((x,y), state)
       | y == 3 = putStrLn $ show state
       | otherwise = putStr $ show state
-
 
 main :: IO ()
 main = do
