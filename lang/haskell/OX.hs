@@ -2,9 +2,9 @@ module OX where
 
 import qualified Data.Map as M
 
-data State = E | O | X deriving (Show, Eq)
+data Mark = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
-type Board = M.Map Pos State
+type Board = M.Map Pos Mark
 
 boardSize :: Int
 boardSize = 3
@@ -12,39 +12,39 @@ boardSize = 3
 initBoard :: Board
 initBoard = M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
-rev :: State -> State
+rev :: Mark -> Mark
 rev O = X
 rev X = O
 rev E = E
 
 canPut :: Board -> Pos -> Bool
-canPut board pos = (onBoard pos) && (M.lookup pos board == Just E)
+canPut board pos = (isOnBoard pos) && (M.lookup pos board == Just E)
 
-onBoard :: Pos -> Bool
-onBoard (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
+isOnBoard :: Pos -> Bool
+isOnBoard (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
 
-put :: Board -> Pos -> State -> Either String Board
-put board pos state
-  | onBoard pos = if canPut board pos
-                then Right (M.insert pos state board)
-                else Left "can't put there."
-  | otherwise = Left "out of board."
+putMark :: Board -> Pos -> Mark -> Either String Board
+putMark board pos mark
+  | isOnBoard pos = if canPut board pos
+                    then Right (M.insert pos mark board)
+                    else Left "Can't put there."
+  | otherwise = Left "Out of board."
 
-roop :: Board -> State -> IO b
-roop board state = do
+roop :: Board -> Mark -> IO b
+roop board mark = do
   renderBoard board
-  board' <- tern board state
+  board' <- tern board mark
   case board' of
-    Right board1 -> roop board1 (rev state)
+    Right board1 -> roop board1 (rev mark)
     Left err -> do
       print err
-      roop board state
+      roop board mark
 
 -- 標準入力から座標を入力させて、正しい入力でない場合は正しくなるまで繰り返す
-tern :: Board -> State -> IO (Either String Board)
-tern board state = do
+tern :: Board -> Mark -> IO (Either String Board)
+tern board mark = do
   [x, y] <- inputToPos
-  return $ put board ((read x , read y) :: (Int, Int)) state
+  return $ putMark board ((read x , read y) :: (Int, Int)) mark
     where
       inputToPos = do
         l <- getLine
@@ -52,17 +52,16 @@ tern board state = do
           then return $ words l
           else inputToPos
 
-renderBoard :: M.Map Pos State -> IO ()
+renderBoard :: M.Map Pos Mark -> IO ()
 renderBoard board = do
-  putStrLn " 123\n ---"
+  putStrLn "123\n---"
   mapM_ renderCol $ M.toList board
-  putStrLn " ---\n"
+  putStrLn "---\n"
   where
-    renderCol :: (Pos, State) -> IO ()
-    renderCol ((x,y), state)
-      | y == 1 = putStr $ " " ++ show state
-      | y == 2 = putStr $ show state
-      | y == 3 = putStrLn $ show state ++ " " ++ show x
+    renderCol :: (Pos, Mark) -> IO ()
+    renderCol ((x,y), mark)
+      | y == 3 = putStrLn $ show mark ++ " " ++ show x
+      | otherwise = putStr $ show mark
 
 main :: IO ()
 main = do
