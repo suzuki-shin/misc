@@ -6,12 +6,18 @@ import qualified Data.Map as M
 data Mark = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
 type Board = M.Map Pos Mark
+data Result = Draw | Win | Lose
 
 boardSize :: Int
 boardSize = 3
 
 initBoard :: Board
 initBoard = M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
+
+winningPatterns :: [[Pos]]
+winningPatterns = [[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], -- 横
+                   [(1,1),(2,1),(3,1)], [(1,2),(2,2),(3,2)], [(1,3),(2,3),(3,3)], -- 縦
+                   [(1,1),(2,2),(3,3)], [(3,1),(2,2),(1,3)]] -- 斜
 
 rev :: Mark -> Mark
 rev O = X
@@ -36,9 +42,14 @@ roop board mark = do
   board' <- turn board mark
   case board' of
     Right board1 -> do
-      if win board1 winningPatterns mark
-         then putStrLn $ show mark ++ " side win!"
-         else roop board1 (rev mark)
+      case checkFinish board1 winningPatterns mark of
+        Just Win -> do
+          putStrLn $ show mark ++ " side win!"
+          renderBoard board1
+        Just Draw -> do
+          putStrLn "draw"
+          renderBoard board1
+        Nothing -> roop board1 (rev mark)
     Left err -> do
       putStrLn err
       roop board mark
@@ -67,11 +78,6 @@ renderBoard board = do
         | y == 3 = putStrLn $ show mark ++ " " ++ show x
         | otherwise = putStr $ show mark
 
-winningPatterns :: [[Pos]]
-winningPatterns = [[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], -- 横
-                   [(1,1),(2,1),(3,1)], [(1,2),(2,2),(3,2)], [(1,3),(2,3),(3,3)], -- 縦
-                   [(1,1),(2,2),(3,3)], [(3,1),(2,2),(1,3)]] -- 斜
-
 marksPosOf :: Board -> Mark -> [Pos]
 marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
 
@@ -82,6 +88,12 @@ win board winPtns mark = win' (marksPosOf board mark) winPtns
     win' marksPos (p:winPtns') = (p `isInfixOf` marksPos) || (win' marksPos winPtns')
     win' [] _ = False
     win' _ [] = False
+
+checkFinish :: Board -> [[Pos]] -> Mark -> Maybe Result
+checkFinish board winPtns mark
+  | win board winPtns mark = Just Win
+  | length (marksPosOf board E) == 0 = Just Draw
+  | otherwise = Nothing
 
 main :: IO ()
 main = do
