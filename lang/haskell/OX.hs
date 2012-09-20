@@ -1,5 +1,6 @@
 module OX where
 
+import Data.List (isInfixOf)
 import qualified Data.Map as M
 
 data Mark = E | O | X deriving (Show, Eq)
@@ -25,24 +26,27 @@ isOnBoard (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
 
 putMark :: Board -> Pos -> Mark -> Either String Board
 putMark board pos mark
-  | isOnBoard pos = if canPut board pos
-                    then Right (M.insert pos mark board)
-                    else Left "Can't put there."
-  | otherwise = Left "Out of board."
+  | not (isOnBoard pos) = Left "Out of board."
+  | canPut board pos = Right (M.insert pos mark board)
+  | otherwise = Left "Can't put there."
 
-roop :: Board -> Mark -> IO b
+roop :: Board -> Mark -> IO ()
 roop board mark = do
   renderBoard board
-  board' <- tern board mark
+  board' <- turn board mark
   case board' of
-    Right board1 -> roop board1 (rev mark)
+    Right board1 -> do
+      if win board1 winningPatterns mark
+         then putStrLn $ show mark ++ " side win!"
+         else roop board1 (rev mark)
     Left err -> do
-      print err
+      putStrLn err
       roop board mark
 
 -- 標準入力から座標を入力させて、正しい入力でない場合は正しくなるまで繰り返す
-tern :: Board -> Mark -> IO (Either String Board)
-tern board mark = do
+turn :: Board -> Mark -> IO (Either String Board)
+turn board mark = do
+  putStrLn $ (show mark) ++ " side turn. input x y."
   [x, y] <- inputToPos
   return $ putMark board ((read x , read y) :: (Int, Int)) mark
     where
@@ -54,14 +58,30 @@ tern board mark = do
 
 renderBoard :: M.Map Pos Mark -> IO ()
 renderBoard board = do
-  putStrLn "123\n---"
+  putStrLn "123\n   "
   mapM_ renderCol $ M.toList board
-  putStrLn "---\n"
+  putStrLn "   \n"
+    where
+      renderCol :: (Pos, Mark) -> IO ()
+      renderCol ((x,y), mark)
+        | y == 3 = putStrLn $ show mark ++ " " ++ show x
+        | otherwise = putStr $ show mark
+
+winningPatterns :: [[Pos]]
+winningPatterns = [[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], -- 横
+                   [(1,1),(2,1),(3,1)], [(1,2),(2,2),(3,2)], [(1,3),(2,3),(3,3)], -- 縦
+                   [(1,1),(2,2),(3,3)], [(3,1),(2,2),(1,3)]] -- 斜
+
+marksPosOf :: Board -> Mark -> [Pos]
+marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
+
+win :: Board -> [[Pos]] -> Mark -> Bool
+win board winPtns mark = win' (marksPosOf board mark) winPtns
   where
-    renderCol :: (Pos, Mark) -> IO ()
-    renderCol ((x,y), mark)
-      | y == 3 = putStrLn $ show mark ++ " " ++ show x
-      | otherwise = putStr $ show mark
+    win' :: [Pos] -> [[Pos]] -> Bool
+    win' marksPos (p:winPtns') = (p `isInfixOf` marksPos) || (win' marksPos winPtns')
+    win' [] _ = False
+    win' _ [] = False
 
 main :: IO ()
 main = do
