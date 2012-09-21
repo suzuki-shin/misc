@@ -2,6 +2,7 @@ module OX where
 
 import Data.List (isInfixOf)
 import qualified Data.Map as M
+-- import Debug.Trace
 
 data Mark = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
@@ -85,7 +86,8 @@ win :: Board -> [[Pos]] -> Mark -> Bool
 win board winPtns mark = win' (marksPosOf board mark) winPtns
   where
     win' :: [Pos] -> [[Pos]] -> Bool
-    win' marksPos (p:winPtns') = (p `isInfixOf` marksPos) || (win' marksPos winPtns')
+--     win' marksPos (wp:winPtns') = trace ("wp: " ++show wp ++ "\n marksPos: " ++ show marksPos) ( (wp `isIn` marksPos) || (win' marksPos winPtns') )
+    win' marksPos (wp:winPtns') = (wp `isIn` marksPos) || (win' marksPos winPtns')
     win' [] _ = False
     win' _ [] = False
 
@@ -99,4 +101,19 @@ main :: IO ()
 main = do
   let board = initBoard
   roop board O
+
+-- | あるリストの全ての要素が別のリストに含まれるかを返す
+-- >>> [1,2,3] `isIn` [3,1,2,4,5]
+-- True
+-- >>> [1,2,3] `isIn` [1,2,4,5]
+-- False
+-- >>> [] `isIn` [1,2,4,5]
+-- True
+-- >>> [] `isIn` []
+-- True
+-- >>> [(1,2),(2,3)] `isIn` [(3,3),(1,2),(4,5),(2,3)]
+-- True
+isIn :: Eq a => [a] -> [a] -> Bool
+(x:xs) `isIn` ys = (x `elem` ys) && (xs `isIn` ys)
+[] `isIn` _ = True
 
