@@ -1,6 +1,6 @@
 module OX where
 
-import Data.List (isInfixOf)
+-- import Data.List (isInfixOf)
 import qualified Data.Map as M
 -- import Debug.Trace
 
@@ -25,17 +25,59 @@ rev O = X
 rev X = O
 rev E = E
 
-canPut :: Board -> Pos -> Bool
-canPut board pos = (isOnBoard pos) && (M.lookup pos board == Just E)
+canPut :: Board -> Int -> Pos -> Bool
+canPut board boardSize pos = (isOnBoard boardSize pos) && (M.lookup pos board == Just E)
 
-isOnBoard :: Pos -> Bool
-isOnBoard (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
+-- | Posが盤上かどうかを返す
+-- >>> isOnBoard (1,5) 5
+-- True
+-- >>> isOnBoard (1,6) 5
+-- False
+-- >>> isOnBoard (6,3) 5
+-- False
+-- >>> isOnBoard (0,5) 5
+-- False
+isOnBoard :: Int -> Pos -> Bool
+isOnBoard boardSize (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
 
-putMark :: Board -> Pos -> Mark -> Either String Board
-putMark board pos mark
-  | not (isOnBoard pos) = Left "Out of board."
-  | canPut board pos = Right (M.insert pos mark board)
+putMark :: Board -> Int -> Pos -> Mark -> Either String Board
+putMark board boardSize pos mark
+  | not (isOnBoard boardSize pos) = Left "Out of board."
+  | canPut board boardSize pos = Right (M.insert pos mark board)
   | otherwise = Left "Can't put there."
+
+marksPosOf :: Board -> Mark -> [Pos]
+marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
+
+win :: Board -> [[Pos]] -> Mark -> Bool
+win board winPtns mark = win' (marksPosOf board mark) winPtns
+  where
+    win' :: [Pos] -> [[Pos]] -> Bool
+--     win' marksPos (wp:winPtns') = trace ("wp: " ++show wp ++ "\n marksPos: " ++ show marksPos) ( (wp `isIn` marksPos) || (win' marksPos winPtns') )
+    win' marksPos (wp:winPtns') = (wp `isIn` marksPos) || (win' marksPos winPtns')
+    win' [] _ = False
+    win' _ [] = False
+
+checkFinish :: Board -> [[Pos]] -> Mark -> Maybe Result
+checkFinish board winPtns mark
+  | win board winPtns mark = Just Win
+  | length (marksPosOf board E) == 0 = Just Draw
+  | otherwise = Nothing
+
+-- | あるリストの全ての要素が別のリストに含まれるかを返す
+-- >>> [1,2,3] `isIn` [3,1,2,4,5]
+-- True
+-- >>> [1,2,3] `isIn` [1,2,4,5]
+-- False
+-- >>> [] `isIn` [1,2,4,5]
+-- True
+-- >>> [] `isIn` []
+-- True
+-- >>> [(1,2),(2,3)] `isIn` [(3,3),(1,2),(4,5),(2,3)]
+-- True
+isIn :: Eq a => [a] -> [a] -> Bool
+(x:xs) `isIn` ys = (x `elem` ys) && (xs `isIn` ys)
+[] `isIn` _ = True
 
 roop :: Board -> Mark -> IO ()
 roop board mark = do
@@ -60,7 +102,7 @@ turn :: Board -> Mark -> IO (Either String Board)
 turn board mark = do
   putStrLn $ (show mark) ++ " side turn. input x y."
   [x, y] <- inputToPos
-  return $ putMark board ((read x , read y) :: (Int, Int)) mark
+  return $ putMark board boardSize ((read x , read y) :: (Int, Int)) mark
     where
       inputToPos = do
         l <- getLine
@@ -79,41 +121,7 @@ renderBoard board = do
         | y == 3 = putStrLn $ show mark ++ " " ++ show x
         | otherwise = putStr $ show mark
 
-marksPosOf :: Board -> Mark -> [Pos]
-marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
-
-win :: Board -> [[Pos]] -> Mark -> Bool
-win board winPtns mark = win' (marksPosOf board mark) winPtns
-  where
-    win' :: [Pos] -> [[Pos]] -> Bool
---     win' marksPos (wp:winPtns') = trace ("wp: " ++show wp ++ "\n marksPos: " ++ show marksPos) ( (wp `isIn` marksPos) || (win' marksPos winPtns') )
-    win' marksPos (wp:winPtns') = (wp `isIn` marksPos) || (win' marksPos winPtns')
-    win' [] _ = False
-    win' _ [] = False
-
-checkFinish :: Board -> [[Pos]] -> Mark -> Maybe Result
-checkFinish board winPtns mark
-  | win board winPtns mark = Just Win
-  | length (marksPosOf board E) == 0 = Just Draw
-  | otherwise = Nothing
-
 main :: IO ()
 main = do
   let board = initBoard
   roop board O
-
--- | あるリストの全ての要素が別のリストに含まれるかを返す
--- >>> [1,2,3] `isIn` [3,1,2,4,5]
--- True
--- >>> [1,2,3] `isIn` [1,2,4,5]
--- False
--- >>> [] `isIn` [1,2,4,5]
--- True
--- >>> [] `isIn` []
--- True
--- >>> [(1,2),(2,3)] `isIn` [(3,3),(1,2),(4,5),(2,3)]
--- True
-isIn :: Eq a => [a] -> [a] -> Bool
-(x:xs) `isIn` ys = (x `elem` ys) && (xs `isIn` ys)
-[] `isIn` _ = True
-
