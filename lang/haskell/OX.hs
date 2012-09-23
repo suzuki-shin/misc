@@ -1,19 +1,19 @@
 module OX where
 
--- import Data.List (isInfixOf)
 import qualified Data.Map as M
 -- import Debug.Trace
 
 data Mark = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
 type Board = M.Map Pos Mark
+data BoardInfo = BoardInfo {getSize :: Int, getBoard :: Board} deriving (Show, Eq)
 data Result = Draw | Win | Lose
 
 boardSize :: Int
 boardSize = 3
 
-initBoard :: Board
-initBoard = M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
+initBoard :: Int -> BoardInfo
+initBoard boardSize = BoardInfo boardSize $ M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
 winningPatterns :: [[Pos]]
 winningPatterns = [[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], -- 横
@@ -25,30 +25,51 @@ rev O = X
 rev X = O
 rev E = E
 
-canPut :: Board -> Int -> Pos -> Bool
-canPut board boardSize pos = (isOnBoard boardSize pos) && (M.lookup pos board == Just E)
+-- | 指定したPosにMarkを置くことができるかどうかを返す
+canPut :: BoardInfo -> Pos -> Bool
+canPut boardInfo pos = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoard boardInfo) pos) == Just E)
 
 -- | Posが盤上かどうかを返す
--- >>> isOnBoard (1,5) 5
+-- >>> isOnBoard 5 (1,5)
 -- True
--- >>> isOnBoard (1,6) 5
+-- >>> isOnBoard 5 (1,6)
 -- False
--- >>> isOnBoard (6,3) 5
+-- >>> isOnBoard 5 (6,3)
 -- False
--- >>> isOnBoard (0,5) 5
+-- >>> isOnBoard 5 (0,5)
 -- False
 isOnBoard :: Int -> Pos -> Bool
-isOnBoard boardSize (x, y) = (x >= 1 && x <= boardSize) && (y >= 1 && y <= boardSize)
+isOnBoard size (x, y) = (x >= 1 && x <= size) && (y >= 1 && y <= size)
 
-putMark :: Board -> Int -> Pos -> Mark -> Either String Board
-putMark board boardSize pos mark
-  | not (isOnBoard boardSize pos) = Left "Out of board."
-  | canPut board boardSize pos = Right (M.insert pos mark board)
+-- | boardInfoとPosとMarkをとりPos位置にMarkが置けるかをチェックして、おけるならばおいたboardInfoをRight boardInfoで返し、置けないならばLeft errを返す
+-- >>> let bi = BoardInfo {getSize = 2, getBoard = M.fromList [((1,1),O),((1,2),X),((2,1),E),((2,2),E)]}
+-- >>> putMark bi (2,1) O
+-- Right (BoardInfo {getSize = 2, getBoard = fromList [((1,1),O),((1,2),X),((2,1),O),((2,2),E)]})
+-- >>> putMark bi (1,3) O
+-- Left "Can't put there."
+-- >>> putMark bi (1,1) O
+-- Left "Can't put there."
+putMark :: BoardInfo -> Pos -> Mark -> Either String BoardInfo
+putMark boardInfo pos mark
+  | canPut boardInfo pos = Right $ BoardInfo (getSize boardInfo) (M.insert pos mark (getBoard boardInfo))
   | otherwise = Left "Can't put there."
 
+-- | Markを指定して、盤上のそのMarkすべての位置を返す
+-- >>> let b = M.fromList [((1,1),O),((1,2),X),((1,3),O),((2,1),E),((2,2),E),((2,3),O),((3,1),X),((3,2),E),((3,3),E)] :: Board
+-- >>> marksPosOf b O
+-- [(1,1),(1,3),(2,3)]
+-- >>> marksPosOf b X
+-- [(1,2),(3,1)]
+-- >>> marksPosOf b E
+-- [(2,1),(2,2),(3,2),(3,3)]
 marksPosOf :: Board -> Mark -> [Pos]
 marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
 
+-- | 位置を指定して、その位置にあるMarkをMaybe Markで返す
+markOf :: Board -> Pos -> Maybe Mark
+markOf board pos = M.lookup pos board
+
+-- | 指定したMarkが勝利条件を満たしているかを返す
 win :: Board -> [[Pos]] -> Mark -> Bool
 win board winPtns mark = win' (marksPosOf board mark) winPtns
   where
@@ -58,6 +79,7 @@ win board winPtns mark = win' (marksPosOf board mark) winPtns
     win' [] _ = False
     win' _ [] = False
 
+-- | ゲームが終了条件を満たしているかをチェックし、満たしていればJust結果を、満たしていなければNothingを返す
 checkFinish :: Board -> [[Pos]] -> Mark -> Maybe Result
 checkFinish board winPtns mark
   | win board winPtns mark = Just Win
@@ -79,30 +101,30 @@ isIn :: Eq a => [a] -> [a] -> Bool
 (x:xs) `isIn` ys = (x `elem` ys) && (xs `isIn` ys)
 [] `isIn` _ = True
 
-roop :: Board -> Mark -> IO ()
-roop board mark = do
-  renderBoard board
-  board' <- turn board mark
-  case board' of
-    Right board1 -> do
-      case checkFinish board1 winningPatterns mark of
+roop :: BoardInfo -> Mark -> IO ()
+roop boardInfo mark = do
+  renderBoard boardInfo
+  boardInfo' <- turn boardInfo mark
+  case boardInfo' of
+    Right boardInfo1 -> do
+      case checkFinish (getBoard boardInfo1) winningPatterns mark of
         Just Win -> do
           putStrLn $ show mark ++ " side win!"
-          renderBoard board1
+          renderBoard boardInfo1
         Just Draw -> do
           putStrLn "draw"
-          renderBoard board1
-        Nothing -> roop board1 (rev mark)
+          renderBoard boardInfo1
+        Nothing -> roop boardInfo1 (rev mark)
     Left err -> do
       putStrLn err
-      roop board mark
+      roop boardInfo mark
 
--- 標準入力から座標を入力させて、正しい入力でない場合は正しくなるまで繰り返す
-turn :: Board -> Mark -> IO (Either String Board)
-turn board mark = do
+-- | 標準入力から座標を入力させて、正しい入力でない場合は正しくなるまで繰り返す
+turn :: BoardInfo -> Mark -> IO (Either String BoardInfo)
+turn boardInfo mark = do
   putStrLn $ (show mark) ++ " side turn. input x y."
   [x, y] <- inputToPos
-  return $ putMark board boardSize ((read x , read y) :: (Int, Int)) mark
+  return $ putMark boardInfo ((read x , read y) :: (Int, Int)) mark
     where
       inputToPos = do
         l <- getLine
@@ -110,18 +132,19 @@ turn board mark = do
           then return $ words l
           else inputToPos
 
-renderBoard :: M.Map Pos Mark -> IO ()
-renderBoard board = do
+-- | ボードを描画する
+renderBoard :: BoardInfo -> IO ()
+renderBoard (BoardInfo size board) = do
   putStrLn "123\n   "
   mapM_ renderCol $ M.toList board
   putStrLn "   \n"
     where
       renderCol :: (Pos, Mark) -> IO ()
       renderCol ((x,y), mark)
-        | y == 3 = putStrLn $ show mark ++ " " ++ show x
+        | y == size = putStrLn $ show mark ++ " " ++ show x
         | otherwise = putStr $ show mark
 
 main :: IO ()
 main = do
-  let board = initBoard
-  roop board O
+  let boardInfo = initBoard boardSize
+  roop boardInfo O
