@@ -97,9 +97,11 @@ turn boardInfo mark = do
 -- | ボードを描画する
 renderBoard :: BoardInfo -> IO ()
 renderBoard (BoardInfo size board) = do
-  putStrLn "123\n   "
+--   putStrLn "123\n   "
+  mapM_ (putStr . show) [1..size]
+  putStrLn "\n"
   mapM_ renderCol $ M.toList board
-  putStrLn "   \n"
+  putStrLn "\n"
     where
       renderCol :: (Pos, Mark) -> IO ()
       renderCol ((x,y), mark)
