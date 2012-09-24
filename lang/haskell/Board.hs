@@ -13,7 +13,7 @@ data Mark = E | O | X deriving (Show, Eq)
 type Pos = (Int, Int)
 type Board = M.Map Pos Mark
 data BoardInfo = BoardInfo {getSize :: Int, getBoard :: Board} deriving (Show, Eq)
-data Result = Draw | Win | Lose
+data Result =  Lose | Draw | Win
 
 emptyBoard :: Int -> BoardInfo
 emptyBoard boardSize = BoardInfo boardSize $ M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
@@ -26,11 +26,11 @@ roop boardInfo winPtns mark = do
     Right boardInfo1 -> do
       case checkFinish (getBoard boardInfo1) winPtns mark of
         Just Win -> do
+          renderBoard boardInfo1
           putStrLn $ show mark ++ " side win!"
-          renderBoard boardInfo1
         Just Draw -> do
-          putStrLn "draw"
           renderBoard boardInfo1
+          putStrLn "draw"
         Nothing -> roop boardInfo1 winPtns (rev mark)
     Left err -> do
       putStrLn err
