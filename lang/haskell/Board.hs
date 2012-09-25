@@ -9,7 +9,12 @@ import qualified Data.Map as M
 import MyList
 -- import Debug.Trace
 
-data Mark = E | O | X deriving (Show, Eq)
+data Mark = E | O | X deriving (Eq)
+instance Show Mark where
+  show E = "_"
+  show O = "O"
+  show X = "X"
+
 type Pos = (Int, Int)
 type Board = M.Map Pos Mark
 data BoardInfo = BoardInfo {getSize :: Int, getBoard :: Board} deriving (Show, Eq)
