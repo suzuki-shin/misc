@@ -1,5 +1,3 @@
-module OX where
-
 import qualified Data.Map as M
 import Board
 
