@@ -1,13 +1,14 @@
 module Board (
     Pos
+  , Board
   , Mark (E, O, X)
   , emptyBoard
   , roop
+  , marksPosOf
   ) where
 
 import qualified Data.Map as M
 import MyList
--- import Debug.Trace
 
 data Mark = E | O | X deriving (Eq)
 instance Show Mark where
@@ -23,23 +24,23 @@ data Result =  Lose | Draw | Win
 emptyBoard :: Int -> BoardInfo
 emptyBoard boardSize = BoardInfo boardSize $ M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
-roop :: BoardInfo -> [[Pos]] -> Mark -> IO ()
-roop boardInfo winPtns mark = do
+roop :: BoardInfo -> (Board -> Mark -> Bool) -> (Board -> Mark -> Bool) -> Mark -> IO ()
+roop boardInfo checkWin checkDraw mark = do
   renderBoard boardInfo
   boardInfo' <- turn boardInfo mark
   case boardInfo' of
     Right boardInfo1 -> do
-      case checkFinish (getBoard boardInfo1) winPtns mark of
+      case checkFinish (getBoard boardInfo1) checkWin checkDraw mark of
         Just Win -> do
           renderBoard boardInfo1
           putStrLn $ show mark ++ " side win!"
         Just Draw -> do
           renderBoard boardInfo1
           putStrLn "draw"
-        Nothing -> roop boardInfo1 winPtns (rev mark)
+        Nothing -> roop boardInfo1 checkWin checkDraw (rev mark)
     Left err -> do
       putStrLn err
-      roop boardInfo winPtns mark
+      roop boardInfo checkWin checkDraw mark
 
 
 -- | 指定したPosにMarkを置くことができるかどうかを返す
@@ -103,7 +104,7 @@ turn boardInfo mark = do
 renderBoard :: BoardInfo -> IO ()
 renderBoard (BoardInfo size board) = do
 --   putStrLn "123\n   "
-  mapM_ (putStr . show) [1..size]
+  mapM_ (putStr . show . (\n -> if n >= 10 then n `mod` 10 else n)) [1..size]
   putStrLn "\n"
   mapM_ renderCol $ M.toList board
   putStrLn "\n"
@@ -118,20 +119,14 @@ rev O = X
 rev X = O
 rev E = E
 
-
--- | 指定したMarkが勝利条件を満たしているかを返す
-win :: Board -> [[Pos]] -> Mark -> Bool
-win board winPtns mark = win' (marksPosOf board mark) winPtns
-  where
-    win' :: [Pos] -> [[Pos]] -> Bool
---     win' marksPos (wp:winPtns') = trace ("wp: " ++show wp ++ "\n marksPos: " ++ show marksPos) ( (wp `isIn` marksPos) || (win' marksPos winPtns') )
-    win' marksPos (wp:winPtns') = (wp `isIn` marksPos) || (win' marksPos winPtns')
-    win' [] _ = False
-    win' _ [] = False
-
 -- | ゲームが終了条件を満たしているかをチェックし、満たしていればJust結果を、満たしていなければNothingを返す
-checkFinish :: Board -> [[Pos]] -> Mark -> Maybe Result
-checkFinish board winPtns mark
-  | win board winPtns mark = Just Win
-  | length (marksPosOf board E) == 0 = Just Draw
+checkFinish :: Board -> (Board -> Mark -> Bool) -> (Board -> Mark -> Bool) -> Mark -> Maybe Result
+checkFinish board win draw mark
+  | win board mark = Just Win
+  | draw board mark = Just Draw
   | otherwise = Nothing
+
+-- win2 board mark = myCount > enemyCount
+--   where
+--     myCount = marksPosOf board mark
+--     enemyCount = marksPosOf board (rev mark)
