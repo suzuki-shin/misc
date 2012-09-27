@@ -1,0 +1,1 @@
+[[file:Board.hs::canPut%20boardInfo%20pos%20isOnBoard%20getSize%20boardInfo%20pos%20markOf%20getBoard%20boardInfo%20pos%20Just%20E][reversiはcanPutも変更しないといかんな]]
