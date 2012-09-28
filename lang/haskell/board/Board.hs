@@ -1,7 +1,7 @@
 module Board (
     Pos
   , Board
-  , BoardInfo (getSize, getBoard)
+  , BoardInfo (BoardInfo, getSize, getBoard)
   , Mark (E, O, X)
   , isOnBoard
   , emptyBoard
@@ -28,10 +28,16 @@ data Result =  Lose | Draw | Win
 emptyBoard :: Int -> BoardInfo
 emptyBoard boardSize = BoardInfo boardSize $ M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
-roop :: BoardInfo -> (BoardInfo -> BoardInfo) -> (Board -> Mark -> Bool) -> (Board -> Mark -> Bool) -> Mark -> IO ()
-roop boardInfo action checkWin checkDraw mark = do
+roop :: BoardInfo
+        -> (BoardInfo -> BoardInfo)
+        -> (BoardInfo -> Pos -> Mark -> Bool)
+        -> (Board -> Mark -> Bool)
+        -> (Board -> Mark -> Bool)
+        -> Mark
+        -> IO ()
+roop boardInfo action canPut checkWin checkDraw mark = do
   renderBoard boardInfo
-  boardInfo' <- turn boardInfo mark
+  boardInfo' <- turn boardInfo canPut mark
   case boardInfo' of
     Right boardInfo1 -> do
       let boardInfo1' = action boardInfo1
@@ -42,10 +48,10 @@ roop boardInfo action checkWin checkDraw mark = do
         Just Draw -> do
           renderBoard boardInfo1'
           putStrLn "draw"
-        Nothing -> roop boardInfo1' action checkWin checkDraw (rev mark)
+        Nothing -> roop boardInfo1' action canPut checkWin checkDraw (rev mark)
     Left err -> do
       putStrLn err
-      roop boardInfo action checkWin checkDraw mark
+      roop boardInfo action canPut checkWin checkDraw mark
 
 
 -- | 指定したPosにMarkを置くことができるかどうかを返す
@@ -67,14 +73,14 @@ isOnBoard size (x, y) = (x >= 1 && x <= size) && (y >= 1 && y <= size)
 -- | boardInfoとPosとMarkをとりPos位置にMarkが置けるかをチェックして、おけるならばおいたboardInfoをRight boardInfoで返し、置けないならばLeft errを返す
 -- >>> let bi = BoardInfo {getSize = 2, getBoard = M.fromList [((1,1),O),((1,2),X),((2,1),E),((2,2),E)]}
 -- >>> putMark bi (2,1) O
--- Right (BoardInfo {getSize = 2, getBoard = fromList [((1,1),O),((1,2),X),((2,1),O),((2,2),E)]})
+-- Right (BoardInfo {getSize = 2, getBoard = fromList [((1,1),O),((1,2),X),((2,1),O),((2,2),_)]})
 -- >>> putMark bi (1,3) O
 -- Left "Can't put there."
 -- >>> putMark bi (1,1) O
 -- Left "Can't put there."
-putMark :: BoardInfo -> Pos -> Mark -> Either String BoardInfo
-putMark boardInfo pos mark
-  | canPut boardInfo pos = Right $ BoardInfo (getSize boardInfo) (M.insert pos mark (getBoard boardInfo))
+putMark :: BoardInfo -> (BoardInfo -> Pos -> Mark -> Bool) -> Pos -> Mark -> Either String BoardInfo
+putMark boardInfo canPut pos mark
+  | canPut boardInfo pos mark = Right $ BoardInfo (getSize boardInfo) (M.insert pos mark (getBoard boardInfo))
   | otherwise = Left "Can't put there."
 
 -- | Markを指定して、盤上のそのMarkすべての位置を返す
@@ -93,11 +99,11 @@ markOf :: Board -> Pos -> Maybe Mark
 markOf board pos = M.lookup pos board
 
 -- | 標準入力から座標を入力させて(正しい入力でない場合は正しくなるまで繰り返す)、その座標にマークをおき、何らかの処理をして、
-turn :: BoardInfo -> Mark -> IO (Either String BoardInfo)
-turn boardInfo mark = do
+turn :: BoardInfo -> (BoardInfo -> Pos -> Mark -> Bool) -> Mark -> IO (Either String BoardInfo)
+turn boardInfo canPut mark = do
   putStrLn $ (show mark) ++ " side turn. input x y."
   [x, y] <- inputToPos
-  return $ putMark boardInfo ((read x , read y) :: (Int, Int)) mark
+  return $ putMark boardInfo canPut ((read x , read y) :: (Int, Int)) mark
     where
       inputToPos = do
         l <- getLine

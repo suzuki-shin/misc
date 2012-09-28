@@ -31,4 +31,4 @@ draw board _ = length (marksPosOf board E) == 0
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo (win (winningPatterns boardSize)) draw O
+  roop boardInfo id (win (winningPatterns boardSize)) draw O
