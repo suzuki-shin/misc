@@ -1,4 +1,5 @@
-import MyList
+{-# OPTIONS -Wall #-}
+import MyList (isIn)
 import Board
 
 boardSize :: Int
@@ -18,6 +19,7 @@ win winPtns board mark = win' (marksPosOf board mark) winPtns
     win' [] _ = False
     win' _ [] = False
 
+draw :: Board -> Mark -> Bool
 draw board _ = length (marksPosOf board E) == 0
 
 -- | 指定したPosにMarkを置くことができるかどうかを返す
@@ -27,4 +29,4 @@ canPut boardInfo pos _ = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoa
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo id canPut (win winningPatterns) draw O
+  roop boardInfo (\bi _ _ -> bi) canPut (win winningPatterns) draw O

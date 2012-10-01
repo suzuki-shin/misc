@@ -1,3 +1,4 @@
+{-# OPTIONS -Wall #-}
 module Board (
     Pos
   , Board
@@ -9,10 +10,10 @@ module Board (
   , marksPosOf
   , markOf
   , rev
+  , renderBoard -- DEBUG
   ) where
 
 import qualified Data.Map as M
-import MyList
 
 data Mark = E | O | X deriving (Eq)
 instance Show Mark where
@@ -29,7 +30,7 @@ emptyBoard :: Int -> BoardInfo
 emptyBoard boardSize = BoardInfo boardSize $ M.fromList [((x, y) , E) | x <- [1..boardSize], y <- [1..boardSize]]
 
 roop :: BoardInfo
-        -> (BoardInfo -> BoardInfo)
+        -> (BoardInfo -> Pos -> Mark -> BoardInfo)
         -> (BoardInfo -> Pos -> Mark -> Bool)
         -> (Board -> Mark -> Bool)
         -> (Board -> Mark -> Bool)
@@ -37,19 +38,18 @@ roop :: BoardInfo
         -> IO ()
 roop boardInfo action canPut checkWin checkDraw mark = do
   renderBoard boardInfo
-  boardInfo' <- turn boardInfo canPut mark
-  let boardInfo1' = action boardInfo'
-  case checkFinish (getBoard boardInfo1') checkWin checkDraw mark of
+  boardInfo' <- turn boardInfo action canPut mark
+  case checkFinish (getBoard boardInfo') checkWin checkDraw mark of
     Just Win -> do
-      renderBoard boardInfo1'
+      renderBoard boardInfo'
       putStrLn $ show mark ++ " side win!"
     Just Draw -> do
-      renderBoard boardInfo1'
+      renderBoard boardInfo'
       putStrLn "draw"
     Just Lose -> do
-      renderBoard boardInfo1'
+      renderBoard boardInfo'
       putStrLn $ show mark ++ " side lose!"
-    Nothing -> roop boardInfo1' action canPut checkWin checkDraw (rev mark)
+    Nothing -> roop boardInfo' action canPut checkWin checkDraw (rev mark)
 
 
 -- | Posが盤上かどうかを返す
@@ -88,7 +88,7 @@ putMark boardInfo canPut pos mark
 -- >>> marksPosOf b E
 -- [(2,1),(2,2),(3,2),(3,3)]
 marksPosOf :: Board -> Mark -> [Pos]
-marksPosOf board mark = map (\(p, m) -> p) $ filter (\(p, m) -> m == mark) $ M.toList board
+marksPosOf board mark = map fst $ filter (\(_, m) -> m == mark) $ M.toList board
 
 -- | 位置を指定して、その位置にあるMarkをMaybe Markで返す
 markOf :: Board -> Pos -> Maybe Mark
@@ -96,23 +96,28 @@ markOf board pos = M.lookup pos board
 
 -- | 標準入力から座標を入力させて(正しい入力でない場合は正しくなるまで繰り返す)、その座標にマークをおき、何らかの処理をして、
 turn :: BoardInfo
+        -> (BoardInfo -> Pos -> Mark -> BoardInfo)
         -> (BoardInfo -> Pos -> Mark -> Bool)
         -> Mark
         -> IO BoardInfo
-turn boardInfo canPut mark = do
+turn boardInfo action canPut mark = do
   putStrLn $ (show mark) ++ " side turn. input x y."
-  [x, y] <- inputToPos
-  case putMark boardInfo canPut ((read x , read y) :: (Int, Int)) mark of
-    Right boardInfo' -> return $ boardInfo'
+  pos <- inputToPos
+  case putMark boardInfo canPut pos mark of
+    Right boardInfo' -> return $ action boardInfo' pos mark
     Left err -> do
       putStrLn err
-      turn boardInfo canPut mark
+      turn boardInfo action canPut mark
     where
+      inputToPos :: IO (Int, Int)
       inputToPos = do
         l <- getLine
         if length (words l) == 2
-          then return $ words l
+          then return $ list2ToTuple2 $ map read $ words l
           else inputToPos
+      list2ToTuple2 :: [Int] -> (Int, Int)
+      list2ToTuple2 [n1, n2] = (n1, n2)
+      list2ToTuple2 _ = error "list2ToTuple2 args error"
 
 -- | ボードを描画する
 renderBoard :: BoardInfo -> IO ()

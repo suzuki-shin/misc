@@ -1,3 +1,4 @@
+{-# OPTIONS -Wall #-}
 import MyList
 import Board
 -- import Debug.Trace
@@ -35,4 +36,4 @@ canPut boardInfo pos _ = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoa
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo id canPut (win (winningPatterns boardSize)) draw O
+  roop boardInfo (\bi _ _ -> bi) canPut (win (winningPatterns boardSize)) draw O

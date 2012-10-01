@@ -1,1 +1,5 @@
 [[file:Board.hs::canPut%20boardInfo%20pos%20isOnBoard%20getSize%20boardInfo%20pos%20markOf%20getBoard%20boardInfo%20pos%20Just%20E][reversiはcanPutも変更しないといかんな]]
+[[file:reversi.hs::canClip%20boardInfo%20pos%20mark%20case%20byEnemySide%20getBoard%20boardInfo%20pos%20mark%20of][canClipのアルゴリズムを変える]]
+  Directの8方向をそれぞれチェックして、相手マークから伸びているラインがあるかどうかを、そのPosとともに返すような(Maybe [Pos])関数を作って、やる
+
+
