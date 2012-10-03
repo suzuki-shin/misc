@@ -34,12 +34,13 @@ roop :: BoardInfo
         -> (BoardInfo -> Pos -> Mark -> Bool)
         -> (Board -> Mark -> Bool)
         -> (Board -> Mark -> Bool)
+        -> (Board -> Mark -> Bool)
         -> Mark
         -> IO ()
-roop boardInfo action canPut checkWin checkDraw mark = do
+roop boardInfo action canPut checkWin checkDraw checkLose mark = do
   renderBoard boardInfo
   boardInfo' <- turn boardInfo action canPut mark
-  case checkFinish (getBoard boardInfo') checkWin checkDraw mark of
+  case checkFinish (getBoard boardInfo') checkWin checkDraw checkLose mark of
     Just Win -> do
       renderBoard boardInfo'
       putStrLn $ show mark ++ " side win!"
@@ -49,7 +50,7 @@ roop boardInfo action canPut checkWin checkDraw mark = do
     Just Lose -> do
       renderBoard boardInfo'
       putStrLn $ show mark ++ " side lose!"
-    Nothing -> roop boardInfo' action canPut checkWin checkDraw (rev mark)
+    Nothing -> roop boardInfo' action canPut checkWin checkDraw checkLose (rev mark)
 
 
 -- | Posが盤上かどうかを返す
@@ -139,8 +140,14 @@ rev X = O
 rev E = E
 
 -- | ゲームが終了条件を満たしているかをチェックし、満たしていればJust結果を、満たしていなければNothingを返す
-checkFinish :: Board -> (Board -> Mark -> Bool) -> (Board -> Mark -> Bool) -> Mark -> Maybe Result
-checkFinish board win draw mark
+checkFinish :: Board
+               -> (Board -> Mark -> Bool)
+               -> (Board -> Mark -> Bool)
+               -> (Board -> Mark -> Bool)
+               -> Mark
+               -> Maybe Result
+checkFinish board win draw lose mark
   | win board mark = Just Win
   | draw board mark = Just Draw
+  | lose board mark = Just Lose
   | otherwise = Nothing
