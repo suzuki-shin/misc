@@ -2,6 +2,7 @@
 import Board
 import qualified Data.Map as M
 import Data.Maybe
+import Control.Monad
 -- import Debug.Trace
 
 boardSize :: Int
@@ -55,6 +56,9 @@ checkWin board mark = isFinished board && length (marksPosOf board mark) > lengt
 checkDraw :: Board -> Mark -> Bool
 checkDraw board mark = isFinished board && length (marksPosOf board mark) == length (marksPosOf board (rev mark))
 
+checkLose :: Board -> Mark -> Bool
+checkLose board mark = isFinished board && not (checkWin board mark) && not (checkDraw board mark)
+
 -- | 指定した位置から指定した方向の列の(Pos,Mark)のリストを返す
 -- >>> let bSize = 4 :: Int
 -- >>> let bi = BoardInfo bSize $ M.insert (3,3) O $ M.insert (3,2) X $ M.insert (2,3) X $ M.insert (2,2) O (getBoard (emptyBoard bSize))
@@ -102,33 +106,6 @@ canClip bi p m
   | filter (\d -> clippableLine m (lineOfDirection bi p d) /= []) allDirections == [] = False
   | otherwise = True
 
--- | となりに逆のマークがあるか？
--- >>> import Data.Map
--- >>> let b = (fromList [((1,1),O),((1,2),X)]) :: Board
--- >>> byEnemySide b (2,1) O
--- Just LeftDownD
--- >>> byEnemySide b (2,2) O
--- Just LeftD
--- >>> byEnemySide b (3,1) O
--- Nothing
--- >>> byEnemySide b (3,1) X
--- Nothing
--- >>> byEnemySide b (0,0) O
--- Nothing
--- >>> byEnemySide b (0,0) X
--- Just RightDownD
-byEnemySide :: Board -> Pos -> Mark -> Maybe Direct
-byEnemySide board pos mark
-  | markOf board (neighbor pos RightD) == Just (rev mark)     = Just RightD
-  | markOf board (neighbor pos LeftD) == Just (rev mark)      = Just LeftD
-  | markOf board (neighbor pos DownD) == Just (rev mark)      = Just DownD
-  | markOf board (neighbor pos UpD) == Just (rev mark)        = Just UpD
-  | markOf board (neighbor pos RightDownD) == Just (rev mark) = Just RightDownD
-  | markOf board (neighbor pos LeftDownD) == Just (rev mark)  = Just LeftDownD
-  | markOf board (neighbor pos RightUpD) == Just (rev mark)   = Just RightUpD
-  | markOf board (neighbor pos LeftUpD) == Just (rev mark)    = Just LeftUpD
-  | otherwise = Nothing
-
 -- | そこにそのマークを置けるかどうか
 -- >>> let bi = initBoard 4 [((2,2),O), ((2,3),X),((3,2),X), ((3,3),O)]
 -- >>> canPut bi (1,3) O
@@ -145,17 +122,21 @@ canPut boardInfo pos mark  =    isOnBoard (getSize boardInfo) pos
                              && (markOf (getBoard boardInfo) pos) == Just E
                              && canClip boardInfo pos mark
 
+-- | 指定した位置のmarkをひっくり返す
 turnBack :: Board -> [Pos] -> Board
 turnBack board ps = foldl (\b p -> M.insert p (revMark p) b) board ps
   where
     revMark :: Pos -> Mark
-    revMark p = case M.lookup p board of
-      Just (pos', mark') -> mark'
-      Nothing -> 
+    revMark p = rev $ fromJust $ M.lookup p board
 
 -- | markをおいたあとにboardInfoがどのように変更されるか
 action :: BoardInfo -> Pos -> Mark  -> BoardInfo
-action boardInfo _ _ = BoardInfo (getSize boardInfo) (M.insert (4, 4) X (getBoard boardInfo))
+action bi pos mark = BoardInfo bSize (turnBack b clippablePoses)
+  where
+    b = getBoard bi
+    bSize = getSize bi
+    dirs = filter (\d -> clippableLine mark (lineOfDirection bi pos d) /= []) allDirections
+    clippablePoses = join $ map (\d -> clippableLine mark (lineOfDirection bi pos d)) dirs
 
 initBoard :: Int -> [(Pos, Mark)] -> BoardInfo
 initBoard bSize posMarks = BoardInfo bSize $ foldl (\b (pos, mark) -> M.insert pos mark b) (getBoard (emptyBoard bSize)) posMarks
@@ -163,4 +144,4 @@ initBoard bSize posMarks = BoardInfo bSize $ foldl (\b (pos, mark) -> M.insert p
 main :: IO ()
 main = do
   let boardInfo = initBoard boardSize [((2,2),O), ((2,3),X),((3,2),X), ((3,3),O)]
-  roop boardInfo action canPut checkWin checkDraw O
+  roop boardInfo action canPut checkWin checkDraw checkLose O
