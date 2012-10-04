@@ -19,8 +19,11 @@ win winPtns board mark = win' (marksPosOf board mark) winPtns
     win' [] _ = False
     win' _ [] = False
 
-draw :: Board -> Mark -> Bool
+draw :: Board -> Mark -> Bool 
 draw board _ = length (marksPosOf board E) == 0
+
+lose :: Board -> Mark -> Bool
+lose _ _ = False
 
 -- | 指定したPosにMarkを置くことができるかどうかを返す
 canPut :: BoardInfo -> Pos -> Mark -> Bool
@@ -29,4 +32,4 @@ canPut boardInfo pos _ = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoa
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo (\bi _ _ -> bi) canPut (win winningPatterns) draw O
+  roop boardInfo (\bi _ _ -> bi) canPut (win winningPatterns) draw lose O

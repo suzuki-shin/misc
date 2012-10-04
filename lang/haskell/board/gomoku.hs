@@ -7,15 +7,15 @@ boardSize :: Int
 boardSize = 15
 
 winningPatterns :: Int -> [[Pos]]
-winningPatterns boardSize = (_tate boardSize) ++ (_yoko boardSize) ++ (_naname boardSize)
+winningPatterns bSize = (_tate bSize) ++ (_yoko bSize) ++ (_naname bSize)
   where
     _tate :: Int -> [[Pos]]
-    _tate boardSize = [[(x,y),(x,y+1),(x,y+2),(x,y+3),(x,y+4)] | x <- [1..(boardSize)], y <- [1..(boardSize - 4)]]
+    _tate bSize' = [[(x,y),(x,y+1),(x,y+2),(x,y+3),(x,y+4)] | x <- [1..(bSize')], y <- [1..(bSize' - 4)]]
     _yoko :: Int -> [[Pos]]
-    _yoko boardSize = [[(x,y),(x+1,y),(x+2,y),(x+3,y),(x+4,y)] | x <- [1..(boardSize - 4)], y <- [1..(boardSize)]]
+    _yoko bSize' = [[(x,y),(x+1,y),(x+2,y),(x+3,y),(x+4,y)] | x <- [1..(bSize' - 4)], y <- [1..(bSize')]]
     _naname :: Int -> [[Pos]]
-    _naname boardSize = [[(x,y),(x+1,y+1),(x+2,y+2),(x+3,y+3),(x+4,y+4)] | x <- [1..(boardSize - 4)], y <- [1..(boardSize - 4)]]
-                        ++ [[(x,y),(x+1,y-1),(x+2,y-2),(x+3,y-3),(x+4,y-4)] | x <- [1..(boardSize - 4)], y <- [5..boardSize]]
+    _naname bSize' = [[(x,y),(x+1,y+1),(x+2,y+2),(x+3,y+3),(x+4,y+4)] | x <- [1..(bSize' - 4)], y <- [1..(bSize' - 4)]]
+                        ++ [[(x,y),(x+1,y-1),(x+2,y-2),(x+3,y-3),(x+4,y-4)] | x <- [1..(bSize' - 4)], y <- [5..bSize']]
 
 win :: [[Pos]] -> Board -> Mark -> Bool
 win winPtns board mark = win' (marksPosOf board mark) winPtns
@@ -26,7 +26,11 @@ win winPtns board mark = win' (marksPosOf board mark) winPtns
     win' [] _ = False
     win' _ [] = False
 
+draw :: Board -> t -> Bool
 draw board _ = length (marksPosOf board E) == 0
+
+lose :: Board -> t -> Bool
+lose _ _ = False
 
 -- | 指定したPosにMarkを置くことができるかどうかを返す
 canPut :: BoardInfo -> Pos -> Mark -> Bool
@@ -36,4 +40,4 @@ canPut boardInfo pos _ = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoa
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo (\bi _ _ -> bi) canPut (win (winningPatterns boardSize)) draw O
+  roop boardInfo (\bi _ _ -> bi) canPut (win (winningPatterns boardSize)) draw lose O
