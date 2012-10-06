@@ -6,7 +6,7 @@ import Control.Monad
 -- import Debug.Trace
 
 boardSize :: Int
-boardSize = 4
+boardSize = 8
 
 data Direct = LeftUpD | UpD | RightUpD
             | LeftD | RightD
@@ -103,7 +103,7 @@ clippableLine mark posMarks
 -- >>> let bi = BoardInfo bSize $ M.insert (3,3) O $ M.insert (3,2) X $ M.insert (2,3) X $ M.insert (2,2) O (getBoard (emptyBoard bSize))
 canClip :: BoardInfo -> Pos -> Mark -> Bool
 canClip bi p m
-  | filter (\d -> clippableLine m (lineOfDirection bi p d) /= []) allDirections == [] = False
+  | not (any (\d -> clippableLine m (lineOfDirection bi p d) /= []) allDirections) = False
   | otherwise = True
 
 -- | そこにそのマークを置けるかどうか
@@ -143,5 +143,7 @@ initBoard bSize posMarks = BoardInfo bSize $ foldl (\b (pos, mark) -> M.insert p
 
 main :: IO ()
 main = do
-  let boardInfo = initBoard boardSize [((2,2),O), ((2,3),X),((3,2),X), ((3,3),O)]
+  let boardInfo = initBoard boardSize [((center,center),O), ((center,center+1),X),((center+1,center),X), ((center+1,center+1),O)]
   roop boardInfo action canPut checkWin checkDraw checkLose O
+    where
+      center = boardSize `div` 2
