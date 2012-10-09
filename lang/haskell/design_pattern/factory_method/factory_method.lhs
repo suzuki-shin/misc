@@ -1,10 +1,70 @@
 \begin{code}
+{-# LANGUAGE OverloadedStrings #-}
 
+import Data.List
+import Text.CSV
+import Text.XmlHtml
+import qualified Data.ByteString.Char8 as D
+import Control.Monad
+-- import Control.Monad.IO (liftIO)
+
+class ReaderF a where
+  readF :: a -> IO Document
+
+class PrinterD a where
+  display :: a -> IO ()
+
+instance PrinterD Document where
+  display doc = print "hoge"
+
+data FileReader = CSVFileReader FilePath
+                | XMLFileReader FilePath
+                deriving (Show)
+
+instance ReaderF FileReader where
+--   readF (CSVFileReader file) = do
+--     res <- parseCSVFromFile file
+--     case res of
+--       Left parseError -> error "hoge"
+--       Right csv -> return csv
+  readF (XMLFileReader file) = do
+    res <- readFile file
+    case parseXML "xml" (D.pack res) of
+--       Left parseError -> return "hoge"
+      Right xml -> return xml
+      Left err -> error err
+
+
+
+data DataPrinter = CSVPrinter Document
+                 | XMLPrinter Document
+                 deriving (Show)
+
+
+
+createReader :: FilePath -> FileReader
+createReader file
+  | ".csv" `isSuffixOf` file = CSVFileReader file
+  | ".xml" `isSuffixOf` file  = XMLFileReader file
+  | otherwise = error "hoge"
+
+
+fileName :: FilePath
 fileName = "Music.xml"
+-- fileName = "Music.csv"
+
+-- body :: FilePath -> String
+-- body file = getBody $ readF (createReader file)
+-- body file = getBody $ readF $ CSVFileReader file
 
 -- main :: IO ()
--- main = display $ readF fileName
+-- main = do
+--   c <- readF (createReader fileName)
+--   display c
 
+-- hoge = do
+--   c <- readF (createReader fileName)
+--   render c
 
 \end{code}
 
