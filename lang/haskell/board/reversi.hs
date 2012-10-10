@@ -150,13 +150,9 @@ puttableAllPoses bi m = filter (\p -> canPut bi p m) $ marksPosOf (getBoard bi) 
 enemyAi :: Mark -> BoardInfo -> IO Pos
 enemyAi m bi = do
   let ps = puttableAllPoses bi m
-  idx <- selectLogic ps
+  idx <- randomRIO (0, (length ps)-1)
   print ps
   return $ ps!!idx
-  where
-    selectLogic :: [Pos] -> IO Int
-    selectLogic ps = randomRIO (0, (length ps)-1)
---     selectLogic ps = do
 
 
 main :: IO ()

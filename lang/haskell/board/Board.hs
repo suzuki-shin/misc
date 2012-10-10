@@ -116,7 +116,7 @@ turn boardInfo action canPut mark enemyAi = do
     where
       getPos :: BoardInfo -> Mark -> IO (Int, Int)
       getPos _ O = inputToPos
-      getPos bi X = putStrLn "." >> sleep 1 >> putStrLn ".." >> sleep 1 >> enemyAi bi
+      getPos bi X = putStrLn "..." >> sleep 1 >> enemyAi bi
       getPos _ _ = error "Invalid mark"
 
       inputToPos :: IO (Int, Int)
