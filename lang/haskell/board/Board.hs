@@ -14,6 +14,7 @@ module Board (
   ) where
 
 import qualified Data.Map as M
+import System.Posix
 
 data Mark = E | O | X deriving (Eq)
 instance Show Mark where
@@ -115,7 +116,7 @@ turn boardInfo action canPut mark enemyAi = do
     where
       getPos :: BoardInfo -> Mark -> IO (Int, Int)
       getPos _ O = inputToPos
-      getPos bi X = enemyAi bi
+      getPos bi X = putStrLn "." >> sleep 1 >> putStrLn ".." >> sleep 1 >> enemyAi bi
       getPos _ _ = error "Invalid mark"
 
       inputToPos :: IO (Int, Int)

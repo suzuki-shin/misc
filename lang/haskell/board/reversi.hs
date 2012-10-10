@@ -146,13 +146,17 @@ initBoard bSize posMarks = BoardInfo bSize $ foldl (\b (pos, mark) -> M.insert p
 puttableAllPoses :: BoardInfo -> Mark -> [Pos]
 puttableAllPoses bi m = filter (\p -> canPut bi p m) $ marksPosOf (getBoard bi) E
 
+-- | 相手の打つ場所を返す
 enemyAi :: Mark -> BoardInfo -> IO Pos
 enemyAi m bi = do
   let ps = puttableAllPoses bi m
-      psLen = length ps
-  idx <- randomRIO (0, psLen-1)
+  idx <- selectLogic ps
   print ps
   return $ ps!!idx
+  where
+    selectLogic :: [Pos] -> IO Int
+    selectLogic ps = randomRIO (0, (length ps)-1)
+--     selectLogic ps = do
 
 
 main :: IO ()
