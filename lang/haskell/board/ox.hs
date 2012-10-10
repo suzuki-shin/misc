@@ -1,6 +1,8 @@
 {-# OPTIONS -Wall #-}
 import MyList (isIn)
 import Board
+import System.Random
+-- import qualified Data.Map as M
 
 boardSize :: Int
 boardSize = 3
@@ -29,7 +31,20 @@ lose _ _ = False
 canPut :: BoardInfo -> Pos -> Mark -> Bool
 canPut boardInfo pos _ = (isOnBoard (getSize boardInfo) pos) && ((markOf (getBoard boardInfo) pos) == Just E)
 
+-- | 指定したMarkを置くことのできる全Posを返す
+puttableAllPoses :: BoardInfo -> Mark -> [Pos]
+puttableAllPoses bi m = filter (\p -> canPut bi p m) $ marksPosOf (getBoard bi) E
+
+enemyAi :: Mark -> BoardInfo -> IO Pos
+enemyAi m bi = do
+  let ps = puttableAllPoses bi m
+      psLen = length ps
+  idx <- randomRIO (0, psLen-1)
+  print ps
+  return $ ps!!idx
+
+
 main :: IO ()
 main = do
   let boardInfo = emptyBoard boardSize
-  roop boardInfo (\bi _ _ -> bi) canPut (win winningPatterns) draw lose O
+  roop boardInfo (\bi _ _ -> bi) canPut (win winningPatterns) draw lose O (enemyAi X)

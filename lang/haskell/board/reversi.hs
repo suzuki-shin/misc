@@ -3,6 +3,7 @@ import Board
 import qualified Data.Map as M
 import Data.Maybe
 import Control.Monad
+import System.Random
 -- import Debug.Trace
 
 boardSize :: Int
@@ -141,9 +142,22 @@ action bi pos mark = BoardInfo bSize (turnBack b clippablePoses)
 initBoard :: Int -> [(Pos, Mark)] -> BoardInfo
 initBoard bSize posMarks = BoardInfo bSize $ foldl (\b (pos, mark) -> M.insert pos mark b) (getBoard (emptyBoard bSize)) posMarks
 
+-- | 指定したMarkを置くことのできる全Posを返す
+puttableAllPoses :: BoardInfo -> Mark -> [Pos]
+puttableAllPoses bi m = filter (\p -> canPut bi p m) $ marksPosOf (getBoard bi) E
+
+enemyAi :: Mark -> BoardInfo -> IO Pos
+enemyAi m bi = do
+  let ps = puttableAllPoses bi m
+      psLen = length ps
+  idx <- randomRIO (0, psLen-1)
+  print ps
+  return $ ps!!idx
+
+
 main :: IO ()
-main = do
-  let boardInfo = initBoard boardSize [((center,center),O), ((center,center+1),X),((center+1,center),X), ((center+1,center+1),O)]
-  roop boardInfo action canPut checkWin checkDraw checkLose O
-    where
-      center = boardSize `div` 2
+main = roop boardInfo action canPut checkWin checkDraw checkLose O (enemyAi X)
+  where
+    center = boardSize `div` 2
+    initMarkPos = [((center,center),O), ((center,center+1),X),((center+1,center),X), ((center+1,center+1),O)]
+    boardInfo = initBoard boardSize initMarkPos

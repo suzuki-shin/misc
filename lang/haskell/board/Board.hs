@@ -36,10 +36,11 @@ roop :: BoardInfo
         -> (Board -> Mark -> Bool)
         -> (Board -> Mark -> Bool)
         -> Mark
+        -> (BoardInfo -> IO (Int, Int))
         -> IO ()
-roop boardInfo action canPut checkWin checkDraw checkLose mark = do
+roop boardInfo action canPut checkWin checkDraw checkLose mark enemyAi = do
   renderBoard boardInfo
-  boardInfo' <- turn boardInfo action canPut mark
+  boardInfo' <- turn boardInfo action canPut mark enemyAi
   case checkFinish (getBoard boardInfo') checkWin checkDraw checkLose mark of
     Just Win -> do
       renderBoard boardInfo'
@@ -50,7 +51,7 @@ roop boardInfo action canPut checkWin checkDraw checkLose mark = do
     Just Lose -> do
       renderBoard boardInfo'
       putStrLn $ show mark ++ " side lose!"
-    Nothing -> roop boardInfo' action canPut checkWin checkDraw checkLose (rev mark)
+    Nothing -> roop boardInfo' action canPut checkWin checkDraw checkLose (rev mark) enemyAi
 
 
 -- | Posが盤上かどうかを返す
@@ -100,22 +101,30 @@ turn :: BoardInfo
         -> (BoardInfo -> Pos -> Mark -> BoardInfo)
         -> (BoardInfo -> Pos -> Mark -> Bool)
         -> Mark
+        -> (BoardInfo -> IO (Int, Int))
         -> IO BoardInfo
-turn boardInfo action canPut mark = do
+turn boardInfo action canPut mark enemyAi = do
   putStrLn $ (show mark) ++ " side turn. input x y."
-  pos <- inputToPos
+  pos <- getPos boardInfo mark
+  print pos
   case putMark boardInfo canPut pos mark of
     Right boardInfo' -> return $ action boardInfo' pos mark
     Left err -> do
       putStrLn err
-      turn boardInfo action canPut mark
+      turn boardInfo action canPut mark enemyAi
     where
+      getPos :: BoardInfo -> Mark -> IO (Int, Int)
+      getPos _ O = inputToPos
+      getPos bi X = enemyAi bi
+      getPos _ _ = error "Invalid mark"
+
       inputToPos :: IO (Int, Int)
       inputToPos = do
         l <- getLine
-        if length (words l) == 2
-          then return $ list2ToTuple2 $ map read $ words l
-          else inputToPos
+        case length (words l) of
+          0 -> getPos boardInfo X
+          2 -> return $ list2ToTuple2 $ map read $ words l
+          _ ->  inputToPos
       list2ToTuple2 :: [Int] -> (Int, Int)
       list2ToTuple2 [n1, n2] = (n1, n2)
       list2ToTuple2 _ = error "list2ToTuple2 args error"
