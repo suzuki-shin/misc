@@ -1,10 +1,11 @@
 \begin{code}
 
-module OrderDao where
+module OrderDao (createOrder) where
 
 import qualified Order as O
+import qualified Item as I
 
-createOrder :: Order -> IO ()
+createOrder :: O.Order -> IO ()
 createOrder order = do
   putStrLn "以下の内容で注文データを作成しました";
   putStrLn "<table border=\"1\">";
@@ -16,11 +17,21 @@ createOrder order = do
   putStrLn "<th>金額</th>";
   putStrLn "</tr>";
   printItems (O.getItems order)
+  putStrLn "</table>"
   where
     printItems :: [O.OrderItem] -> IO ()
     printItems (oi:ois) = do
+      let item = O.getItem oi
+          totalPrice = (O.getAmount oi) * (I.getPrice item)
       putStrLn "<tr>"
-      putStrLn "<td>" ++ show (O.getId (O.getItem oi)) ++ "</td>"
+      putStrLn $ "<td>" ++ show (I.getId item) ++ "</td>"
+      putStrLn $ "<td>" ++ show (I.getName item) ++ "</td>"
+      putStrLn $ "<td>" ++ show (I.getPrice item) ++ "</td>"
+      putStrLn $ "<td>" ++ show (O.getAmount oi) ++ "</td>"
+      putStrLn $ "<td>" ++ show totalPrice ++ "</td>"
+      putStrLn "</tr>"
+      printItems ois
+    printItems [] = return ()
 
 \end{code}
 

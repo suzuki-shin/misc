@@ -1,29 +1,32 @@
 \begin{code}
 
-module Dao (ItemDao(ItemDao, getItems), findById, getInstance, setAside)where
+module ItemDao (findById, getInstance, setAside)where
 
 import Data.String.Utils
 import Data.Maybe
+import qualified Data.ByteString.Char8 as B
+import qualified Item as I
 import qualified Order as O
 
-data ItemDao = ItemDao {getItems :: [O.Item]}
+data ItemDao = ItemDao {getItems :: [I.Item]}
 
-findById :: ItemDao -> Int -> Maybe O.Item
-findById itemDao itemId = listToMaybe $ filter (\i -> itemId == O.getId i) (getItems itemDao)
+findById :: ItemDao -> Int -> Maybe I.Item
+findById itemDao itemId = listToMaybe $ filter (\i -> itemId == I.getId i) (getItems itemDao)
 
-getInstance :: FilePath -> IO ItemDao
-getInstance filePath = do
-  f <- readFile filePath
-  return $ ItemDao (items $ lines f)
+getInstance :: IO ItemDao
+getInstance  = do
+  f <- B.readFile "item_data.txt"
+  return $ ItemDao (items $ tail $ B.lines f)
   where
-    items :: [String] -> [O.Item]
-    items (l:ls) = let id = (read $ take 10 l) :: Int
-                       name = take 10 (drop 20 l)
-                       price = (read $ drop 30 l) :: Int
-                   in (O.Item id name price):(items ls)
+    items :: [B.ByteString] -> [I.Item]
+    items (l:ls) = let id = (read $ strip $ B.unpack $ B.take 10 l) :: Int
+                       name = strip $ B.unpack $ B.take 10 (B.drop 20 l)
+                       price = (read $ strip $ B.unpack $ B.drop 30 l) :: Int
+                   in (I.Item id name price):(items ls)
+    items [] = []
 
 setAside :: O.OrderItem -> IO ()
-setAside orderItem = print $ (O.getName (O.getItem orderItem)) ++ "の引き当てを行いました"
+setAside orderItem = print $ (I.getName (O.getItem orderItem)) ++ "の引き当てを行いました"
 
 \end{code}
 

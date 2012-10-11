@@ -1,13 +1,21 @@
 \begin{code}
 
-module Order (Item(Item, getId, getName, getPrice), OrderItem(getItem, getAmount), Order(getItems), addItem) where
+module Order (
+  OrderItem(OrderItem, getItem, getAmount),
+  Order(getItems),
+  addItem,
+  initOrder
+  ) where
 
 import qualified Item as I
 
 data OrderItem = OrderItem {getItem :: I.Item, getAmount :: Int} deriving (Show, Eq)
-data Order = Order {getItems :: [Item]} deriving (Show, Eq)
+data Order = Order {getItems :: [OrderItem]} deriving (Show, Eq)
+initOrder :: Order
+initOrder = Order []
+
 addItem :: Order -> OrderItem -> Order
-addItem order orderItem = Order ((getItem orderItem):(getItems order))
+addItem order' orderItem = Order (orderItem:(getItems order'))
 
 \end{code}
 

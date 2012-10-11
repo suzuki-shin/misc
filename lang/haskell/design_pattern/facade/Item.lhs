@@ -1,6 +1,6 @@
 \begin{code}
 
-module Order (Item(Item, getId, getName, getPrice)) where
+module Item (Item(Item, getId, getName, getPrice)) where
 
 data Item = Item {getId :: Int, getName :: String, getPrice :: Int} deriving (Show, Eq)
 
