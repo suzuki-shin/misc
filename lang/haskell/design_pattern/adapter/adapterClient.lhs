@@ -2,7 +2,7 @@
 import FileImpl
 
 main :: IO ()
-main = display "ShowFile.class.php"
+main = display "FileImpl.lhs"
 
 \end{code}
 <?php

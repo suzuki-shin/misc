@@ -13,9 +13,7 @@ showPlain filePath = do
   putStr $ "<pre>" ++ escapeHtml contents ++ "</pre>"
 
 showHighlight :: FilePath -> IO ()
-showHighlight filePath = do
-  contents <- readFile filePath
-  highlight contents
+showHighlight filePath = readFile filePath >>= highlight
 
 \end{code}
 
