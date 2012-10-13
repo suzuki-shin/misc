@@ -1,13 +1,14 @@
 \begin{code}
 
 import Factory
+import Dao
 
 itemId = 1
 orderId = 3
 
 printItem factory = putStrLn "ID=" ++ show itemId ++ "の商品は「" ++ getName item ++ "」です<br>"
   where
-    item = findById (createItemDao factory) itemId
+    item = findItemById (createItemDao factory) itemId
 
 printOrder factory = do
   putStrLn "ID=" ++ show orderId ++ "の注文情報は次の通りです。"
@@ -15,7 +16,7 @@ printOrder factory = do
   printOrder' items
   putStrLn "</ul>"
   where
-    items = getItems $ findById (createOrderDao factory) orderId
+    items = getItems $ findOrderById (createOrderDao factory) orderId
     printOrder' (i:is) = do
       putStrLn "<li>" ++ getName (getObject i) ++ "</li>"
       printOrder' is

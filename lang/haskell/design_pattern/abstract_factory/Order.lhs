@@ -2,197 +2,20 @@
 
 module Order where
 
-data Order = Order {getId :: Int, getItems :: [Item]} deriving (Show)
+import qualified Item as I
+import qualified Data.Map as Map
+
+data Order = Order {getId :: Int, getItems :: Map.Map I.Item Int} deriving (Show)
+
+addItem :: Order -> I.Item -> Order
+addItem order item =
+  let id = getId order
+      items = getItems order
+  in case Map.lookup item (getItems order) of
+    Just amount' -> Order id $ Map.insert item (amount'+1) items
+    Nothing -> Order id $ Map.insert item 1 items
 
 \end{code}
-
-// DaoFactory.class.php
-<?php
-interface DaoFactory {
-    public function createItemDao();
-    public function createOrderDao();
-}
-?>
-
-// DbFactory.class.php
-<?php
-require_once 'DaoFactory.class.php';
-require_once 'DbItemDao.class.php';
-require_once 'DbOrderDao.class.php';
-?>
-<?php
-class DbFactory implements DaoFactory {
-    public function createItemDao() {
-        return new DbItemDao();
-    }
-    public function createOrderDao() {
-        return new DbOrderDao($this->createItemDao());
-    }
-}
-?>
-
-// MockFactory.class.php
-<?php
-require_once 'DaoFactory.class.php';
-require_once 'MockItemDao.class.php';
-require_once 'MockOrderDao.class.php';
-?>
-<?php
-class MockFactory implements DaoFactory {
-    public function createItemDao() {
-        return new MockItemDao();
-    }
-    public function createOrderDao() {
-        return new MockOrderDao();
-    }
-}
-?>
-
-// ItemDao.class.php
-<?php
-interface ItemDao {
-    public function findById($item_id);
-}
-?>
-
-// OrderDao.class.php
-<?php
-interface OrderDao {
-    public function findById($order_id);
-}
-?>
-
-// DbItemDao.class.php
-<?php
-require_once 'ItemDao.class.php';
-require_once 'Item.class.php';
-?>
-<?php
-class DbItemDao implements ItemDao {
-    private $items;
-    public function __construct() {
-        $fp = fopen('item_data.txt', 'r');
-
-        /**
-         * ヘッダ行を抜く
-         */
-        $dummy = fgets($fp, 4096);
-
-        $this->items = array();
-        while ($buffer = fgets($fp, 4096)) {
-            $item_id = trim(substr($buffer, 0, 10));
-            $item_name = trim(substr($buffer, 10));
-
-            $item = new Item($item_id, $item_name);
-            $this->items[$item->getId()] = $item;
-        }
-
-        fclose($fp);
-    }
-
-    public function findById($item_id) {
-        if (array_key_exists($item_id, $this->items)) {
-            return $this->items[$item_id];
-        } else {
-            return null;
-        }
-    }
-}
-?>
-
-// DbOrderDao.class.php
-<?php
-require_once 'OrderDao.class.php';
-require_once 'Order.class.php';
-?>
-<?php
-class DbOrderDao implements OrderDao {
-    private $orders;
-    public function __construct(ItemDao $item_dao) {
-        $fp = fopen('order_data.txt', 'r');
-
-        /**
-         * ヘッダ行を抜く
-         */
-        $dummy = fgets($fp, 4096);
-
-        $this->orders = array();
-        while ($buffer = fgets($fp, 4096)) {
-            $order_id = trim(substr($buffer, 0, 10));
-            $item_ids = trim(substr($buffer, 10));
-
-            $order = new Order($order_id);
-            foreach (split(',', $item_ids) as $item_id) {
-                $item = $item_dao->findById($item_id);
-                if (!is_null($item)) {
-                    $order->addItem($item);
-                }
-            }
-            $this->orders[$order->getId()] = $order;
-        }
-
-        fclose($fp);
-    }
-
-    public function findById($order_id) {
-        if (array_key_exists($order_id, $this->orders)) {
-            return $this->orders[$order_id];
-        } else {
-            return null;
-        }
-    }
-}
-?>
-
-// MockItemDao.class.php
-<?php
-require_once 'ItemDao.class.php';
-require_once 'Item.class.php';
-?>
-<?php
-class MockItemDao implements ItemDao {
-    public function findById($item_id) {
-        $item = new Item('99', 'ダミー商品');
-        return $item;
-    }
-}
-?>
-
-// MockOrderDao.class.php
-<?php
-require_once 'OrderDao.class.php';
-require_once 'Order.class.php';
-?>
-<?php
-class MockOrderDao implements OrderDao {
-    public function findById($order_id) {
-        $order = new Order('999');
-        $order->addItem(new Item('99', 'ダミー商品'));
-        $order->addItem(new Item('99', 'ダミー商品'));
-        $order->addItem(new Item('98', 'テスト商品'));
-
-        return $order;
-    }
-}
-?>
-
-// Item.class.php
-<?php
-class Item {
-    private $id;
-    private $name;
-    public function __construct($id, $name) {
-        $this->id = $id;
-        $this->name = $name;
-    }
-    public function getId() {
-        return $this->id;
-    }
-    public function getName() {
-        return $this->name;
-    }
-}
-?>
 
 // Order.class.php
 
@@ -220,5 +43,3 @@ class Order {
     }
 }
 ?>
-
-// 
