@@ -1,8 +1,8 @@
 \begin{code}
-import FileImpl
+import DisplaySourceFileImpl
 
 main :: IO ()
-main = display "FileImpl.lhs"
+main = display (DisplaySource "File.lhs")
 
 \end{code}
 <?php
