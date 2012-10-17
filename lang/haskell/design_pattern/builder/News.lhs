@@ -1,6 +1,6 @@
 \begin{code}
 {-# OPTIONS -Wall #-}
-module News where
+module News (Url, Date, Title, News(News, getTitle, getUrl, getDate))where
 
 type Url = String
 type Date = String

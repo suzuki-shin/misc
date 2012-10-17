@@ -3,7 +3,7 @@
 module Parsable (Parsable, parse) where
 
 class Parsable a where
-  parse :: a -> String
+  parse :: a -> [b]
 
 \end{code}
 // NewsBuilder.class.php

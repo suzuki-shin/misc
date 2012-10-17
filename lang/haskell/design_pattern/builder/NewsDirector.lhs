@@ -1,6 +1,6 @@
 \begin{code}
 {-# OPTIONS -Wall #-}
-module NewsDirector where
+module NewsDirector (getNews, NewsDirector(NewsDirector)) where
 
 import NewsBuilder
 

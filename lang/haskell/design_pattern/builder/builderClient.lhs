@@ -7,13 +7,14 @@ url :: Url
 url = "http://www.php.net/news.rss"
 
 main = do
-  news <- getNews $ NewsDirector (RssNewsBuilder url)
-  display news
+  display $ getNews $ NewsDirector (RssNewsBuilder url)
     where
       display :: [String] -> IO ()
       display (n:ns) = do
-        putStr "<li>" ++ (getDate n) ++ "<a href=" ++ (getUrl n) ++ ">" ++ (getTitle n) ++ "</a></li>"
-        display ns
+        putStrLn n
+        putStr $ "<li>" ++ (getDate n) ++ "<a href=" ++ (getUrl n) ++ ">" ++ (getTitle n) ++ "</a></li>"
+--         display ns
+--         return ()
 
 \end{code}
 // builder_client.php

@@ -1,13 +1,21 @@
 \begin{code}
 {-# OPTIONS -Wall #-}
-module NewsBuilder where
+module NewsBuilder (
+  NewsBuilder(RssNewsBuilder), parse,
+  Url, Date, Title,
+  getUrl, getDate, getTitle,
+  ) where
 
 import News
 import Parsable
 
 data NewsBuilder = RssNewsBuilder Url deriving Show
 instance Parsable NewsBuilder where
-  parse (RssNewsBuilder url) = "hoge"
+  parse (RssNewsBuilder url) = [
+      News "hoge" "hoge.com" "2012-10-10"
+    , News "hoge1" "hoge1.com" "2012-10-11"
+    , News "hoge2" "hoge2.com" "2012-10-12"
+    ]
 
 \end{code}
 
