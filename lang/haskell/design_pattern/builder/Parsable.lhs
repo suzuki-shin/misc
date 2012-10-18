@@ -2,8 +2,10 @@
 {-# OPTIONS -Wall #-}
 module Parsable (Parsable, parse) where
 
+import News
+
 class Parsable a where
-  parse :: a -> [b]
+  parse :: a -> [News]
 
 \end{code}
 // NewsBuilder.class.php

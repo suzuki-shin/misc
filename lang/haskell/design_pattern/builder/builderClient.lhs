@@ -2,6 +2,7 @@
 {-# OPTIONS -Wall #-}
 import NewsDirector
 import NewsBuilder
+import News
 
 url :: Url
 url = "http://www.php.net/news.rss"
@@ -9,12 +10,11 @@ url = "http://www.php.net/news.rss"
 main = do
   display $ getNews $ NewsDirector (RssNewsBuilder url)
     where
-      display :: [String] -> IO ()
+      display :: [News] -> IO ()
+      display [] = return ()
       display (n:ns) = do
-        putStrLn n
-        putStr $ "<li>" ++ (getDate n) ++ "<a href=" ++ (getUrl n) ++ ">" ++ (getTitle n) ++ "</a></li>"
---         display ns
---         return ()
+        putStr $ "<li>" ++ (getDate n) ++ "<a href=\"" ++ (getUrl n) ++ "\">" ++ (getTitle n) ++ "</a></li>"
+        display ns
 
 \end{code}
 // builder_client.php

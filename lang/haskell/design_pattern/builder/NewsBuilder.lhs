@@ -9,13 +9,14 @@ module NewsBuilder (
 import News
 import Parsable
 
+-- ダミー
+news1 = News "hoge" "hoge.com" "2012-10-10"
+news2 = News "hoge1" "hoge1.com" "2012-10-11"
+news3 = News "hoge2" "hoge2.com" "2012-10-12"
+
 data NewsBuilder = RssNewsBuilder Url deriving Show
 instance Parsable NewsBuilder where
-  parse (RssNewsBuilder url) = [
-      News "hoge" "hoge.com" "2012-10-10"
-    , News "hoge1" "hoge1.com" "2012-10-11"
-    , News "hoge2" "hoge2.com" "2012-10-12"
-    ]
+  parse (RssNewsBuilder url) = [ news1, news2, news3 ]
 
 \end{code}
 

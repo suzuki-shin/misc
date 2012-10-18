@@ -3,10 +3,11 @@
 module NewsDirector (getNews, NewsDirector(NewsDirector)) where
 
 import NewsBuilder
+import News
 
 data NewsDirector = NewsDirector {getBuilder :: NewsBuilder}
 
-getNews :: NewsDirector -> [String]
+getNews :: NewsDirector -> [News]
 getNews newsDirector = parse $ getBuilder newsDirector
 
 \end{code}
