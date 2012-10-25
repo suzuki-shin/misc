@@ -2,16 +2,34 @@
 import OrganizationEntry
 
 group3 :: OrganizationEntry
-group3 = add (add (add (Group [] "020" "××支店") (Employee "02001" "萩原")) (Employee "02002" "田島")) (Employee "02002" "白井")
+group3 = foldl1 add [(Group [] "020" "××支店"),
+                     (Employee "02001" "萩原"),
+                     (Employee "02002" "田島"),
+                     (Employee "02002" "白井")
+                    ]
+-- group3 = add (add (add (Group [] "020" "××支店") (Employee "02001" "萩原")) (Employee "02002" "田島")) (Employee "02002" "白井")
 
 group2 :: OrganizationEntry
 group2 = add (Group [] "110" "XX営業所") (Employee "11001" "川村")
 
 group1 :: OrganizationEntry
-group1 = add (add (add (add (add (Group [] "010" "OO支社") (Employee "01001" "支店長")) (Employee "01002" "佐々木")) (Employee "01003" "鈴木")) (Employee "01003" "吉田")) group2
+group1 = foldl1 add [(Group [] "010" "OO支社"),
+                     (Employee "01001" "支店長"),
+                     (Employee "01002" "佐々木"),
+                     (Employee "01003" "鈴木"),
+                     (Employee "01003" "吉田"),
+                     group2
+                     ]
+-- group1 = add (add (add (add (add (Group [] "010" "OO支社") (Employee "01001" "支店長")) (Employee "01002" "佐々木")) (Employee "01003" "鈴木")) (Employee "01003" "吉田")) group2
 
 rootEntry :: OrganizationEntry
-rootEntry = add (add (add (add (Group [] "001" "本社") (Employee "00101" "CEO")) (Employee "00102" "CTO")) group1) group3
+rootEntry = foldl1 add [(Group [] "001" "本社"),
+                        (Employee "00101" "CEO"),
+                        (Employee "00102" "CTO"),
+                        group1,
+                        group3
+                        ]
+-- rootEntry = add (add (add (add (Group [] "001" "本社") (Employee "00101" "CEO")) (Employee "00102" "CTO")) group1) group3
 
 
 main = dump rootEntry
