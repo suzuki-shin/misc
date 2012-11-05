@@ -6,10 +6,9 @@ data State = O | X deriving Show
 
 main :: IO ()
 main = do
-   items <- lines <$> getContents
-   printHeader items
-   printMatrix $ matrix items
-   return ()
+  items <- lines <$> getContents
+  printHeader items
+  printMatrix $ matrix items
 
 -- | 入力項目のリストに対するO、Xのマトリクスを返す
 -- >>> matrix ["hoge","fuga","foo"]
