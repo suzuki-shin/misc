@@ -22,7 +22,7 @@ matrix = mapM (\_ -> [O, X])
 -- | Matrixデータを表形式で出力する
 printMatrix :: [[State]] -> IO ()
 printMatrix (col:cols) = do
-  mapM_ putStr $ listToTsv $ map show col
+  putStr $ listToTsv $ map show col
   putStrLn ""
   printMatrix cols
 printMatrix [] = return ()
@@ -30,8 +30,11 @@ printMatrix [] = return ()
 -- | ヘッダを出力する
 printHeader :: [String] -> IO ()
 printHeader items = do
-  mapM_ putStr $ listToTsv items
+  putStr $ listToTsv items
   putStrLn ""
 
-listToTsv :: [String] -> [String]
-listToTsv items = intersperse "\t" items
+-- | 文字列のリストをタブ区切りの文字列にする
+-- >>> listToTsv ["hoge","fuga","bar"]
+-- "hoge\tfuga\tbar"
+listToTsv :: [String] -> String
+listToTsv items = intercalate "\t" items
