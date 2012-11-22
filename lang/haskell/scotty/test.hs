@@ -22,7 +22,7 @@ import Data.Aeson ((.:),(.=))
 import Control.Monad
 import Data.Maybe
 
-data User = User {getId :: Int, getName :: Text, getMail :: Text} deriving Show
+data User = User {getId :: Maybe Int, getName :: Text, getMail :: Text} deriving Show
 instance A.FromJSON User where
    parseJSON (A.Object v) = User <$> v .: "id" <*> v .: "name" <*> v .: "mail"
    parseJSON _            = mzero
@@ -54,6 +54,7 @@ insertDB sql params = do
   conn <- liftIO $ connectSqlite3 "test1.db"
   stmt <- liftIO $ prepare conn sql
   res <- execute stmt params
+  commit conn
   disconnect conn
   return res
 
@@ -66,7 +67,8 @@ main = do
     middleware logStdoutDev
 --     middleware $ staticPolicy $ addBase "static"
 
-    get "/" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" name=\"user\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
+    get "/" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
+    get "/testpost" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" name=\"name\" value=\"xxx1\"><input type=\"hidden\" name=\"mail\" value=\"yyy1@zzz.com\"><input type=\"submit\" value=\"submit\"></form></body></html>"
 
     get "/user/:id" $ withRescue $ do
       id <- param "id"
@@ -78,10 +80,19 @@ main = do
       json res
 
 --     post "/user" $ withRescue $ do
-    post "/user" $ withRescue $ do
-      userData <- jsonData :: ActionM User
-      res <- liftIO $ insertUser userData
-      return ()
+--     post "/user" $ withRescue $ do
+--       userData <- jsonData :: ActionM User
+--       res <- liftIO $ insertUser userData
+--       json res
+--       text $ (show res)::T.Text
+--       return ()
+
+    post "/usertest" $ withRescue $ do
+      name <- param "name"
+      mail <- param "mail"
+--       html $ (show $ userData)::T.Text
+      res <- liftIO $ insertUser (User Nothing name mail)
+      json res
 
 --       json userData
 --       res <- liftIO $ insertDB "insert into users (name, mail) values (?, ?)" [name, mail]
