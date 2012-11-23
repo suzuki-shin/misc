@@ -22,7 +22,7 @@ import Data.Aeson ((.:),(.=))
 import Control.Monad
 import Data.Maybe
 
-data User = User {getId :: Maybe Int, getName :: Text, getMail :: Text} deriving Show
+data User = User {getId :: Maybe Int, getName :: String, getMail :: String} deriving Show
 instance A.FromJSON User where
    parseJSON (A.Object v) = User <$> v .: "id" <*> v .: "name" <*> v .: "mail"
    parseJSON _            = mzero
@@ -59,7 +59,7 @@ insertDB sql params = do
   return res
 
 insertUser :: User -> IO Integer
-insertUser (User _ name mail) = insertDB "insert into users (name, email) values (?, ?)" [toSql name, toSql mail]
+insertUser (User _ name mail) = insertDB "insert into users (name, mail) values (?, ?)" [toSql name, toSql mail]
 
 main = do
     scotty 3000 $ do
@@ -68,7 +68,7 @@ main = do
 --     middleware $ staticPolicy $ addBase "static"
 
     get "/" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
-    get "/testpost" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" name=\"name\" value=\"xxx1\"><input type=\"hidden\" name=\"mail\" value=\"yyy1@zzz.com\"><input type=\"submit\" value=\"submit\"></form></body></html>"
+    get "/testpost" $ html "<html><head></head><body><form action=\"/usertest\" method=\"post\"><input type=\"hidden\" name=\"name\" value=\"xxx1\"><input type=\"hidden\" name=\"mail\" value=\"yyy1@zzz.com\"><input type=\"submit\" value=\"submit\"></form></body></html>"
 
     get "/user/:id" $ withRescue $ do
       id <- param "id"
