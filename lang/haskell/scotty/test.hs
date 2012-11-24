@@ -22,12 +22,12 @@ import Data.Aeson ((.:),(.=))
 import Control.Monad
 import Data.Maybe
 
-data User = User {getId :: Maybe Int, getName :: String, getMail :: String} deriving Show
+data User = User {getName :: String, getMail :: String} deriving Show
 instance A.FromJSON User where
-   parseJSON (A.Object v) = User <$> v .: "id" <*> v .: "name" <*> v .: "mail"
+   parseJSON (A.Object v) = User <$> v .: "name" <*> v .: "mail"
    parseJSON _            = mzero
 instance A.ToJSON User where
-   toJSON (User id name mail) = A.object ["id" .= id, "name" .= name, "mail" .= mail]
+   toJSON (User name mail) = A.object ["name" .= name, "mail" .= mail]
 
 
 withRescue :: ActionM () -> ActionM ()
@@ -59,7 +59,7 @@ insertDB sql params = do
   return res
 
 insertUser :: User -> IO Integer
-insertUser (User _ name mail) = insertDB "insert into users (name, mail) values (?, ?)" [toSql name, toSql mail]
+insertUser (User name mail) = insertDB "insert into users (name, mail) values (?, ?)" [toSql name, toSql mail]
 
 main = do
     scotty 3000 $ do
@@ -67,16 +67,16 @@ main = do
     middleware logStdoutDev
 --     middleware $ staticPolicy $ addBase "static"
 
-    get "/" $ html "<html><head></head><body><form action=\"/user\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
+    get "/" $ html "<html><head></head><body><h1>test</h1><script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script><script type=\"text/javascript\">$.ajax({url:'http://localhost:3000/jsontest',type:'POST',dataType:'json',data:JSON.stringify({name:'aauuu',mail:'bbbbbb'}),success: function(){console.log('suc');},error: function(){console.log('err');}});</script></body></html>" --"<html><head></head><body><form action=\"/jsontest\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
     get "/testpost" $ html "<html><head></head><body><form action=\"/usertest\" method=\"post\"><input type=\"hidden\" name=\"name\" value=\"xxx1\"><input type=\"hidden\" name=\"mail\" value=\"yyy1@zzz.com\"><input type=\"submit\" value=\"submit\"></form></body></html>"
 
-    get "/user/:id" $ withRescue $ do
-      id <- param "id"
-      res <- liftIO $ selectFetchDB "select id ,desc from test where id = ? order by id, desc" [toSql (id::String)]
+    get "/user/:mail" $ withRescue $ do
+      mail <- param "mail"
+      res <- liftIO $ selectFetchDB "select * from users where mail = ?" [toSql (mail::String)]
       json $ listToMaybe res
 
     get "/users" $ withRescue $ do
-      res <- liftIO $ selectFetchDB "select id ,desc from test order by id, desc" []
+      res <- liftIO $ selectFetchDB "select * from users" []
       json res
 
 --     post "/user" $ withRescue $ do
@@ -91,8 +91,24 @@ main = do
       name <- param "name"
       mail <- param "mail"
 --       html $ (show $ userData)::T.Text
-      res <- liftIO $ insertUser (User Nothing name mail)
+      res <- liftIO $ insertUser (User name mail)
       json res
+
+--     get "/jsontest" $ withRescue $ do
+    post "/jsontest" $ withRescue $ do
+      userData <- jsonData :: ActionM User
+--       liftIO $ print userData
+      res' <- liftIO $ insertUser userData
+      res <- liftIO $ insertUser (User "KUSUKU" "HOGE@FUGA")
+      json res
+
+-- Just (User {getName = "aauuu", getMail = "bbbbbb"})
+-- *Main> A.decode "{\"name\":\"aauuu\",\"mail\":\"bbbbbb\"}" :: Maybe User
+
+
+--       html $ (show $ userData)::T.Text
+--       res <- liftIO $ insertUser (User Nothing name mail)
+--       json res
 
 --       json userData
 --       res <- liftIO $ insertDB "insert into users (name, mail) values (?, ?)" [name, mail]
