@@ -21,7 +21,7 @@ import qualified Data.Aeson as A
 import Data.Aeson ((.:),(.=))
 import Control.Monad
 import Data.Maybe
-import Model
+import Model.Base
 import Model.User
 import Model.Item
 
@@ -73,7 +73,7 @@ main = do
     middleware logStdoutDev
 --     middleware $ staticPolicy $ addBase "static"
 
-    get "/" $ html "<html><head></head><body><h1>test</h1><script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script><script type=\"text/javascript\">$.ajax({url:'http://localhost:3000/jsontest',type:'POST',dataType:'json',data:JSON.stringify({name:'aauuu',mail:'bbbbbb'}),success: function(){console.log('suc');},error: function(){console.log('err');}});</script></body></html>" --"<html><head></head><body><form action=\"/jsontest\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
+    get "/" $ html "<html><head></head><body><h1>test</h1><script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script><script type=\"text/javascript\">$.ajax({url:'http://localhost:3000/jsontest',type:'POST',dataType:'json',data:JSON.stringify({id: '', name:'aauuu',mail:'bbbbbb'}),success: function(){console.log('suc');},error: function(){console.log('err');}});</script></body></html>" --"<html><head></head><body><form action=\"/jsontest\" method=\"post\"><input type=\"hidden\" value=\"{'name':'xxx','mail':'yyy@zzz.com'}\"><input type=\"submit\" value=\"submit\"></form></body></html>"
     get "/testpost" $ html "<html><head></head><body><form action=\"/usertest\" method=\"post\"><input type=\"hidden\" name=\"name\" value=\"xxx1\"><input type=\"hidden\" name=\"mail\" value=\"yyy1@zzz.com\"><input type=\"submit\" value=\"submit\"></form></body></html>"
 
     get "/user/:mail" $ withRescue $ do
@@ -88,11 +88,18 @@ main = do
     post "/usertest" $ withRescue $ do
       name <- param "name"
       mail <- param "mail"
-      res <- liftIO $ insertUser (User name mail)
+      res <- liftIO $ insertUser (User Nothing name mail)
       json res
 
     post "/jsontest" $ withRescue $ do
       userData <- jsonData :: ActionM User
       res' <- liftIO $ insertUser userData
-      res <- liftIO $ insertUser (User "KUSUKU" "HOGE@FUGA")
+      res <- liftIO $ insertUser (User Nothing "KUSUKU" "HOGE@FUGA")
       json res
+
+    post "/itemtest" $ withRescue $ do
+      itemData <- jsonData :: ActionM Item
+      res <- liftIO $ insertItem itemData
+      json res
+
+    get "/item" $ html "<html><head></head><body><h1>test</h1><script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script><script type=\"text/javascript\">$.ajax({url:'http://localhost:3000/itemtest',type:'POST',dataType:'json',data:JSON.stringify({name:'jump',unitName:'times', userId:1}),success: function(){console.log('suc');},error: function(){console.log('err');}});</script></body></html>" --"<html><head></head><body><form action=\"/jsontes

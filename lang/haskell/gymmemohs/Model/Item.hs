@@ -2,36 +2,28 @@
 {-# LANGUAGE GADTs, FlexibleContexts, EmptyDataDecls #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Item where
+module Model.Item where
+
+import Control.Monad
+import Control.Monad.Trans
+import Control.Applicative
+import qualified Data.Aeson as A
+import Data.Aeson ((.:),(.=))
+import Database.HDBC
 
 import Model.Base
-import Model.User
+import Model.User (User)
 
-data Item = ITem {getName :: String, getUnitName :: String, getUser :: User} deriving Show
+data Item = Item {getName :: String, getUnitName :: String, getUserId :: Int} deriving Show
 instance A.FromJSON Item where
-   parseJSON (A.Object v) = Item <$> v .: "name" <*> v .: "unitName" <*> .: "user"
+   parseJSON (A.Object v) = Item <$> v .: "name" <*> v .: "unitName" <*> v .: "user"
    parseJSON _            = mzero
 instance A.ToJSON Item where
-   toJSON (Item name unitName user) = A.object ["name" .= name, "unitName" .= unitName, "user" .= user]
+   toJSON (Item name unitName userId) = A.object ["name" .= name, "unitName" .= unitName, "userId" .= userId]
 
-selectFetchDB :: String -> [SqlValue] -> IO [[Maybe Text]]
-selectFetchDB sql params = do
-  conn <- liftIO $ connectDB
-  stmt <- liftIO $ prepare conn sql
-  execute stmt params
-  res <- tFetchAllRows stmt
-  print res
-  disconnect conn
-  return res
-
-insertDB :: String -> [SqlValue] -> IO Integer
-insertDB sql params = do
-  conn <- liftIO $ connectDB
-  stmt <- liftIO $ prepare conn sql
-  res <- execute stmt params
-  commit conn
-  disconnect conn
-  return res
+createTableItem = executeDB "create table if not exists items (id integer primary key autoincrement, name varchar(128) not null, unitName varchar(128) not null, userId integer not null)" []
 
 insertItem :: Item -> IO Integer
-insertItem (Item name mail) = insertDB "insert into items (name, mail) values (?, ?)" [toSql name, toSql mail]
+insertItem (Item name unitName userId) = do
+  createTableItem
+  executeDB "insert into items (name, unitName, userId) values (?, ?, ?)" [toSql name, toSql unitName, toSql userId]

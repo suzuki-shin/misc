@@ -2,11 +2,10 @@
 {-# LANGUAGE GADTs, FlexibleContexts, EmptyDataDecls #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Base where
+module Model.Base (selectFetchDB, executeDB) where
 
 -- import Network.Wai.Middleware.RequestLogger -- install wai-extra if you don't have this
 import Control.Monad.Trans
-import Control.Applicative
 -- import Data.Monoid
 -- import System.Random (newStdGen, randomRs)
 -- import Network.HTTP.Types (status302)
@@ -17,11 +16,9 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text (Text)
 import Database.HDBC
 import Database.HDBC.Sqlite3
-import qualified Data.Aeson as A
-import Data.Aeson ((.:),(.=))
 import Control.Monad
 import Data.Maybe
-
+import Data.Convertible.Base
 
 dbname :: String
 dbname = "test1.db"
@@ -44,3 +41,10 @@ selectFetchDB sql params = do
   disconnect conn
   return res
 
+executeDB sql params = do
+  conn <- liftIO $ connectSqlite3 "test1.db"
+  stmt <- liftIO $ prepare conn sql
+  res <- execute stmt params
+  commit conn
+  disconnect conn
+  return res
