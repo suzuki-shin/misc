@@ -11,6 +11,10 @@ Main.main = function() {
 		Item.create(ws,tx,function(tx1,res) {
 			console.log("exex suc");
 		});
+		Record.create(ws,tx,function(tx1,res) {
+			console.log("exex suc");
+			Table.insert(ws,tx1,new Record(1,30));
+		});
 		var item = new Item("Dash","times");
 		Table.insert(ws,tx,item);
 		Table.insert(ws,tx,new Item("AAA","bbb"));
@@ -21,13 +25,13 @@ Main.main = function() {
 }
 var Table = function() { }
 Table.__name__ = true;
-Table.insert = function(websql,tx,table,success,error) {
-	websql.executeSql(tx,table.insertSql(),table.insertParams(),success != null?success:function(tx1,res) {
-	},error != null?error:function(tx1,res) {
+Table.insert = function(websql,tx,table,suc,err) {
+	websql.executeSql(tx,table.insertSql(),table.insertParams(),suc != null?suc:function(tx1,res) {
+	},err != null?err:function(tx1,res) {
 	});
 }
-Table.select = function(websql,tx,query,params,success,error) {
-	websql.executeSql(tx,query,params,success,error != null?error:function(tx1,res) {
+Table.select = function(websql,tx,query,params,suc,err) {
+	websql.executeSql(tx,query,params,suc,err != null?err:function(tx1,res) {
 	});
 }
 Table.prototype = {
@@ -52,9 +56,9 @@ var Item = function(name,attr,isSaved,isActive,orderNum) {
 	this.orderNum = orderNum;
 };
 Item.__name__ = true;
-Item.create = function(websql,tx,success,error) {
-	websql.executeSql(tx,"CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, attr TEXT, is_saved INT DEFAULT 0 NOT NULL, ordernum INT DEFAULT 0, is_active INTEGER DEFAULT 1)",[],success != null?success:function(tx1,res) {
-	},error != null?error:function(tx1,res) {
+Item.create = function(websql,tx,suc,err) {
+	websql.executeSql(tx,"CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, attr TEXT, is_saved INT DEFAULT 0 NOT NULL, ordernum INT DEFAULT 0, is_active INTEGER DEFAULT 1)",[],suc != null?suc:function(tx1,res) {
+	},err != null?err:function(tx1,res) {
 	});
 }
 Item.__super__ = Table;
@@ -67,6 +71,32 @@ Item.prototype = $extend(Table.prototype,{
 	}
 	,insertSql: function() {
 		return "INSERT INTO items (name, attr, ordernum) VALUES (?, ?, ?)";
+	}
+});
+var Record = function(itemId,value,isSaved,isActive) {
+	if(isActive == null) isActive = true;
+	if(isSaved == null) isSaved = false;
+	this.itemId = itemId;
+	this.value = value;
+	this.isSaved = isSaved;
+	this.isActive = isActive;
+};
+Record.__name__ = true;
+Record.create = function(websql,tx,suc,err) {
+	websql.executeSql(tx,"CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, itemId INTEGER NOT NULL, value INTEGER NOT NULL, is_saved INT DEFAULT 0 NOT NULL, is_active INTEGER DEFAULT 1)",[],suc != null?suc:function(tx1,res) {
+	},err != null?err:function(tx1,res) {
+	});
+}
+Record.__super__ = Table;
+Record.prototype = $extend(Table.prototype,{
+	selectSql: function(cond) {
+		return "SELECT * FROM records WHERE " + cond;
+	}
+	,insertParams: function() {
+		return [Std.string(this.itemId),Std.string(this.value)];
+	}
+	,insertSql: function() {
+		return "INSERT INTO records (itemId, value) VALUES (?, ?)";
 	}
 });
 var Std = function() { }
