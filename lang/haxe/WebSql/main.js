@@ -15,10 +15,8 @@ Main.main = function() {
 			console.log("exex suc");
 			Table.insert(ws,tx1,new Record(1,30));
 		});
-		var item = new Item("Dash","times");
-		Table.insert(ws,tx,item);
 		Table.insert(ws,tx,new Item("AAA","bbb"));
-		Table.select(ws,tx,"select * from items",[],function(tx1,res) {
+		Table.select(ws,tx,"SELECT * FROM items ORDER BY id DESC",[],function(tx1,res) {
 			console.log(res.rows.item(0));
 		});
 	});
