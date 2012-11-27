@@ -4,16 +4,15 @@ extern class WebSql {
     // wrapping js libs
     //
     public function new(dbname:String):Void;
-    public function transaction(callb:Dynamic,
-                                errorCallb:Dynamic,
-                                successCallb:Dynamic):Void;
-    public function executeSql(tx:Dynamic,
+    public function transaction(callb:Tx -> Void,
+                                ?errorCallb:Tx -> Res -> Void,
+                                ?successCallb:Tx -> Res -> Void):Void;
+    public function executeSql(tx:Tx,
                                sql:String,
                                params:Array<String>,
-                               successCallb:Dynamic,
-                               errorCallb:Dynamic):String;
+                               ?successCallb:Tx -> Res -> Void,
+                               ?errorCallb:Tx -> Res -> Void):Void;
 }
 
-// class Callback {
-//     public function new(tx: Dynamic, res:Dynamic):
-// }
+class Tx {} // トランザクションオブジェクト型
+class Res {} // レスポンスオブジェクト型
