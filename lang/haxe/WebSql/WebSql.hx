@@ -15,4 +15,6 @@ extern class WebSql {
 }
 
 class Tx {} // トランザクションオブジェクト型
-class Res {} // レスポンスオブジェクト型
+class Res { // レスポンスオブジェクト型
+    public var rows:Dynamic;
+}

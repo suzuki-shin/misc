@@ -11,7 +11,6 @@ class Main {
                 Table.insert(ws, tx, item);
                 Table.insert(ws, tx, new Item("AAA", "bbb")); // これもOK
                 Table.select(ws, tx, "select * from items", [], function(tx,res){trace(res.rows.item(0));});
-                Table.select(ws, tx, "select * from items", [], function(tx,res){trace(res.rows.item(0));});
             });
     }
 }

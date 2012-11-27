@@ -17,8 +17,8 @@ class Table {
     static public function insert(websql:WebSql,
                                   tx:Tx,
                                   table:Table,
-                                  ?success:Tx -> Dynamic -> Void,
-                                  ?error:Tx -> Dynamic -> Void
+                                  ?success:Tx -> Res -> Void,
+                                  ?error:Tx -> Res -> Void
     ):Void {
         websql.executeSql(
             tx,
@@ -35,8 +35,8 @@ class Table {
                                   tx:Tx,
                                   query:String,
                                   params:Array<String>,
-                                  success:Tx -> Dynamic -> Void,
-                                  ?error:Tx -> Dynamic -> Void
+                                  success:Tx -> Res -> Void,
+                                  ?error:Tx -> Res -> Void
     ):Void {
         websql.executeSql(
             tx,
@@ -67,8 +67,8 @@ class Item extends Table {
 
     static public function create(websql:WebSql,
                                   tx:Tx,
-                                  ?success:Tx -> Dynamic -> Void,
-                                  ?error:Tx -> Dynamic -> Void
+                                  ?success:Tx -> Res -> Void,
+                                  ?error:Tx -> Res -> Void
     ):Void {
         websql.executeSql(
             tx,
