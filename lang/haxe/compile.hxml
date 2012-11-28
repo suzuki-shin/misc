@@ -1,3 +1,4 @@
 -js main.js
 -main Main
+-cp WebSql
 --dead-code-elimination
