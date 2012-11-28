@@ -22,7 +22,7 @@ class Main {
                         Table.select(
                             ws, tx,
                             "SELECT * FROM items ORDER BY id DESC", [],
-                            function(tx,res){ul(Item.fromObj, new JQuery("#itemList"), tx, res);});
+                            function(tx,res){ulOfItem(new JQuery("#itemList"), tx, res);});
 //                         Table.select(ws, tx, "SELECT * FROM items ORDER BY id DESC", [], function(tx,res){trace(res.rows.item(0));});
                     });});
 
@@ -48,17 +48,15 @@ class Main {
     }
 
 //     static function ul(cls:Class<Table>, jq:JQuery, tx:Tx, res:Res):Void {
-    static function ul(fromObj:Dynamic -> Table, jq:JQuery, tx:Tx, res:Res):Void {
+    static function ulOfItem(jq:JQuery, tx:Tx, res:Res):Void {
         trace(jq);
-        var lis = Lambda.map(Util.resToList(res), fromObj);
-        trace(lis);
-//         var it = Item.fromObj(lis[0]);
-//         trace(it);
-//         trace(Type.typeof(it));
-//         cast(l[0], Item);
-//         for (a in l[0]) {trace(a);} // You can't iterate on a Dynamic value, please specify Iterator or Iterable
-//         var f = Type.getInstanceFields(Item);
-//         trace(f);
-        jq.empty().append("hogexxx");
+        var itemList = Lambda.map(Util.resToList(res), Item.fromObj);
+        trace(itemList);
+        var str = "<ul>";
+        for (it in itemList) {
+            str += "<li>["+ it.id + "] " + it.name + ":" + it.attr + "</li>";
+        }
+        str += "</ul>";
+        jq.empty().append(str);
     }
 }

@@ -4,11 +4,11 @@ import Table;
 import Util;
 
 class Item extends Table {
-    var name: String;
-    var attr: String;
-    var is_saved: Bool;
-    var is_active: Bool;
-    var ordernum: Int;
+    public var name: String;
+    public var attr: String;
+    public var is_saved: Bool;
+    public var is_active: Bool;
+    public var ordernum: Int;
 
     public function new(id: Maybe<Int>, name:String, attr:String, is_saved = false, is_active = true, ordernum = 0):Void {
         this.id        = id;
@@ -19,7 +19,7 @@ class Item extends Table {
         this.ordernum  = ordernum;
     }
 
-    static public function fromObj(obj:Dynamic):Table {
+    static public function fromObj(obj:Dynamic):Item {
         var id = if (obj.id != null) Just(Std.parseInt(obj.id)) else Nothing;
         return new Item(id, obj.name, obj.attr, obj.is_saved, obj.is_active, obj.ordernum);
     }
@@ -47,10 +47,10 @@ class Item extends Table {
 }
 
 class Record extends Table {
-    var item_id: Int;
-    var value: Int;
-    var is_saved: Bool;
-    var is_active: Bool;
+    public var item_id: Int;
+    public var value: Int;
+    public var is_saved: Bool;
+    public var is_active: Bool;
 
     public function new(id:Maybe<Int>, item_id:Int, value:Int, is_saved = false, is_active = true):Void {
         this.id        = id;

@@ -10,7 +10,7 @@ class Column {
 }
 
 class Table {
-    var id: Maybe<Int>;
+    public var id: Maybe<Int>;
 
 //     static public function fromObj(obj:Dynamic):Dynamic {
 // //         var id = if (obj.id != null) Just(Std.parseInt(obj.id)) else Nothing;
