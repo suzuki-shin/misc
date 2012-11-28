@@ -1,20 +1,27 @@
 package;
 import WebSql;
 import Table;
+import Util;
 
 class Item extends Table {
     var name: String;
     var attr: String;
-    var isSaved: Bool;
-    var isActive: Bool;
-    var orderNum: Int;
+    var is_saved: Bool;
+    var is_active: Bool;
+    var ordernum: Int;
 
-    public function new(name:String, attr:String, isSaved = false, isActive = true, orderNum = 0):Void {
-        this.name     = name;
-        this.attr     = attr;
-        this.isSaved  = isSaved;
-        this.isActive = isActive;
-        this.orderNum = orderNum;
+    public function new(id: Maybe<Int>, name:String, attr:String, is_saved = false, is_active = true, ordernum = 0):Void {
+        this.id        = id;
+        this.name      = name;
+        this.attr      = attr;
+        this.is_saved  = is_saved;
+        this.is_active = is_active;
+        this.ordernum  = ordernum;
+    }
+
+    static public function fromObj(obj:Dynamic):Table {
+        var id = if (obj.id != null) Just(Std.parseInt(obj.id)) else Nothing;
+        return new Item(id, obj.name, obj.attr, obj.is_saved, obj.is_active, obj.ordernum);
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
@@ -31,7 +38,7 @@ class Item extends Table {
         return "INSERT INTO items (name, attr, ordernum) VALUES (?, ?, ?)";
     }
     override function insertParams():Array<String> {
-        return [this.name, this.attr, Std.string(this.orderNum)];
+        return [this.name, this.attr, Std.string(this.ordernum)];
     }
 
     override function selectSql(cond:String):String {
@@ -40,22 +47,23 @@ class Item extends Table {
 }
 
 class Record extends Table {
-    var itemId: Int;
+    var item_id: Int;
     var value: Int;
-    var isSaved: Bool;
-    var isActive: Bool;
+    var is_saved: Bool;
+    var is_active: Bool;
 
-    public function new(itemId:Int, value:Int, isSaved = false, isActive = true):Void {
-        this.itemId   = itemId;
-        this.value    = value;
-        this.isSaved  = isSaved;
-        this.isActive = isActive;
+    public function new(id:Maybe<Int>, item_id:Int, value:Int, is_saved = false, is_active = true):Void {
+        this.id        = id;
+        this.item_id   = item_id;
+        this.value     = value;
+        this.is_saved  = is_saved;
+        this.is_active = is_active;
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
         websql.executeSql(
             tx,
-            "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, itemId INTEGER NOT NULL, value INTEGER NOT NULL, is_saved INT DEFAULT 0 NOT NULL, is_active INTEGER DEFAULT 1)",
+            "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, item_id INTEGER NOT NULL, value INTEGER NOT NULL, is_saved INT DEFAULT 0 NOT NULL, is_active INTEGER DEFAULT 1)",
             [],
             if (suc != null) suc else function(tx,res) {},
             if (err != null) err else function(tx,res) {}
@@ -63,10 +71,10 @@ class Record extends Table {
     }
 
     override function insertSql():String {
-        return "INSERT INTO records (itemId, value) VALUES (?, ?)";
+        return "INSERT INTO records (item_id, value) VALUES (?, ?)";
     }
     override function insertParams():Array<String> {
-        return [Std.string(this.itemId), Std.string(this.value)];
+        return [Std.string(this.item_id), Std.string(this.value)];
     }
 
     override function selectSql(cond:String):String {
