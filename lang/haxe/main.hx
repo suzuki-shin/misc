@@ -24,7 +24,6 @@ class Main {
 
     static function setUp(ws:WebSql):Void {
         U.notify('setUp...');
-
         ws.transaction(
             function(tx){
                 Item.create(ws, tx);
@@ -62,22 +61,30 @@ class Main {
     // #insertRecordをクリックしたときに、#recordItemId、#recordValueのRecordをDBにINSERTする
     // 成功時には#recordNameと#recordAttrのフォームの値をクリアする
     static function insertRecordEvent(ws:WebSql):Void {
-        var recItemIdJQ = new JQuery("#recordItemId");
-        var recValueJQ = new JQuery("#recordValue");
+//         var recItemId:String = new JQuery("#itemForm");
+//         var recValueJQ = new JQuery("#recordValue");
 
-        new JQuery("#insertRecord").click(function(ev){
+        new JQuery("#itemList input").blur(function(ev){
                 trace('insertRecord');
-                if (recItemIdJQ.attr('value') == '' || recValueJQ.attr('value') == '') { return; }
+                trace(ev.target);
+                var id = ev.target.id;
+                var item_id = id.substr(8,4);
+                var recValueJQ = new JQuery(id);
+                trace(id);
+                trace(item_id);
+                trace(recValueJQ);
+
+                if (item_id == '' || recValueJQ.attr('value') == '') { return; }
                 ws.transaction(
                     function(tx){
                         Table.insert(
                             ws, tx,
                             new Record({id : Nothing,
-                                        item_id : Std.parseInt(recItemIdJQ.attr('value')),
+                                        item_id : Std.parseInt(item_id),
                                         value : Std.parseInt(recValueJQ.attr('value')),
                                         is_active :  true,
                                         is_saved :  false}),
-                            function(tx,res){ recItemIdJQ.attr('value',''); recValueJQ.attr('value',''); },
+                            function(tx,res){ recValueJQ.attr('value',''); },
                             function(tx,res){ U.notify('INSERT ERROR'); }
                         );});});
     }
@@ -103,7 +110,7 @@ class Main {
         var itemList:List<Item> = Lambda.map(Util.resToList(res), Item.fromJSON);
         var str = "<table>";
         for (it in itemList) {
-            str += it.getTrTagStr();
+            str += it.getRecordFormTagStr();
         }
         str += "</table>";
         jq.empty().append(str);

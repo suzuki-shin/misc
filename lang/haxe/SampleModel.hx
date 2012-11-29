@@ -41,8 +41,10 @@ class Item extends Table {
         return [this.columns.name, this.columns.attr, Std.string(this.columns.ordernum)];
     }
 
-    public function getTrTagStr():String {
-        return "<tr><td>"+ this.columns.id + "</td><td>" + this.columns.name + "</td><td>" + this.columns.attr + "</td></tr>";
+    public function getRecordFormTagStr():String {
+        return "<tr><td>" + this.columns.name +
+            "</td><td>" + this.columns.attr +
+            '</td><td><input class="insertRecord" id=itemForm' + U.iMaybe(0, this.columns.id) + '" /></td></tr>';
     }
 
     public function getLiTagStr():String {
