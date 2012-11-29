@@ -4,24 +4,24 @@ import Table;
 import Util;
 
 class Item extends Table {
-    public var name: String;
-    public var attr: String;
-    public var is_saved: Bool;
-    public var is_active: Bool;
-    public var ordernum: Int;
+    public var __name: String;
+    public var __attr: String;
+    public var __is_saved: Bool;
+    public var __is_active: Bool;
+    public var __ordernum: Int;
 
     public function new(id: Maybe<Int>, name:String, attr:String, is_saved = false, is_active = true, ordernum = 0):Void {
-        this.id        = id;
-        this.name      = name;
-        this.attr      = attr;
-        this.is_saved  = is_saved;
-        this.is_active = is_active;
-        this.ordernum  = ordernum;
+        this.__id        = id;
+        this.__name      = name;
+        this.__attr      = attr;
+        this.__is_saved  = is_saved;
+        this.__is_active = is_active;
+        this.__ordernum  = ordernum;
     }
 
-    static public function fromObj(obj:Dynamic):Item {
-        var id = if (obj.id != null) Just(Std.parseInt(obj.id)) else Nothing;
-        return new Item(id, obj.name, obj.attr, obj.is_saved, obj.is_active, obj.ordernum);
+    static public function fromJSON(json:Dynamic):Item {
+        var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
+        return new Item(id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum);
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
@@ -38,26 +38,22 @@ class Item extends Table {
         return "INSERT INTO items (name, attr, ordernum) VALUES (?, ?, ?)";
     }
     override function insertParams():Array<String> {
-        return [this.name, this.attr, Std.string(this.ordernum)];
-    }
-
-    override function selectSql(cond:String):String {
-        return "SELECT * FROM items WHERE " + cond;
+        return [this.__name, this.__attr, Std.string(this.__ordernum)];
     }
 }
 
 class Record extends Table {
-    public var item_id: Int;
-    public var value: Int;
-    public var is_saved: Bool;
-    public var is_active: Bool;
+    public var __item_id: Int;
+    public var __value: Int;
+    public var __is_saved: Bool;
+    public var __is_active: Bool;
 
     public function new(id:Maybe<Int>, item_id:Int, value:Int, is_saved = false, is_active = true):Void {
-        this.id        = id;
-        this.item_id   = item_id;
-        this.value     = value;
-        this.is_saved  = is_saved;
-        this.is_active = is_active;
+        this.__id        = id;
+        this.__item_id   = item_id;
+        this.__value     = value;
+        this.__is_saved  = is_saved;
+        this.__is_active = is_active;
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
@@ -74,10 +70,14 @@ class Record extends Table {
         return "INSERT INTO records (item_id, value) VALUES (?, ?)";
     }
     override function insertParams():Array<String> {
-        return [Std.string(this.item_id), Std.string(this.value)];
+        return [Std.string(this.__item_id), Std.string(this.__value)];
     }
 
-    override function selectSql(cond:String):String {
-        return "SELECT * FROM records WHERE " + cond;
-    }
+//     static public function fromJSON(cls:Class<Table>, json:Dynamic):Table {
+//         var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
+// //         trace(json);
+// //         trace(cls);
+// //         trace(Type.getInstanceFields(cls));
+//         return Type.createInstance(cls, [id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum]);
+//     }
 }

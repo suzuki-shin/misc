@@ -4,29 +4,24 @@ import Util;
 import WebSql;
 import js.JQuery;
 
-class Column {
-    var name: String;
-//     var type: 
-}
+// class Column {
+//     var name: String;
+// //     var type: 
+// }
 
 class Table {
-    public var id: Maybe<Int>;
-
-//     static public function fromObj(obj:Dynamic):Dynamic {
-// //         var id = if (obj.id != null) Just(Std.parseInt(obj.id)) else Nothing;
-// //         return new Item(id, obj.name, obj.attr, obj.is_saved, obj.is_active, obj.ordernum);
-//     }
+    public var __id: Maybe<Int>;
 
     static public function insert( websql:WebSql,
                                    tx:Tx,
-                                   table:Table,
+                                   obj:Table,
                                    ?suc:Tx -> Res -> Void,
                                    ?err:Tx -> Res -> Void
     ):Void {
         websql.executeSql(
             tx,
-            table.insertSql(),
-            table.insertParams(),
+            obj.insertSql(),
+            obj.insertParams(),
             if (suc != null) suc else function(tx,res) {},
             if (err != null) err else function(tx,res) {}
         );
@@ -43,8 +38,24 @@ class Table {
     ):Void {
         websql.executeSql(tx, query, params, suc, if (err != null) err else function(tx,res) {});
     }
-    private function selectSql(cond:String):String {return "";}
-    private function selectParams():Array<String> {return [];}
+
+//     static public function fromJSON(cls:Class<Table>, json:Dynamic):Table {
+//         var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
+
+//         trace(json);
+//         trace(cls);
+//         trace(Type.getInstanceFields(cls));
+
+//         return Type.createInstance(cls, [id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum]);
+// //         return new Item(id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum);
+//     }
+
+//     static public function getProps(cls:Class<Table>):Array<String> {
+//         return Lambda.array(
+//             Lambda.filter(
+//                 Type.getInstanceFields(cls),
+//                 function(s:String){return StringTools.startsWith(s, "__");}));
+//     }
 }
 
 class Util {
@@ -55,14 +66,4 @@ class Util {
         }
         return list;
     }
-
-    static public function toUl(ts:Array<Dynamic>):String {
-        for (t in ts) {
-        }
-        return "";
-    }
-//     static public function resToUl(res:Res):String {
-//         var len = res.rows.length();
-//         var ulTagStr = "<ul>";
-//     }
 }
