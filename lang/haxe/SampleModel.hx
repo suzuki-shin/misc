@@ -3,31 +3,31 @@ import WebSql;
 import Table;
 import Util;
 
-class Item extends Table {
-    public var __name: String;
-    public var __attr: String;
-    public var __is_saved: Bool;
-    public var __is_active: Bool;
-    public var __ordernum: Int;
+typedef ItemCols = {
+    var id: Maybe<Int>;
+    var name: String;
+    var attr: String;
+    var is_saved: Bool;
+    var is_active: Bool;
+    var ordernum: Int;
+}
 
-    public function new(id: Maybe<Int>, name:String, attr:String, is_saved = false, is_active = true, ordernum = 0):Void {
-        this.__id        = id;
-        this.__name      = name;
-        this.__attr      = attr;
-        this.__is_saved  = is_saved;
-        this.__is_active = is_active;
-        this.__ordernum  = ordernum;
+class Item extends Table {
+    var columns:ItemCols;
+
+    public function new(cols:ItemCols):Void {
+        this.columns = cols;
     }
 
     static public function fromJSON(json:Dynamic):Item {
         var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
-        return new Item(id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum);
+        return new Item({id:id, name:json.name, attr:json.attr, is_saved:json.is_saved, is_active:json.is_active, ordernum:json.ordernum});
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
         websql.executeSql(
             tx,
-            "CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, attr TEXT, is_saved INT DEFAULT 0 NOT NULL, ordernum INT DEFAULT 0, is_active INTEGER DEFAULT 1)",
+            "CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, attr TEXT, is_saved INT DEFAULT 0 NOT NULL, ordernum INT DEFAULT 0, is_active INTEGER DEFAULT 1)",
             [],
             if (suc != null) suc else function(tx,res) {},
             if (err != null) err else function(tx,res) {}
@@ -38,22 +38,31 @@ class Item extends Table {
         return "INSERT INTO items (name, attr, ordernum) VALUES (?, ?, ?)";
     }
     override function insertParams():Array<String> {
-        return [this.__name, this.__attr, Std.string(this.__ordernum)];
+        return [this.columns.name, this.columns.attr, Std.string(this.columns.ordernum)];
+    }
+
+    public function getTrTagStr():String {
+        return "<tr><td>"+ this.columns.id + "</td><td>" + this.columns.name + "</td><td>" + this.columns.attr + "</td></tr>";
+    }
+
+    public function getLiTagStr():String {
+        return "<li>["+ this.columns.id + "] " + this.columns.name + ":" + this.columns.attr + "</li>";
     }
 }
 
-class Record extends Table {
-    public var __item_id: Int;
-    public var __value: Int;
-    public var __is_saved: Bool;
-    public var __is_active: Bool;
+typedef RecordCols = {
+    var id: Maybe<Int>;
+    var item_id: Int;
+    var value: Int;
+    var is_saved: Bool;
+    var is_active: Bool;
+}
 
-    public function new(id:Maybe<Int>, item_id:Int, value:Int, is_saved = false, is_active = true):Void {
-        this.__id        = id;
-        this.__item_id   = item_id;
-        this.__value     = value;
-        this.__is_saved  = is_saved;
-        this.__is_active = is_active;
+class Record extends Table {
+    var columns:RecordCols;
+
+    public function new(cols:RecordCols):Void {
+        this.columns = cols;
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
@@ -70,14 +79,6 @@ class Record extends Table {
         return "INSERT INTO records (item_id, value) VALUES (?, ?)";
     }
     override function insertParams():Array<String> {
-        return [Std.string(this.__item_id), Std.string(this.__value)];
+        return [Std.string(this.columns.item_id), Std.string(this.columns.value)];
     }
-
-//     static public function fromJSON(cls:Class<Table>, json:Dynamic):Table {
-//         var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
-// //         trace(json);
-// //         trace(cls);
-// //         trace(Type.getInstanceFields(cls));
-//         return Type.createInstance(cls, [id, json.name, json.attr, json.is_saved, json.is_active, json.ordernum]);
-//     }
 }
