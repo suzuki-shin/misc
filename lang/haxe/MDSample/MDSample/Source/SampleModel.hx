@@ -21,7 +21,8 @@ class Item extends Table {
 
     static public function fromJSON(json:Dynamic):Item {
         var id = if (json.id != null) Just(Std.parseInt(json.id)) else Nothing;
-        return new Item({id:id, name:json.name, attr:json.attr, is_saved:json.is_saved, is_active:json.is_active, ordernum:json.ordernum});
+        json.id = id;
+        return new Item(json);
     }
 
     static public function create(websql:WebSql, tx:Tx, ?suc:Tx -> Res -> Void, ?err:Tx -> Res -> Void):Void {
@@ -41,23 +42,7 @@ class Item extends Table {
         return [this.columns.name, this.columns.attr, Std.string(this.columns.ordernum)];
     }
 
-//     static public function update( websql:WebSql,
-//                                    tx:Tx,
-//                                    obj:{id:Maybe<Int>},
-//                                    ?suc:Tx -> Res -> Void,
-//                                    ?err:Tx -> Res -> Void
-//     ):Void {
-//         websql.executeSql(
-//             tx,
-//             "UPDATE items SET (name, attr, ordernum) VALUES (?, ?, ?) WHERE id = ?;",
-//             [obj.name, obj.attr, obj.ordernum, obj.id],
-//             if (suc != null) suc else function(tx,res) {},
-//             if (err != null) err else function(tx,res) {}
-//         );
-//     }
-
     public function getRecordFormTagStr():String {
-        trace(this.columns);
         // テンプレート使うように変更する
         return "<tr><td>" + this.columns.name +
             "</td><td>" + this.columns.attr +

@@ -9,29 +9,21 @@ class Main {
         var ws = new WebSql("hogesql");
         setUp(ws);
 
-//         new JQuery("button.toggle").click(function(){
-//                 new JQuery( "button.toggle" ).toggle();
-//                 ws.transaction(function(tx){
-//                         Table.select(
-//                             ws, tx,
-//                             "SELECT * FROM items ORDER BY id DESC", [],
-//                             function(tx,res){ tableOfItem(new JQuery("#itemList"), tx, res); });
-//                     });});
-
         insertItemEvent(ws);
         insertRecordEvent(ws);
     }
 
     static function setUp(ws:WebSql):Void {
-        U.notify('setUp...');
-        ws.transaction(
-            function(tx){
+        ws.transaction(function(tx){
                 Item.create(ws, tx);
                 Record.create(ws, tx);
                 renderItems(ws, tx);
             });
     }
 
+    /*
+     * function for event set
+     */
     // #insertItemをクリックしたときに、#itemName、#itemAttrのItemをDBにINSERTする
     // 成功時には#itemNameと#itemAttrのフォームの値をクリアする
     static function insertItemEvent(ws:WebSql):Void {
@@ -50,6 +42,7 @@ class Main {
                                        is_active : true,
                                        ordernum : 0}),
                             function(tx,res){
+                                U.notify(itNameJQ.attr('value') + " ADDED.");
                                 itNameJQ.attr('value','');
                                 itAttrJQ.attr('value','');
                                 renderItems(ws, tx);
@@ -61,20 +54,19 @@ class Main {
     // #insertRecordをクリックしたときに、#recordItemId、#recordValueのRecordをDBにINSERTする
     // 成功時には#recordNameと#recordAttrのフォームの値をクリアする
     static function insertRecordEvent(ws:WebSql):Void {
-//         var recItemId:String = new JQuery("#itemForm");
-//         var recValueJQ = new JQuery("#recordValue");
-
-        new JQuery("#itemList input").blur(function(ev){
+        trace('insertRecordEvent');
+        new JQuery("body").delegate(".insertRecord", 'blur', function(ev){
                 trace('insertRecord');
                 trace(ev.target);
                 var id = ev.target.id;
-                var item_id = id.substr(8,4);
-                var recValueJQ = new JQuery(id);
+                var r:EReg = ~/[^0-9]*/;
+                var item_id = r.replace(id,"");
+                var recValueJQ = new JQuery('#' + id);
                 trace(id);
                 trace(item_id);
-                trace(recValueJQ);
+                trace(recValueJQ.attr('value'));
 
-                if (item_id == '' || recValueJQ.attr('value') == '') { return; }
+                if (item_id == '' || recValueJQ.attr('value') == '' || recValueJQ.attr('value') == null) { trace('novalue'); return; }
                 ws.transaction(
                     function(tx){
                         Table.insert(
@@ -84,11 +76,17 @@ class Main {
                                         value : Std.parseInt(recValueJQ.attr('value')),
                                         is_active :  true,
                                         is_saved :  false}),
-                            function(tx,res){ recValueJQ.attr('value',''); },
+                            function(tx,res){
+                                U.notify(recValueJQ.attr('value'));
+                                recValueJQ.attr('value','');
+                            },
                             function(tx,res){ U.notify('INSERT ERROR'); }
                         );});});
     }
 
+    /*
+     * function for display
+     */
     static function renderItems(ws:WebSql, tx:Tx):Void {
         Table.select(
             ws, tx,
@@ -108,6 +106,7 @@ class Main {
 
     static function tableOfItem(jq:JQuery, tx:Tx, res:Res):Void {
         var itemList:List<Item> = Lambda.map(Util.resToList(res), Item.fromJSON);
+        trace(itemList);
         var str = "<table>";
         for (it in itemList) {
             str += it.getRecordFormTagStr();
@@ -116,7 +115,9 @@ class Main {
         jq.empty().append(str);
     }
 
-//     static function hoge(table:Class<Table>):Void {
+    static function hoge(table:Class<Table>):Void {
+//         trace('hoge');
+//         Item.update({id:1, name:
 //         trace(Type.getClassFields(table));
 //         trace(Type.getInstanceFields(table));
 //         var i0 = new Item(Nothing, "ioioio", "sec");
@@ -130,5 +131,5 @@ class Main {
 //         ws.transaction(function(tx){ Table.insert(ws,tx, i1);});
 //         trace(Table.getProps(Item));
 //         trace(Table.getProps(Record));
-//     }
+    }
 }

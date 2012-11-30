@@ -1,0 +1,2 @@
+#!/bin/sh
+ctags -e -R --languages=-javascript
