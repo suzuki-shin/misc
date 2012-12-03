@@ -10,9 +10,9 @@ class U {
     static public var l = function(a:Dynamic):Void{trace(a);};
     static public var l2 = function(a:Dynamic, b:Dynamic):Void{trace(b);};
 
-    static public var notify = function(message:String):Void{
+    static public var notify = function(message:String, id:String = "notification"):Void{
         trace('notify');
-        var notifyJQ = new JQuery("#notification");
+        var notifyJQ = new JQuery('#' + id);
         notifyJQ.empty().append(message);
         notifyJQ.fadeToggle(5000);
 //         haxe.Timer.delay(function(){ notifyJQ.fadeToggle(1000); }, 1500);

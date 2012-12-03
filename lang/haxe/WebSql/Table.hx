@@ -5,8 +5,6 @@ import WebSql;
 import js.JQuery;
 
 class Table {
-//     public var __id: Maybe<Int>;
-
     static public function insert( websql:WebSql,
                                    tx:Tx,
                                    obj:Table,
