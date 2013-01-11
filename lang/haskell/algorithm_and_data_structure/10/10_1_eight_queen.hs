@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 --  エイトクイーンをバックトラックで解く
 import qualified Data.Map as M
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, catMaybes)
 import Data.List (sortBy)
 
 type Pos = (Int, Int)
@@ -75,22 +75,18 @@ print2DList (l:ls) = do
   putStrLn ""
   print2DList ls
 
-solve :: Board -> Int -> Maybe Board
-solve b x
-  | x >= boardSize = Just b
-  | otherwise = case filter (/=Nothing) $ boardHistry b x of
-    [] -> Nothing
-    bs -> head bs
+-- | 指定したx列にQueenが置けるかどうかを返す(置ける場合は置けるボードすべてのリスト、置けなければ[]を返す)
+checkX :: Board -> Int -> [Board]
+checkX b x = catMaybes  $ map (\y -> putQueen (x,y) b) [0..boardSize-1]
 
-boardHistry :: Board -> Int -> [Maybe Board]
-boardHistry b x = map (solve' b x) [0..boardSize-1]
-solve' :: Board -> Int -> Int -> Maybe Board
-solve' b x y = case putQueen (x, y) b of
-  Just b1 -> case solve b1 (x+1) of
-    Just _ -> Just b1
-    Nothing -> Nothing
-  Nothing -> Nothing
+-- solve :: Board -> Int -> Maybe Board
+-- solve b x
+--   | x >= boardSize = Just b
+--   | otherwise = case checkX b x of
+--     [] -> Nothing
+--     b':bs' -> case solve b' (x+1) of
+--       Nothing -> solve 
+--       Just b'' -> Just b'
 
-
-main :: IO ()
-main = showBoard $ fromJust $ solve initBoard 0
+-- main :: IO ()
+-- main = showBoard $ fromJust $ solve initBoard 0
