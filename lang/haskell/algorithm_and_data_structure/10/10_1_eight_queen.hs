@@ -11,8 +11,8 @@ boardSize :: Int
 boardSize = 8
 
 -- | チェスのボード
-board :: Board
-board = [((x,y), False)|x<-[0..boardSize-1],y<-[0..boardSize-1]]
+initBoard :: Board
+initBoard = [((x,y), False)|x<-[0..boardSize-1],y<-[0..boardSize-1]]
 
 -- | (x,y)にクイーンが置けるかと置いた後のボードを返す
 -- >>> putQueen (0,0) [((0,0),False),((0,1),False),((1,0),False),((1,1),False)]
@@ -54,24 +54,24 @@ showBoard b = print2DList $ pairListTo2dList b
 -- >>> pairListTo2dList [((0,1), 1),((0,0), 2),((1,1), 3),((1,0), 4)]
 -- [[2,4],[1,3]]
 pairListTo2dList :: [((Int, Int), a)] -> [[a]]
-pairListTo2dList b = map (\y -> lineOf y b) $ [0..maxY b]
+pairListTo2dList board' = map (\y -> lineOf y board') $ [0..maxY board']
   where
     maxY :: [((Int, Int), a)] -> Int
     maxY b = maximum $ map (\((_,y),_) -> y) b
 
     lineOf :: Int -> [((Int,Int), a)] -> [a]
-    lineOf y b = map (\(_,e) -> e) $ sortBy sortFunc $ lineOf' y b
+    lineOf y b = map snd $ sortBy compareX $ lineOf' y b
 
     lineOf' :: Int -> [((Int,Int), a)] -> [(Int, a)]
     lineOf' y b = map (\((x,_), e) -> (x,e)) $ filter (\((_,y'), _) -> y == y') b
 
-    sortFunc :: (Int, a) -> (Int, a) -> Ordering
-    sortFunc (x, _) (x', _) = x `compare` x'
+    compareX :: (Int, a) -> (Int, a) -> Ordering
+    compareX (x, _) (x', _) = x `compare` x'
 
 print2DList :: [[Bool]] -> IO ()
 print2DList [] = putStrLn ""
 print2DList (l:ls) = do
-  mapM (putStr . (\e -> if e then "Q " else "_ ")) l
+  mapM_ (putStr . (\e -> if e then "Q " else "_ ")) l
   putStrLn ""
   print2DList ls
 
@@ -79,8 +79,8 @@ solve :: Board -> Int -> Maybe Board
 solve b x
   | x >= boardSize = Just b
   | otherwise = case filter (/=Nothing) $ boardHistry b x of
-                  [] -> Nothing
-                  bs -> last bs
+    [] -> Nothing
+    bs -> head bs
 
 boardHistry :: Board -> Int -> [Maybe Board]
 boardHistry b x = map (solve' b x) [0..boardSize-1]
@@ -92,5 +92,5 @@ solve' b x y = case putQueen (x, y) b of
   Nothing -> Nothing
 
 
--- main :: IO ()
--- main = print $ check (0,0) board
+main :: IO ()
+main = showBoard $ fromJust $ solve initBoard 0
