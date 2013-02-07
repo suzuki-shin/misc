@@ -1,0 +1,11 @@
+{
+    "name": "Omnibox Example",
+    "description" : "To use, type 'omnix' plus a search term into the Omnibox.",
+    "version": "0.0.1",
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "omnibox": { "keyword" : ";" },
+    "permissions": [ "tabs" ],
+    "manifest_version": 2
+}
