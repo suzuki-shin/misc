@@ -32,7 +32,7 @@ Background.filterByInputQuery = function(tabs, text){
     t = tabs[i$];
     if (matchFunc(t, regs)) {
       results$.push({
-        content: t.title + ' ' + t.url,
+        content: t.url,
         description: t.title + ' ' + t.url
       });
     }
@@ -57,7 +57,29 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest){
   console.log(matchTabs);
   return suggest(matchTabs);
 });
-chrome.omnibox.onInputEntered.addListener(function(text){
-  console.log('inputEntered: ' + text);
-  return alert('You just typed "' + text + '"');
+chrome.omnibox.onInputEntered.addListener(function(url){
+  var _tabIds, res$, i$, ref$, len$, t, tabId;
+  console.log('inputEntered: ' + url);
+  res$ = [];
+  for (i$ = 0, len$ = (ref$ = Background.tabs).length; i$ < len$; ++i$) {
+    t = ref$[i$];
+    if (t.url === url) {
+      res$.push(t.id);
+    }
+  }
+  _tabIds = res$;
+  if (_tabIds === []) {
+    return;
+  }
+  tabId = _tabIds[0];
+  console.log(tabId);
+  return chrome.tabs.get(tabId, function(tab){
+    console.log('tab get');
+    console.log(tab);
+    if (tab && !tab.selected) {
+      return chrome.tabs.update(tabId, {
+        selected: true
+      });
+    }
+  });
 });

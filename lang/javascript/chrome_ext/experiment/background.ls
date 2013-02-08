@@ -19,7 +19,7 @@ Background.filterByInputQuery = (tabs, text) ->
   regs = [new RegExp(t) for t in text.split(" ")]
   console.log('regs')
   console.log(regs)
-  [{content: t.title + ' ' + t.url, description: t.title + ' ' + t.url} for t in tabs when matchFunc(t, regs)]
+  [{content: t.url, description: t.title + ' ' + t.url} for t in tabs when matchFunc(t, regs)]
 
 chrome.omnibox.onInputStarted.addListener(->
   console.log('inputStarted:')
@@ -39,8 +39,18 @@ chrome.omnibox.onInputChanged.addListener(((text, suggest) ->
   suggest(matchTabs)
 ))
 
-chrome.omnibox.onInputEntered.addListener(((text) ->
-  console.log('inputEntered: ' + text)
-  alert('You just typed "' + text + '"')
+chrome.omnibox.onInputEntered.addListener(((url) ->
+  console.log('inputEntered: ' + url)
+  _tabIds = [t.id for t in Background.tabs when t.url == url]
+  return if _tabIds == []
+
+  tabId = _tabIds[0]
+  console.log(tabId)
+  chrome.tabs.get(tabId, ((tab) ->
+    console.log('tab get')
+    console.log(tab)
+    if tab && not tab.selected
+      chrome.tabs.update(tabId, { selected: true })
+  ))
 ))
 
