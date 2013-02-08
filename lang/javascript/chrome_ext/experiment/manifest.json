@@ -1,6 +1,6 @@
 {
-    "name": "Omnibox Example",
-    "description" : "To use, type 'omnix' plus a search term into the Omnibox.",
+    "name": "any selector",
+    "description" : "anything.el like selector",
     "version": "0.0.1",
     "background": {
 		"persistent": false,

@@ -6,15 +6,6 @@ Background.filterByInputQuery = (tabs, text) ->
   p = prelude
   matchFunc = (tab, regs) ->
     p.all(p.id, [tab.title.search(re) isnt -1 or tab.url.search(re) isnt -1 for re in regs])
-#     yyy = [tab.title.search(re) isnt -1 or tab.url.search(re) isnt -1 for re in regs]
-#     console.log('yyy')
-#     console.log(yyy)
-#     xxx = p.all(p.id, yyy)
-#     console.log('tab')
-#     console.log(tab)
-#     console.log('xxx')
-#     console.log(xxx)
-#     xxx
 
   regs = [new RegExp(t) for t in text.split(" ")]
   console.log('regs')
@@ -53,4 +44,3 @@ chrome.omnibox.onInputEntered.addListener(((url) ->
       chrome.tabs.update(tabId, { selected: true })
   ))
 ))
-
