@@ -3,9 +3,10 @@
     "description" : "To use, type 'omnix' plus a search term into the Omnibox.",
     "version": "0.0.1",
     "background": {
-        "scripts": ["background.js"]
+		"persistent": false,
+        "page": "background.html"
     },
     "omnibox": { "keyword" : ";" },
-    "permissions": [ "tabs" ],
+	"permissions": [ "history", "tabs", "bookmarks" ],
     "manifest_version": 2
 }
