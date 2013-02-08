@@ -5,40 +5,44 @@ Background = (function(){
   function Background(){}
   return Background;
 }());
-Background.suggestList = [];
+Background.tabs = [];
+Background.filterByInputQuery = function(tabs, text){
+  var re, filtered, i$, len$, t;
+  re = new RegExp(text);
+  console.log('re');
+  console.log(re);
+  filtered = [];
+  for (i$ = 0, len$ = tabs.length; i$ < len$; ++i$) {
+    t = tabs[i$];
+    console.log('tab');
+    console.log(t);
+    if (t.url.search(re) !== -1) {
+      console.log(t.url);
+      filtered.push({
+        content: t.title + ' ' + t.url,
+        description: t.title + ' ' + t.url
+      });
+    }
+  }
+  return filtered;
+};
 chrome.omnibox.onInputStarted.addListener(function(){
   var listTabs;
   console.log('inputStarted:');
   listTabs = function(tabs){
-    var list, res$, i$, len$, t;
     console.log('listTabs');
-    res$ = [];
-    for (i$ = 0, len$ = tabs.length; i$ < len$; ++i$) {
-      t = tabs[i$];
-      res$.push({
-        content: t.title,
-        description: t.title
-      });
-    }
-    list = res$;
-    console.log(list);
-    return Background.suggestList = Background.suggestList.concat(list);
+    console.log(tabs);
+    return Background.tabs = tabs;
   };
-  return chrome.tabs.query({
-    currentWindow: true
-  }, listTabs);
+  return chrome.tabs.query({}, listTabs);
 });
 chrome.omnibox.onInputChanged.addListener(function(text, suggest){
-  var list;
+  var matchTabs;
   console.log('inputChanged: ' + text);
-  list = [{
-    content: text + " one!",
-    description: "the first 1"
-  }];
-  console.log(list);
-  Background.suggestList = Background.suggestList.concat(list);
-  console.log(Background.suggestList);
-  return suggest(Background.suggestList);
+  matchTabs = Background.filterByInputQuery(Background.tabs, text);
+  console.log('matchTabs');
+  console.log(matchTabs);
+  return suggest(matchTabs);
 });
 chrome.omnibox.onInputEntered.addListener(function(text){
   console.log('inputEntered: ' + text);
