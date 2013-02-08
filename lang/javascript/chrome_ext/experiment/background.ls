@@ -1,22 +1,25 @@
 class Background
 
-# Background.suggests = []
 Background.tabs = []
 
 Background.filterByInputQuery = (tabs, text) ->
-  re = new RegExp(text)
-  console.log('re')
-  console.log(re)
-#   [{content: t.title + ' ' + t.url, description: t.title + ' ' + t.url} for t in tabs if t.url.search(re) isnt -1]
+  p = prelude
+  matchFunc = (tab, regs) ->
+    p.all(p.id, [tab.title.search(re) isnt -1 or tab.url.search(re) isnt -1 for re in regs])
+#     yyy = [tab.title.search(re) isnt -1 or tab.url.search(re) isnt -1 for re in regs]
+#     console.log('yyy')
+#     console.log(yyy)
+#     xxx = p.all(p.id, yyy)
+#     console.log('tab')
+#     console.log(tab)
+#     console.log('xxx')
+#     console.log(xxx)
+#     xxx
 
-  filtered = []
-  for t in tabs
-    console.log('tab')
-    console.log(t)
-    if (t.url.search(re) isnt -1) or (t.title.search(re) isnt -1)
-      console.log(t.url)
-      filtered.push({content: t.title + ' ' + t.url, description: t.title + ' ' + t.url})
-  filtered
+  regs = [new RegExp(t) for t in text.split(" ")]
+  console.log('regs')
+  console.log(regs)
+  [{content: t.title + ' ' + t.url, description: t.title + ' ' + t.url} for t in tabs when matchFunc(t, regs)]
 
 chrome.omnibox.onInputStarted.addListener(->
   console.log('inputStarted:')

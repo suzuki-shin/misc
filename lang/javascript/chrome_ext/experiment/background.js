@@ -7,24 +7,37 @@ Background = (function(){
 }());
 Background.tabs = [];
 Background.filterByInputQuery = function(tabs, text){
-  var re, filtered, i$, len$, t;
-  re = new RegExp(text);
-  console.log('re');
-  console.log(re);
-  filtered = [];
+  var p, matchFunc, regs, res$, i$, ref$, len$, t, results$ = [];
+  p = prelude;
+  matchFunc = function(tab, regs){
+    var re;
+    return p.all(p.id, (function(){
+      var i$, ref$, len$, results$ = [];
+      for (i$ = 0, len$ = (ref$ = regs).length; i$ < len$; ++i$) {
+        re = ref$[i$];
+        results$.push(tab.title.search(re) !== -1 || tab.url.search(re) !== -1);
+      }
+      return results$;
+    }()));
+  };
+  res$ = [];
+  for (i$ = 0, len$ = (ref$ = text.split(" ")).length; i$ < len$; ++i$) {
+    t = ref$[i$];
+    res$.push(new RegExp(t));
+  }
+  regs = res$;
+  console.log('regs');
+  console.log(regs);
   for (i$ = 0, len$ = tabs.length; i$ < len$; ++i$) {
     t = tabs[i$];
-    console.log('tab');
-    console.log(t);
-    if (t.url.search(re) !== -1) {
-      console.log(t.url);
-      filtered.push({
+    if (matchFunc(t, regs)) {
+      results$.push({
         content: t.title + ' ' + t.url,
         description: t.title + ' ' + t.url
       });
     }
   }
-  return filtered;
+  return results$;
 };
 chrome.omnibox.onInputStarted.addListener(function(){
   var listTabs;
