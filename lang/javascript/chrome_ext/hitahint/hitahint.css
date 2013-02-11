@@ -1,0 +1,10 @@
+.links {
+	background-color: pink;
+}
+.links .hintKey {
+	height: 20px;
+	width: 20px;
+	background-color: #111;
+	color: white;
+	font-size: x-small;
+}
