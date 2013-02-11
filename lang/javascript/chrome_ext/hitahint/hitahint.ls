@@ -4,9 +4,9 @@ KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
 
-MODE_NEWTRAL = 0
-MODE_HITAHINT = 1
-MODE_FORM_FOCUS = 2
+# MODE_NEWTRAL = 0
+# MODE_HITAHINT = 1
+# MODE_FORM_FOCUS = 2
 
 HINT_KEYS =
   65:'a'
@@ -31,53 +31,85 @@ HINT_KEYS =
   84:'t'
   85:'u'
 
-# HINT_KEYS = [
-#   'aa', 'ab', 'ac', 'ad', 'ae', 'af',
-#   'ba', 'bb', 'bc', 'bd', 'be', 'bf',
-#   'ca', 'cb', 'cc', 'cd', 'ce', 'cf',
-#   'da', 'db', 'dc', 'dd', 'de', 'df',
-#   'ea', 'eb', 'ec', 'ed', 'ee', 'ef',
-# ]
-
 class Main
+
+keyCodeToIndex = (keyCode) -> keyCode - 65
+indexToKeyCode = (index) -> index + 65
+
+
+class NewtralMode
+NewtralMode.keyUpHitAHintStart =->
+  Main.mode = HitAHintMode
+  $('a').addClass('links').html((i, oldHtml) ->
+    if HINT_KEYS[indexToKeyCode(i)]?
+    then '<div class="hintKey">' + HINT_KEYS[indexToKeyCode(i)] + '</div> ' + oldHtml
+    else oldHtml)
+
+NewtralMode.keyUpFocusForm =->
+  Main.mode = FormFocusMode
+  $('input, textarea')[0].focus()
+
+NewtralMode.keyUpCancel =-> false
+NewtralMode.keyUpHintKey = (keyCode) -> false
+
+class HitAHintMode
+HitAHintMode.keyUpHitAHintStart =-> false
+HitAHintMode.keyUpFocusForm =-> false
+
+HitAHintMode.keyUpCancel =->
+  Main.mode = NewtralMode
+  $('a').removeClass('links')
+  $('.hintKey').remove()
+
+HitAHintMode.keyUpHintKey = (keyCode) ->
+  console.log('hit!: ' + keyCode)
+  $('a')[keyCodeToIndex(keyCode)].click()
+  Main.mode = NewtralMode
+  $('a').removeClass('links')
+  $('.hintKey').remove()
+
+class FormFocusMode
+FormFocusMode.keyUpHitAHintStart =-> console.log('')
+FormFocusMode.keyUpFocusForm =-> console.log('')
+
+FormFocusMode.keyUpCancel =->
+    Main.mode = NewtralMode
+    $(':focus').blur()
+
+FormFocusMode.keyUpHintKey = (keyCode) -> false
 
 $(->
   HINT_KEYS_LENGTH = HINT_KEYS.length
-  links = $('a')
-  Main.mode = MODE_NEWTRAL
+  Main.mode = NewtralMode
+
+  $('input, textarea').focus(-> Main.mode = FormFocusMode)
 
   $(document).keyup((e) ->
-    console.log(e.keyCode)
-    console.log(Main.mode)
+    console.log('keyCode: ' + e.keyCode)
+    console.log('mode: ' + Main.mode)
 
-    if Main.mode == MODE_NEWTRAL
+    if Main.mode == NewtralMode
       if e.keyCode == KEY_CODE_HITAHINT_START
-        Main.mode = MODE_HITAHINT
-        links.addClass('links').html((i, oldHtml) ->
-          if HINT_KEYS[i+65]?
-          then
-            console.log(HINT_KEYS[i+65])
-            '<div class="hintKey">' + HINT_KEYS[i+65] + '</div> ' + oldHtml
-          else oldHtml)
-      else if e.keyCode == KEY_CODE_FOCUS_FORM
-        Main.mode = MODE_FORM_FOCUS
-        $('input, textarea')[0].focus()
+        Main.mode.keyUpHitAHintStart()
 
-    else if Main.mode == MODE_HITAHINT
+      else if e.keyCode == KEY_CODE_FOCUS_FORM
+        Main.mode.keyUpFocusForm()
+
+    else if Main.mode == HitAHintMode
       if e.keyCode == KEY_CODE_CANCEL
-        Main.mode = MODE_NEWTRAL
-        links.removeClass('links')
-        $('.hintKey').remove();
-      else if $.inArray(e, [k for k,v of HINT_KEYS]) isnt -1
-        console.log('hit!: ' + e.keyCode)
+        Main.mode.keyUpCancel()
+
+      else if $.inArray(String(e.keyCode), [k for k,v of HINT_KEYS]) isnt -1
+        Main.mode.keyUpHintKey(e.keyCode)
+
       else
-        console.log(e)
+        console.log(String(e.keyCode))
+        console.log([k for k,v of HINT_KEYS])
         console.log('mum')
 
-    else if Main.mode == MODE_FORM_FOCUS
+    else if Main.mode == FormFocusMode
       if e.keyCode == KEY_CODE_CANCEL
-        $(':focus').blur()
-        Main.mode = MODE_NEWTRAL
+        Main.mode.keyUpCancel()
 
     else
       console.log('else')
