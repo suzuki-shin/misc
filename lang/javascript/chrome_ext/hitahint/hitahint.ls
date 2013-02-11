@@ -4,10 +4,6 @@ KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
 
-# MODE_NEWTRAL = 0
-# MODE_HITAHINT = 1
-# MODE_FORM_FOCUS = 2
-
 HINT_KEYS =
   65:'a'
   66:'b'
@@ -31,13 +27,16 @@ HINT_KEYS =
   84:'t'
   85:'u'
 
-class Main
 
 keyCodeToIndex = (keyCode) -> keyCode - 65
 indexToKeyCode = (index) -> index + 65
+isHitAHintKey = (keyCode) ->
+  $.inArray(String(keyCode), [k for k,v of HINT_KEYS]) isnt -1
 
+class Main
 
 class NewtralMode
+
 NewtralMode.keyUpHitAHintStart =->
   Main.mode = HitAHintMode
   $('a').addClass('links').html((i, oldHtml) ->
@@ -51,8 +50,10 @@ NewtralMode.keyUpFocusForm =->
 
 NewtralMode.keyUpCancel =-> false
 NewtralMode.keyUpHintKey = (keyCode) -> false
+NewtralMode.keyUpOthers =-> false
 
 class HitAHintMode
+
 HitAHintMode.keyUpHitAHintStart =-> false
 HitAHintMode.keyUpFocusForm =-> false
 
@@ -68,18 +69,21 @@ HitAHintMode.keyUpHintKey = (keyCode) ->
   $('a').removeClass('links')
   $('.hintKey').remove()
 
+HitAHintMode.keyUpOthers =-> false
+
 class FormFocusMode
+
 FormFocusMode.keyUpHitAHintStart =-> console.log('')
 FormFocusMode.keyUpFocusForm =-> console.log('')
 
 FormFocusMode.keyUpCancel =->
-    Main.mode = NewtralMode
-    $(':focus').blur()
+  Main.mode = NewtralMode
+  $(':focus').blur()
 
 FormFocusMode.keyUpHintKey = (keyCode) -> false
+FormFocusMode.keyUpOthers =-> false
 
 $(->
-  HINT_KEYS_LENGTH = HINT_KEYS.length
   Main.mode = NewtralMode
 
   $('input, textarea').focus(-> Main.mode = FormFocusMode)
@@ -88,30 +92,15 @@ $(->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
 
-    if Main.mode == NewtralMode
-      if e.keyCode == KEY_CODE_HITAHINT_START
-        Main.mode.keyUpHitAHintStart()
-
-      else if e.keyCode == KEY_CODE_FOCUS_FORM
-        Main.mode.keyUpFocusForm()
-
-    else if Main.mode == HitAHintMode
-      if e.keyCode == KEY_CODE_CANCEL
-        Main.mode.keyUpCancel()
-
-      else if $.inArray(String(e.keyCode), [k for k,v of HINT_KEYS]) isnt -1
-        Main.mode.keyUpHintKey(e.keyCode)
-
-      else
-        console.log(String(e.keyCode))
-        console.log([k for k,v of HINT_KEYS])
-        console.log('mum')
-
-    else if Main.mode == FormFocusMode
-      if e.keyCode == KEY_CODE_CANCEL
-        Main.mode.keyUpCancel()
-
+    if e.keyCode == KEY_CODE_HITAHINT_START
+      Main.mode.keyUpHitAHintStart()
+    else if e.keyCode == KEY_CODE_FOCUS_FORM
+      Main.mode.keyUpFocusForm()
+    else if e.keyCode == KEY_CODE_CANCEL
+      Main.mode.keyUpCancel()
+    else if isHitAHintKey(e.keyCode)
+      Main.mode.keyUpHintKey(e.keyCode)
     else
-      console.log('else')
+      Main.mode.keyUpOthers()
   )
 )

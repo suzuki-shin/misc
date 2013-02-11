@@ -1,4 +1,4 @@
-var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, HINT_KEYS, Main, keyCodeToIndex, indexToKeyCode, NewtralMode, HitAHintMode, FormFocusMode;
+var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, HINT_KEYS, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NewtralMode, HitAHintMode, FormFocusMode;
 console.log('hitahint');
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
@@ -26,18 +26,29 @@ HINT_KEYS = {
   84: 't',
   85: 'u'
 };
-Main = (function(){
-  Main.displayName = 'Main';
-  var prototype = Main.prototype, constructor = Main;
-  function Main(){}
-  return Main;
-}());
 keyCodeToIndex = function(keyCode){
   return keyCode - 65;
 };
 indexToKeyCode = function(index){
   return index + 65;
 };
+isHitAHintKey = function(keyCode){
+  var k, v;
+  return $.inArray(String(keyCode), (function(){
+    var ref$, results$ = [];
+    for (k in ref$ = HINT_KEYS) {
+      v = ref$[k];
+      results$.push(k);
+    }
+    return results$;
+  }())) !== -1;
+};
+Main = (function(){
+  Main.displayName = 'Main';
+  var prototype = Main.prototype, constructor = Main;
+  function Main(){}
+  return Main;
+}());
 NewtralMode = (function(){
   NewtralMode.displayName = 'NewtralMode';
   var prototype = NewtralMode.prototype, constructor = NewtralMode;
@@ -64,6 +75,9 @@ NewtralMode.keyUpCancel = function(){
 NewtralMode.keyUpHintKey = function(keyCode){
   return false;
 };
+NewtralMode.keyUpOthers = function(){
+  return false;
+};
 HitAHintMode = (function(){
   HitAHintMode.displayName = 'HitAHintMode';
   var prototype = HitAHintMode.prototype, constructor = HitAHintMode;
@@ -88,6 +102,9 @@ HitAHintMode.keyUpHintKey = function(keyCode){
   $('a').removeClass('links');
   return $('.hintKey').remove();
 };
+HitAHintMode.keyUpOthers = function(){
+  return false;
+};
 FormFocusMode = (function(){
   FormFocusMode.displayName = 'FormFocusMode';
   var prototype = FormFocusMode.prototype, constructor = FormFocusMode;
@@ -107,53 +124,27 @@ FormFocusMode.keyUpCancel = function(){
 FormFocusMode.keyUpHintKey = function(keyCode){
   return false;
 };
+FormFocusMode.keyUpOthers = function(){
+  return false;
+};
 $(function(){
-  var HINT_KEYS_LENGTH;
-  HINT_KEYS_LENGTH = HINT_KEYS.length;
   Main.mode = NewtralMode;
   $('input, textarea').focus(function(){
     return Main.mode = FormFocusMode;
   });
   return $(document).keyup(function(e){
-    var k, v;
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
-    if (Main.mode === NewtralMode) {
-      if (e.keyCode === KEY_CODE_HITAHINT_START) {
-        return Main.mode.keyUpHitAHintStart();
-      } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
-        return Main.mode.keyUpFocusForm();
-      }
-    } else if (Main.mode === HitAHintMode) {
-      if (e.keyCode === KEY_CODE_CANCEL) {
-        return Main.mode.keyUpCancel();
-      } else if ($.inArray(String(e.keyCode), (function(){
-        var ref$, results$ = [];
-        for (k in ref$ = HINT_KEYS) {
-          v = ref$[k];
-          results$.push(k);
-        }
-        return results$;
-      }())) !== -1) {
-        return Main.mode.keyUpHintKey(e.keyCode);
-      } else {
-        console.log(String(e.keyCode));
-        console.log((function(){
-          var ref$, results$ = [];
-          for (k in ref$ = HINT_KEYS) {
-            v = ref$[k];
-            results$.push(k);
-          }
-          return results$;
-        }()));
-        return console.log('mum');
-      }
-    } else if (Main.mode === FormFocusMode) {
-      if (e.keyCode === KEY_CODE_CANCEL) {
-        return Main.mode.keyUpCancel();
-      }
+    if (e.keyCode === KEY_CODE_HITAHINT_START) {
+      return Main.mode.keyUpHitAHintStart();
+    } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
+      return Main.mode.keyUpFocusForm();
+    } else if (e.keyCode === KEY_CODE_CANCEL) {
+      return Main.mode.keyUpCancel();
+    } else if (isHitAHintKey(e.keyCode)) {
+      return Main.mode.keyUpHintKey(e.keyCode);
     } else {
-      return console.log('else');
+      return Main.mode.keyUpOthers();
     }
   });
 });
