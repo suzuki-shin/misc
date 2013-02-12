@@ -3,6 +3,8 @@ console.log('hitahint')
 KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
+KEY_CODE_SELECTOR_START = 187
+
 
 _HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
 HINT_KEYS = {}
@@ -21,63 +23,58 @@ isHitAHintKey = (keyCode) ->
 class Main
 
 class NewtralMode
+  @keyUpHitAHintStart =->
+    Main.mode = HitAHintMode
+    Main.links.addClass('links').html((i, oldHtml) ->
+      if HINT_KEYS[indexToKeyCode(i)]?
+      then '<div class="hintKey">' + HINT_KEYS[indexToKeyCode(i)] + '</div> ' + oldHtml
+      else oldHtml)
 
-NewtralMode.keyUpHitAHintStart =->
-  Main.mode = HitAHintMode
-  console.log("Main.links")
-  console.log(Main.links)
-  Main.links.addClass('links').html((i, oldHtml) ->
-    if HINT_KEYS[indexToKeyCode(i)]?
-    then '<div class="hintKey">' + HINT_KEYS[indexToKeyCode(i)] + '</div> ' + oldHtml
-    else oldHtml)
+  @keyUpFocusForm =->
+    Main.mode = FormFocusMode
+    $('input, textarea')[0].focus()
 
-NewtralMode.keyUpFocusForm =->
-  Main.mode = FormFocusMode
-  $('input, textarea')[0].focus()
-
-NewtralMode.keyUpCancel =-> false
-NewtralMode.keyUpHintKey = (keyCode) -> false
-NewtralMode.keyUpOthers =-> false
+  @keyUpCancel =-> false
+  @keyUpHintKey = (keyCode) -> false
+  @keyUpOthers =-> false
 
 class HitAHintMode
+  @firstKeyCode = null
 
-HitAHintMode.firstKeyCode = null
+  @keyUpHitAHintStart =-> false
+  @keyUpFocusForm =-> false
 
-HitAHintMode.keyUpHitAHintStart =-> false
-HitAHintMode.keyUpFocusForm =-> false
-
-HitAHintMode.keyUpCancel =->
-  Main.mode = NewtralMode
-  Main.links.removeClass('links')
-  $('.hintKey').remove()
-
-HitAHintMode.keyUpHintKey = (keyCode) ->
-  console.log('hit!: ' + keyCode + ', 1stkey: ' + HitAHintMode.firstKeyCode)
-  if HitAHintMode.firstKeyCode is null
-    HitAHintMode.firstKeyCode = keyCode
-  else
-    idx = keyCodeToIndex(HitAHintMode.firstKeyCode,  keyCode)
-    console.log('idx: ' + idx)
-    console.log(Main.links)
-    Main.links[idx].click()
+  @keyUpCancel =->
     Main.mode = NewtralMode
     Main.links.removeClass('links')
     $('.hintKey').remove()
-    HitAHintMode.firstKeyCode = null
 
-HitAHintMode.keyUpOthers =-> false
+  @keyUpHintKey = (keyCode) ->
+    console.log('hit!: ' + keyCode + ', 1stkey: ' + @firstKeyCode)
+    if @firstKeyCode is null
+      @firstKeyCode = keyCode
+    else
+      idx = keyCodeToIndex(@firstKeyCode,  keyCode)
+      console.log('idx: ' + idx)
+      console.log(Main.links)
+      Main.links[idx].click()
+      Main.mode = NewtralMode
+      Main.links.removeClass('links')
+      $('.hintKey').remove()
+      @firstKeyCode = null
+
+  @keyUpOthers =-> false
 
 class FormFocusMode
+  @keyUpHitAHintStart =-> false
+  @keyUpFocusForm =-> false
 
-FormFocusMode.keyUpHitAHintStart =-> false
-FormFocusMode.keyUpFocusForm =-> false
+  @keyUpCancel =->
+    Main.mode = NewtralMode
+    $(':focus').blur()
 
-FormFocusMode.keyUpCancel =->
-  Main.mode = NewtralMode
-  $(':focus').blur()
-
-FormFocusMode.keyUpHintKey = (keyCode) -> false
-FormFocusMode.keyUpOthers =-> false
+  @keyUpHintKey = (keyCode) -> false
+  @keyUpOthers =-> false
 
 $(->
   Main.mode = NewtralMode
