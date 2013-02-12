@@ -1,9 +1,9 @@
-var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, HINT_KEYS, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NewtralMode, HitAHintMode, FormFocusMode;
+var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NewtralMode, HitAHintMode, FormFocusMode;
 console.log('hitahint');
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
 KEY_CODE_CANCEL = 27;
-HINT_KEYS = {
+_HINT_KEYS = {
   65: 'a',
   66: 'b',
   67: 'c',
@@ -24,19 +24,49 @@ HINT_KEYS = {
   82: 'r',
   83: 's',
   84: 't',
-  85: 'u'
+  85: 'u',
+  86: 'v',
+  87: 'w',
+  88: 'x',
+  89: 'y',
+  90: 'z'
 };
-keyCodeToIndex = function(keyCode){
-  return keyCode - 65;
+HINT_KEYS = {};
+for (k1 in _HINT_KEYS) {
+  v1 = _HINT_KEYS[k1];
+  for (k2 in _HINT_KEYS) {
+    v2 = _HINT_KEYS[k2];
+    HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2;
+  }
+}
+console.log(HINT_KEYS);
+keyCodeToIndex = function(firstKeyCode, secondKeyCode){
+  var k, v;
+  return $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), (function(){
+    var ref$, results$ = [];
+    for (k in ref$ = HINT_KEYS) {
+      v = ref$[k];
+      results$.push(parseInt(k));
+    }
+    return results$;
+  }()));
 };
 indexToKeyCode = function(index){
-  return index + 65;
+  var k, v;
+  return (function(){
+    var ref$, results$ = [];
+    for (k in ref$ = HINT_KEYS) {
+      v = ref$[k];
+      results$.push(k);
+    }
+    return results$;
+  }())[index];
 };
 isHitAHintKey = function(keyCode){
   var k, v;
   return $.inArray(String(keyCode), (function(){
     var ref$, results$ = [];
-    for (k in ref$ = HINT_KEYS) {
+    for (k in ref$ = _HINT_KEYS) {
       v = ref$[k];
       results$.push(k);
     }
@@ -57,7 +87,9 @@ NewtralMode = (function(){
 }());
 NewtralMode.keyUpHitAHintStart = function(){
   Main.mode = HitAHintMode;
-  return $('a').addClass('links').html(function(i, oldHtml){
+  console.log("Main.links");
+  console.log(Main.links);
+  return Main.links.addClass('links').html(function(i, oldHtml){
     if (HINT_KEYS[indexToKeyCode(i)] != null) {
       return '<div class="hintKey">' + HINT_KEYS[indexToKeyCode(i)] + '</div> ' + oldHtml;
     } else {
@@ -84,6 +116,7 @@ HitAHintMode = (function(){
   function HitAHintMode(){}
   return HitAHintMode;
 }());
+HitAHintMode.firstKeyCode = null;
 HitAHintMode.keyUpHitAHintStart = function(){
   return false;
 };
@@ -92,15 +125,24 @@ HitAHintMode.keyUpFocusForm = function(){
 };
 HitAHintMode.keyUpCancel = function(){
   Main.mode = NewtralMode;
-  $('a').removeClass('links');
+  Main.links.removeClass('links');
   return $('.hintKey').remove();
 };
 HitAHintMode.keyUpHintKey = function(keyCode){
-  console.log('hit!: ' + keyCode);
-  $('a')[keyCodeToIndex(keyCode)].click();
-  Main.mode = NewtralMode;
-  $('a').removeClass('links');
-  return $('.hintKey').remove();
+  var idx;
+  console.log('hit!: ' + keyCode + ', 1stkey: ' + HitAHintMode.firstKeyCode);
+  if (HitAHintMode.firstKeyCode === null) {
+    return HitAHintMode.firstKeyCode = keyCode;
+  } else {
+    idx = keyCodeToIndex(HitAHintMode.firstKeyCode, keyCode);
+    console.log('idx: ' + idx);
+    console.log(Main.links);
+    Main.links[idx].click();
+    Main.mode = NewtralMode;
+    Main.links.removeClass('links');
+    $('.hintKey').remove();
+    return HitAHintMode.firstKeyCode = null;
+  }
 };
 HitAHintMode.keyUpOthers = function(){
   return false;
@@ -129,6 +171,9 @@ FormFocusMode.keyUpOthers = function(){
 };
 $(function(){
   Main.mode = NewtralMode;
+  Main.links = $('a').length === void 8
+    ? [$('a')]
+    : $('a');
   $('input, textarea').focus(function(){
     return Main.mode = FormFocusMode;
   });

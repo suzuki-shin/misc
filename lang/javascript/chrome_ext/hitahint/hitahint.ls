@@ -4,34 +4,20 @@ KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
 
-HINT_KEYS =
-  65:'a'
-  66:'b'
-  67:'c'
-  68:'d'
-  69:'e'
-  70:'f'
-  71:'g'
-  72:'h'
-  73:'i'
-  74:'j'
-  75:'k'
-  76:'l'
-  77:'m'
-  78:'n'
-  79:'o'
-  80:'p'
-  81:'q'
-  82:'r'
-  83:'s'
-  84:'t'
-  85:'u'
+_HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
+HINT_KEYS = {}
+for k1, v1 of _HINT_KEYS
+  for k2, v2 of _HINT_KEYS
+    HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2
+console.log(HINT_KEYS)
 
+keyCodeToIndex = (firstKeyCode, secondKeyCode) ->
+  $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), [parseInt(k) for k,v of HINT_KEYS])
 
-keyCodeToIndex = (keyCode) -> keyCode - 65
-indexToKeyCode = (index) -> index + 65
+indexToKeyCode = (index) -> [k for k,v of HINT_KEYS][index]
+
 isHitAHintKey = (keyCode) ->
-  $.inArray(String(keyCode), [k for k,v of HINT_KEYS]) isnt -1
+  $.inArray(String(keyCode), [k for k,v of _HINT_KEYS]) isnt -1
 
 class Main
 
@@ -39,7 +25,9 @@ class NewtralMode
 
 NewtralMode.keyUpHitAHintStart =->
   Main.mode = HitAHintMode
-  $('a').addClass('links').html((i, oldHtml) ->
+  console.log("Main.links")
+  console.log(Main.links)
+  Main.links.addClass('links').html((i, oldHtml) ->
     if HINT_KEYS[indexToKeyCode(i)]?
     then '<div class="hintKey">' + HINT_KEYS[indexToKeyCode(i)] + '</div> ' + oldHtml
     else oldHtml)
@@ -54,20 +42,29 @@ NewtralMode.keyUpOthers =-> false
 
 class HitAHintMode
 
+HitAHintMode.firstKeyCode = null
+
 HitAHintMode.keyUpHitAHintStart =-> false
 HitAHintMode.keyUpFocusForm =-> false
 
 HitAHintMode.keyUpCancel =->
   Main.mode = NewtralMode
-  $('a').removeClass('links')
+  Main.links.removeClass('links')
   $('.hintKey').remove()
 
 HitAHintMode.keyUpHintKey = (keyCode) ->
-  console.log('hit!: ' + keyCode)
-  $('a')[keyCodeToIndex(keyCode)].click()
-  Main.mode = NewtralMode
-  $('a').removeClass('links')
-  $('.hintKey').remove()
+  console.log('hit!: ' + keyCode + ', 1stkey: ' + HitAHintMode.firstKeyCode)
+  if HitAHintMode.firstKeyCode is null
+    HitAHintMode.firstKeyCode = keyCode
+  else
+    idx = keyCodeToIndex(HitAHintMode.firstKeyCode,  keyCode)
+    console.log('idx: ' + idx)
+    console.log(Main.links)
+    Main.links[idx].click()
+    Main.mode = NewtralMode
+    Main.links.removeClass('links')
+    $('.hintKey').remove()
+    HitAHintMode.firstKeyCode = null
 
 HitAHintMode.keyUpOthers =-> false
 
@@ -85,6 +82,7 @@ FormFocusMode.keyUpOthers =-> false
 
 $(->
   Main.mode = NewtralMode
+  Main.links = if $('a').length is undefined then [$('a')] else $('a')
 
   $('input, textarea').focus(-> Main.mode = FormFocusMode)
 

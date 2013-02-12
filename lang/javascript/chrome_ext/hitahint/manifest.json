@@ -1,10 +1,11 @@
 {
-    "name": "egoh",
+    "name": "hah",
     "description" : "hit a hint",
     "version": "0.0.1",
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
+			"exclude_matches": ["*://mail.google.com/*"],
             "css": ["hitahint.css"],
             "js": ["jquery-1.9.0.min.js", "prelude.min.js", "hitahint.js"]
         }
