@@ -39,7 +39,6 @@ for (k1 in _HINT_KEYS) {
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2;
   }
 }
-console.log(HINT_KEYS);
 keyCodeToIndex = function(firstKeyCode, secondKeyCode){
   var k, v;
   return $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), (function(){
@@ -154,10 +153,10 @@ FormFocusMode = (function(){
   return FormFocusMode;
 }());
 FormFocusMode.keyUpHitAHintStart = function(){
-  return console.log('');
+  return false;
 };
 FormFocusMode.keyUpFocusForm = function(){
-  return console.log('');
+  return false;
 };
 FormFocusMode.keyUpCancel = function(){
   Main.mode = NewtralMode;

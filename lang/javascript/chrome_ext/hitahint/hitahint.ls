@@ -9,7 +9,6 @@ HINT_KEYS = {}
 for k1, v1 of _HINT_KEYS
   for k2, v2 of _HINT_KEYS
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2
-console.log(HINT_KEYS)
 
 keyCodeToIndex = (firstKeyCode, secondKeyCode) ->
   $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), [parseInt(k) for k,v of HINT_KEYS])
@@ -70,8 +69,8 @@ HitAHintMode.keyUpOthers =-> false
 
 class FormFocusMode
 
-FormFocusMode.keyUpHitAHintStart =-> console.log('')
-FormFocusMode.keyUpFocusForm =-> console.log('')
+FormFocusMode.keyUpHitAHintStart =-> false
+FormFocusMode.keyUpFocusForm =-> false
 
 FormFocusMode.keyUpCancel =->
   Main.mode = NewtralMode

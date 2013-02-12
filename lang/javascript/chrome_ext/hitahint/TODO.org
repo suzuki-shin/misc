@@ -1,0 +1,10 @@
+- [ ] tab selector実装
+- [ ] キーの設定を自分でできるようにする
+- [ ] Ctrl+*をつかえるようにする
+- [ ] 別タブで開くオプションをつける
+- [ ] フォームのinput、textareaを移動して行く機能つける
+- [ ] fayにする
+- [ ] hitahintの1key目による表示の絞り込み
+- [ ] hatebuもtab selectorに追加する
+- [ ] evernoteもtab selectorに追加する
+- [ ] 
