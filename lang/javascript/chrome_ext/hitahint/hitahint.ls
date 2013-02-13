@@ -154,7 +154,7 @@ class SelectorMode
 
 $(->
   Main.mode = NeutralMode
-  Main.links = if $('a').length is undefined then [$('a')] else $('a')
+  Main.links = if $('a').length is void then [$('a')] else $('a')
 
   if isFocusingForm() then Main.mode = FormFocusMode
 
@@ -177,24 +177,50 @@ $(->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
 
-    if e.keyCode == KEY_CODE_HITAHINT_START
-      Main.mode.keyUpHitAHintStart()
-    else if e.keyCode == KEY_CODE_FOCUS_FORM
-      Main.mode.keyUpFocusForm()
-    else if e.keyCode == KEY_CODE_CANCEL
-      Main.mode.keyUpCancel()
-    else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
-      Main.mode.keyUpSelectorToggle()
-    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
-      Main.mode.keyUpSelectorCursorNext(e.keyCode)
-    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
-      Main.mode.keyUpSelectorCursorPrev(e.keyCode)
-    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
-      Main.mode.keyUpSelectorCursorEnter()
-    else if isHitAHintKey(e.keyCode)
-      Main.mode.keyUpHintKey(e.keyCode)
-    else
+    switch
+    case e.keyCode == KEY_CODE_HITAHINT_START
+      if not Main.mode.keyUpHitAHintStart()
+        fallthrough
+    case e.keyCode == KEY_CODE_FOCUS_FORM
+      if not Main.mode.keyUpFocusForm()
+        fallthrough
+    case e.keyCode == KEY_CODE_CANCEL
+      if not Main.mode.keyUpCancel()
+        fallthrough
+    case e.keyCode == KEY_CODE_SELECTOR_TOGGLE
+      if not Main.mode.keyUpSelectorToggle()
+        fallthrough
+    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
+      if not Main.mode.keyUpSelectorCursorNext(e.keyCode)
+        fallthrough
+    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
+      if not Main.mode.keyUpSelectorCursorPrev(e.keyCode)
+        fallthrough
+    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
+      if not Main.mode.keyUpSelectorCursorEnter()
+        fallthrough
+    case isHitAHintKey(e.keyCode)
+      if not Main.mode.keyUpHintKey(e.keyCode)
+        fallthrough
+    default
       Main.mode.keyUpOthers()
-#     Main.mode.keyUpAny()
+#     if e.keyCode == KEY_CODE_HITAHINT_START
+#       Main.mode.keyUpHitAHintStart()
+#     else if e.keyCode == KEY_CODE_FOCUS_FORM
+#       Main.mode.keyUpFocusForm()
+#     else if e.keyCode == KEY_CODE_CANCEL
+#       Main.mode.keyUpCancel()
+#     else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
+#       Main.mode.keyUpSelectorToggle()
+#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
+#       Main.mode.keyUpSelectorCursorNext(e.keyCode)
+#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
+#       Main.mode.keyUpSelectorCursorPrev(e.keyCode)
+#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
+#       Main.mode.keyUpSelectorCursorEnter()
+#     else if isHitAHintKey(e.keyCode)
+#       Main.mode.keyUpHintKey(e.keyCode)
+#     else
+#       Main.mode.keyUpOthers()
   )
 )

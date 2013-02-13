@@ -288,23 +288,48 @@ $(function(){
   return $(document).keyup(function(e){
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
-    if (e.keyCode === KEY_CODE_HITAHINT_START) {
-      return Main.mode.keyUpHitAHintStart();
-    } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
-      return Main.mode.keyUpFocusForm();
-    } else if (e.keyCode === KEY_CODE_CANCEL) {
-      return Main.mode.keyUpCancel();
-    } else if (e.keyCode === KEY_CODE_SELECTOR_TOGGLE) {
-      return Main.mode.keyUpSelectorToggle();
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_NEXT) {
-      return Main.mode.keyUpSelectorCursorNext(e.keyCode);
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_PREV) {
-      return Main.mode.keyUpSelectorCursorPrev(e.keyCode);
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_ENTER) {
-      return Main.mode.keyUpSelectorCursorEnter();
-    } else if (isHitAHintKey(e.keyCode)) {
-      return Main.mode.keyUpHintKey(e.keyCode);
-    } else {
+    switch (false) {
+    case e.keyCode !== KEY_CODE_HITAHINT_START:
+      if (!Main.mode.keyUpHitAHintStart()) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_FOCUS_FORM:
+      if (!Main.mode.keyUpFocusForm()) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_CANCEL:
+      if (!Main.mode.keyUpCancel()) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_SELECTOR_TOGGLE:
+      if (!Main.mode.keyUpSelectorToggle()) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_SELECTOR_CURSOR_NEXT:
+      if (!Main.mode.keyUpSelectorCursorNext(e.keyCode)) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_SELECTOR_CURSOR_PREV:
+      if (!Main.mode.keyUpSelectorCursorPrev(e.keyCode)) {
+        return fallthrough;
+      }
+      break;
+    case e.keyCode !== KEY_CODE_SELECTOR_CURSOR_ENTER:
+      if (!Main.mode.keyUpSelectorCursorEnter()) {
+        return fallthrough;
+      }
+      break;
+    case !isHitAHintKey(e.keyCode):
+      if (!Main.mode.keyUpHintKey(e.keyCode)) {
+        return fallthrough;
+      }
+      break;
+    default:
       return Main.mode.keyUpOthers();
     }
   });
