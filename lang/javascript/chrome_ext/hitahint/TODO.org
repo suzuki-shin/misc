@@ -1,3 +1,4 @@
+- [ ] モードの切り替えがうまくいっていない(特にフォームにフォーカスしたとき？)
 - [ ] tab selector実装
 - [ ] キーの設定を自分でできるようにする
 - [ ] Ctrl+*をつかえるようにする
@@ -7,4 +8,3 @@
 - [ ] hitahintの1key目による表示の絞り込み
 - [ ] hatebuもtab selectorに追加する
 - [ ] evernoteもtab selectorに追加する
-- [ ] 

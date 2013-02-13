@@ -1,4 +1,4 @@
-var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 console.log('hitahint');
 p = prelude;
 KEY_CODE_HITAHINT_START = 69;
@@ -88,7 +88,8 @@ makeSelectorConsole = function(tabs){
     }
     return results$;
   }()));
-  return $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>');
+  $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>');
+  return $('#selectorList tr:first').addClass("selected");
 };
 filteringTabs = function(text, tabs){
   return p.filter(function(t){
@@ -98,6 +99,12 @@ filteringTabs = function(text, tabs){
     console.log(a);
     return a;
   }, tabs);
+};
+isFocusingForm = function(){
+  var focusElems;
+  focusElems = $(':focus');
+  console.log(focusElems.attr('type'));
+  return focusElems && ((focusElems[0].nodeName.toLowerCase() === "input" && focusElems.attr('type') === "text") || focusElems[0].nodeName.toLowerCase() === "textarea");
 };
 Main = (function(){
   Main.displayName = 'Main';
@@ -252,6 +259,9 @@ $(function(){
   Main.links = $('a').length === void 8
     ? [$('a')]
     : $('a');
+  if (isFocusingForm()) {
+    Main.mode = FormFocusMode;
+  }
   chrome.extension.sendMessage({
     mes: "makeSelectorConsole"
   }, function(tabs){
@@ -259,11 +269,11 @@ $(function(){
     $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>');
     return makeSelectorConsole(tabs);
   });
-  $('input, textarea').focus(function(){
+  $('input[type="text"], textarea').focus(function(){
     console.log('form focus');
     return Main.mode = FormFocusMode;
   });
-  $('input, textarea').blur(function(){
+  $('input[type="text"], textarea').blur(function(){
     console.log('form blur');
     return Main.mode = NeutralMode;
   });

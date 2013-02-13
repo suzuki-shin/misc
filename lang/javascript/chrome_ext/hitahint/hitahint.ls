@@ -27,6 +27,7 @@ makeSelectorConsole = (tabs) ->
   console.log(tabs)
   ts = p.concat(['<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>' for t in tabs])
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
+  $('#selectorList tr:first').addClass("selected")
 
 filteringTabs = (text, tabs) ->
   p.filter(
@@ -38,6 +39,13 @@ filteringTabs = (text, tabs) ->
     ),
     tabs)
 
+isFocusingForm =->
+  focusElems = $(':focus')
+  console.log(focusElems.attr('type'))
+  focusElems and (
+    (focusElems[0].nodeName.toLowerCase() == "input" and focusElems.attr('type') == "text") or
+    focusElems[0].nodeName.toLowerCase() == "textarea"
+  )
 
 class Main
 
@@ -133,17 +141,19 @@ $(->
   Main.mode = NeutralMode
   Main.links = if $('a').length is undefined then [$('a')] else $('a')
 
+  if isFocusingForm() then Main.mode = FormFocusMode
+
   chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((tabs) ->
     Main.tabs = tabs
     $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>')
     makeSelectorConsole(tabs)
   ))
 
-  $('input, textarea').focus(->
+  $('input[type="text"], textarea').focus(->
     console.log('form focus')
     Main.mode = FormFocusMode
   )
-  $('input, textarea').blur(->
+  $('input[type="text"], textarea').blur(->
     console.log('form blur')
     Main.mode = NeutralMode
   )
