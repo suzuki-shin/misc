@@ -8,6 +8,7 @@ KEY_CODE_CANCEL = 27
 KEY_CODE_SELECTOR_TOGGLE = 186
 KEY_CODE_SELECTOR_CURSOR_NEXT = 40
 KEY_CODE_SELECTOR_CURSOR_PREV = 38
+KEY_CODE_SELECTOR_CURSOR_ENTER = 13
 
 
 _HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
@@ -32,14 +33,7 @@ makeSelectorConsole = (tabs) ->
   $('#selectorList tr:first').addClass("selected")
 
 filteringTabs = (text, tabs) ->
-  p.filter(
-    ((t) ->
-      a = t.title.search(text) isnt -1
-      console.log(t)
-      console.log(a)
-      a
-    ),
-    tabs)
+  p.filter(((t) -> t.title.search(text) isnt -1), tabs)
 
 isFocusingForm =->
   focusElems = $(':focus')

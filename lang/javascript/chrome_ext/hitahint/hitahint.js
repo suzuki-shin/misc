@@ -1,4 +1,4 @@
-var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, KEY_CODE_SELECTOR_CURSOR_NEXT, KEY_CODE_SELECTOR_CURSOR_PREV, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, KEY_CODE_SELECTOR_CURSOR_NEXT, KEY_CODE_SELECTOR_CURSOR_PREV, KEY_CODE_SELECTOR_CURSOR_ENTER, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 console.log('hitahint');
 p = prelude;
 KEY_CODE_HITAHINT_START = 69;
@@ -7,6 +7,7 @@ KEY_CODE_CANCEL = 27;
 KEY_CODE_SELECTOR_TOGGLE = 186;
 KEY_CODE_SELECTOR_CURSOR_NEXT = 40;
 KEY_CODE_SELECTOR_CURSOR_PREV = 38;
+KEY_CODE_SELECTOR_CURSOR_ENTER = 13;
 _HINT_KEYS = {
   65: 'a',
   66: 'b',
@@ -95,11 +96,7 @@ makeSelectorConsole = function(tabs){
 };
 filteringTabs = function(text, tabs){
   return p.filter(function(t){
-    var a;
-    a = t.title.search(text) !== -1;
-    console.log(t);
-    console.log(a);
-    return a;
+    return t.title.search(text) !== -1;
   }, tabs);
 };
 isFocusingForm = function(){
