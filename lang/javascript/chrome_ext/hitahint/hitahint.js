@@ -1,5 +1,6 @@
-var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_START, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NeutralMode, HitAHintMode, FormFocusMode;
+var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_START, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NeutralMode, HitAHintMode, FormFocusMode;
 console.log('hitahint');
+p = prelude;
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
 KEY_CODE_CANCEL = 27;
@@ -172,6 +173,23 @@ $(function(){
   Main.links = $('a').length === void 8
     ? [$('a')]
     : $('a');
+  chrome.extension.sendMessage({
+    mes: "hello"
+  }, function(tabs){
+    var ts, res$, i$, len$, t, ts_;
+    console.log('sendResponse!!');
+    console.log(tabs);
+    res$ = [];
+    for (i$ = 0, len$ = tabs.length; i$ < len$; ++i$) {
+      t = tabs[i$];
+      res$.push('<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>');
+    }
+    ts = res$;
+    console.log(ts);
+    ts_ = p.concat(ts);
+    console.log(ts_);
+    return $('body').append('<div id="selectorConsole"><table>' + ts_ + '</table></div>');
+  });
   $('input, textarea').focus(function(){
     console.log('form focus');
     return Main.mode = FormFocusMode;

@@ -11,3 +11,17 @@
 	text-align: center;
 	z-index:10;
 }
+#selectorConsole {
+	z-index: 10;
+	background-color: #000;
+	opacity: 0.9;
+	color: #fff;
+	position: fixed;
+	top: 30px;
+	left: 30px;
+	width: 90%;
+}
+#selectorConsole td {
+	padding: 5px;
+	color: #fff;
+}

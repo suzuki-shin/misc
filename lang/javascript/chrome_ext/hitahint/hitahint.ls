@@ -1,5 +1,7 @@
 console.log('hitahint')
 
+p = prelude
+
 KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
@@ -79,6 +81,16 @@ class FormFocusMode
 $(->
   Main.mode = NeutralMode
   Main.links = if $('a').length is undefined then [$('a')] else $('a')
+
+  chrome.extension.sendMessage({mes:"hello"}, ((tabs) ->
+    console.log('sendResponse!!')
+    console.log(tabs)
+    ts = ['<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>' for t in tabs]
+    console.log(ts)
+    ts_ = p.concat(ts)
+    console.log(ts_)
+    $('body').append('<div id="selectorConsole"><table>' + ts_ + '</table></div>')
+  ))
 
   $('input, textarea').focus(->
     console.log('form focus')
