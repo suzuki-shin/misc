@@ -6,6 +6,8 @@ KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
 KEY_CODE_SELECTOR_TOGGLE = 186
+KEY_CODE_SELECTOR_CURSOR_NEXT = 40
+KEY_CODE_SELECTOR_CURSOR_PREV = 38
 
 
 _HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
@@ -42,7 +44,7 @@ filteringTabs = (text, tabs) ->
 isFocusingForm =->
   focusElems = $(':focus')
   console.log(focusElems.attr('type'))
-  focusElems and (
+  focusElems[0] and (
     (focusElems[0].nodeName.toLowerCase() == "input" and focusElems.attr('type') == "text") or
     focusElems[0].nodeName.toLowerCase() == "textarea"
   )
@@ -70,7 +72,7 @@ class NeutralMode
     $('#selectorInput').focus()
 
   @keyUpOthers =-> false
-  @keyUpAny = (keyCode) -> false
+#   @keyUpAny = (keyCode) -> false
 
 
 class HitAHintMode
@@ -100,7 +102,7 @@ class HitAHintMode
 
   @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
-  @keyUpAny = (keyCode) -> false
+#   @keyUpAny = (keyCode) -> false
 
 class FormFocusMode
   @keyUpHitAHintStart =-> false
@@ -113,29 +115,42 @@ class FormFocusMode
   @keyUpHintKey = (keyCode) -> false
   @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
-  @keyUpAny = (keyCode) -> false
+#   @keyUpAny = (keyCode) -> false
 
 class SelectorMode
-  @keyUpHitAHintStart =-> false
-  @keyUpFocusForm =-> false
+  @keyUpHitAHintStart =-> @keyUpOthers()
+  @keyUpFocusForm =-> @keyUpOthers()
 
   @keyUpCancel =->
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
     $(':focus').blur()
 
-  @keyUpHintKey = (keyCode) -> false
-  @keyUpOthers =-> false
+  @keyUpHintKey =->  @keyUpOthers()
+  @keyUpOthers =->
+    console.log('keyUpOthers')
+    text = $('#selectorInput').val()
+    console.log(text)
+    makeSelectorConsole(filteringTabs(text, Main.tabs))
+    $('#selectorConsole').show()
 
   @keyUpSelectorToggle =->
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
 
-  @keyUpAny = (keyCode) ->
-    text = $('#selectorInput').val()
-    console.log(text)
-    makeSelectorConsole(filteringTabs(text, Main.tabs))
-    $('#selectorConsole').show()
+#   @keyUpAny = (keyCode) ->
+#     text = $('#selectorInput').val()
+#     console.log(text)
+#     makeSelectorConsole(filteringTabs(text, Main.tabs))
+#     $('#selectorConsole').show()
+
+  @keyUpSelectorCursorNext =->
+    console.log('keyUpSelectorCursorNext')
+    $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected")
+
+  @keyUpSelectorCursorPrev =->
+    console.log('keyUpSelectorCursorPrev')
+    $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected")
 
 $(->
   Main.mode = NeutralMode
@@ -170,10 +185,14 @@ $(->
       Main.mode.keyUpCancel()
     else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
       Main.mode.keyUpSelectorToggle()
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
+      Main.mode.keyUpSelectorCursorNext(e.keyCode)
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
+      Main.mode.keyUpSelectorCursorPrev(e.keyCode)
     else if isHitAHintKey(e.keyCode)
       Main.mode.keyUpHintKey(e.keyCode)
     else
       Main.mode.keyUpOthers()
-    Main.mode.keyUpAny()
+#     Main.mode.keyUpAny()
   )
 )

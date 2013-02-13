@@ -1,10 +1,12 @@
-var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, KEY_CODE_SELECTOR_CURSOR_NEXT, KEY_CODE_SELECTOR_CURSOR_PREV, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 console.log('hitahint');
 p = prelude;
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
 KEY_CODE_CANCEL = 27;
 KEY_CODE_SELECTOR_TOGGLE = 186;
+KEY_CODE_SELECTOR_CURSOR_NEXT = 40;
+KEY_CODE_SELECTOR_CURSOR_PREV = 38;
 _HINT_KEYS = {
   65: 'a',
   66: 'b',
@@ -104,7 +106,7 @@ isFocusingForm = function(){
   var focusElems;
   focusElems = $(':focus');
   console.log(focusElems.attr('type'));
-  return focusElems && ((focusElems[0].nodeName.toLowerCase() === "input" && focusElems.attr('type') === "text") || focusElems[0].nodeName.toLowerCase() === "textarea");
+  return focusElems[0] && ((focusElems[0].nodeName.toLowerCase() === "input" && focusElems.attr('type') === "text") || focusElems[0].nodeName.toLowerCase() === "textarea");
 };
 Main = (function(){
   Main.displayName = 'Main';
@@ -141,9 +143,6 @@ NeutralMode = (function(){
     return $('#selectorInput').focus();
   };
   NeutralMode.keyUpOthers = function(){
-    return false;
-  };
-  NeutralMode.keyUpAny = function(keyCode){
     return false;
   };
   function NeutralMode(){}
@@ -186,9 +185,6 @@ HitAHintMode = (function(){
   HitAHintMode.keyUpOthers = function(){
     return false;
   };
-  HitAHintMode.keyUpAny = function(keyCode){
-    return false;
-  };
   function HitAHintMode(){}
   return HitAHintMode;
 }());
@@ -214,9 +210,6 @@ FormFocusMode = (function(){
   FormFocusMode.keyUpOthers = function(){
     return false;
   };
-  FormFocusMode.keyUpAny = function(keyCode){
-    return false;
-  };
   function FormFocusMode(){}
   return FormFocusMode;
 }());
@@ -224,32 +217,38 @@ SelectorMode = (function(){
   SelectorMode.displayName = 'SelectorMode';
   var prototype = SelectorMode.prototype, constructor = SelectorMode;
   SelectorMode.keyUpHitAHintStart = function(){
-    return false;
+    return this.keyUpOthers();
   };
   SelectorMode.keyUpFocusForm = function(){
-    return false;
+    return this.keyUpOthers();
   };
   SelectorMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     $('#selectorConsole').hide();
     return $(':focus').blur();
   };
-  SelectorMode.keyUpHintKey = function(keyCode){
-    return false;
+  SelectorMode.keyUpHintKey = function(){
+    return this.keyUpOthers();
   };
   SelectorMode.keyUpOthers = function(){
-    return false;
+    var text;
+    console.log('keyUpOthers');
+    text = $('#selectorInput').val();
+    console.log(text);
+    makeSelectorConsole(filteringTabs(text, Main.tabs));
+    return $('#selectorConsole').show();
   };
   SelectorMode.keyUpSelectorToggle = function(){
     Main.mode = NeutralMode;
     return $('#selectorConsole').hide();
   };
-  SelectorMode.keyUpAny = function(keyCode){
-    var text;
-    text = $('#selectorInput').val();
-    console.log(text);
-    makeSelectorConsole(filteringTabs(text, Main.tabs));
-    return $('#selectorConsole').show();
+  SelectorMode.keyUpSelectorCursorNext = function(){
+    console.log('keyUpSelectorCursorNext');
+    return $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected");
+  };
+  SelectorMode.keyUpSelectorCursorPrev = function(){
+    console.log('keyUpSelectorCursorPrev');
+    return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
   };
   function SelectorMode(){}
   return SelectorMode;
@@ -281,18 +280,21 @@ $(function(){
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
     if (e.keyCode === KEY_CODE_HITAHINT_START) {
-      Main.mode.keyUpHitAHintStart();
+      return Main.mode.keyUpHitAHintStart();
     } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
-      Main.mode.keyUpFocusForm();
+      return Main.mode.keyUpFocusForm();
     } else if (e.keyCode === KEY_CODE_CANCEL) {
-      Main.mode.keyUpCancel();
+      return Main.mode.keyUpCancel();
     } else if (e.keyCode === KEY_CODE_SELECTOR_TOGGLE) {
-      Main.mode.keyUpSelectorToggle();
+      return Main.mode.keyUpSelectorToggle();
+    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_NEXT) {
+      return Main.mode.keyUpSelectorCursorNext(e.keyCode);
+    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_PREV) {
+      return Main.mode.keyUpSelectorCursorPrev(e.keyCode);
     } else if (isHitAHintKey(e.keyCode)) {
-      Main.mode.keyUpHintKey(e.keyCode);
+      return Main.mode.keyUpHintKey(e.keyCode);
     } else {
-      Main.mode.keyUpOthers();
+      return Main.mode.keyUpOthers();
     }
-    return Main.mode.keyUpAny();
   });
 });
