@@ -1,4 +1,4 @@
-var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_START, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NewtralMode, HitAHintMode, FormFocusMode;
+var KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_START, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NeutralMode, HitAHintMode, FormFocusMode;
 console.log('hitahint');
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
@@ -79,10 +79,10 @@ Main = (function(){
   function Main(){}
   return Main;
 }());
-NewtralMode = (function(){
-  NewtralMode.displayName = 'NewtralMode';
-  var prototype = NewtralMode.prototype, constructor = NewtralMode;
-  NewtralMode.keyUpHitAHintStart = function(){
+NeutralMode = (function(){
+  NeutralMode.displayName = 'NeutralMode';
+  var prototype = NeutralMode.prototype, constructor = NeutralMode;
+  NeutralMode.keyUpHitAHintStart = function(){
     Main.mode = HitAHintMode;
     return Main.links.addClass('links').html(function(i, oldHtml){
       if (HINT_KEYS[indexToKeyCode(i)] != null) {
@@ -92,21 +92,21 @@ NewtralMode = (function(){
       }
     });
   };
-  NewtralMode.keyUpFocusForm = function(){
+  NeutralMode.keyUpFocusForm = function(){
     Main.mode = FormFocusMode;
     return $('input, textarea')[0].focus();
   };
-  NewtralMode.keyUpCancel = function(){
+  NeutralMode.keyUpCancel = function(){
     return false;
   };
-  NewtralMode.keyUpHintKey = function(keyCode){
+  NeutralMode.keyUpHintKey = function(keyCode){
     return false;
   };
-  NewtralMode.keyUpOthers = function(){
+  NeutralMode.keyUpOthers = function(){
     return false;
   };
-  function NewtralMode(){}
-  return NewtralMode;
+  function NeutralMode(){}
+  return NeutralMode;
 }());
 HitAHintMode = (function(){
   HitAHintMode.displayName = 'HitAHintMode';
@@ -119,7 +119,7 @@ HitAHintMode = (function(){
     return false;
   };
   HitAHintMode.keyUpCancel = function(){
-    Main.mode = NewtralMode;
+    Main.mode = NeutralMode;
     Main.links.removeClass('links');
     return $('.hintKey').remove();
   };
@@ -133,7 +133,7 @@ HitAHintMode = (function(){
       console.log('idx: ' + idx);
       console.log(Main.links);
       Main.links[idx].click();
-      Main.mode = NewtralMode;
+      Main.mode = NeutralMode;
       Main.links.removeClass('links');
       $('.hintKey').remove();
       return this.firstKeyCode = null;
@@ -155,7 +155,7 @@ FormFocusMode = (function(){
     return false;
   };
   FormFocusMode.keyUpCancel = function(){
-    Main.mode = NewtralMode;
+    Main.mode = NeutralMode;
     return $(':focus').blur();
   };
   FormFocusMode.keyUpHintKey = function(keyCode){
@@ -168,12 +168,17 @@ FormFocusMode = (function(){
   return FormFocusMode;
 }());
 $(function(){
-  Main.mode = NewtralMode;
+  Main.mode = NeutralMode;
   Main.links = $('a').length === void 8
     ? [$('a')]
     : $('a');
   $('input, textarea').focus(function(){
+    console.log('form focus');
     return Main.mode = FormFocusMode;
+  });
+  $('input, textarea').blur(function(){
+    console.log('form blur');
+    return Main.mode = NeutralMode;
   });
   return $(document).keyup(function(e){
     console.log('keyCode: ' + e.keyCode);

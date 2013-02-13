@@ -22,7 +22,7 @@ isHitAHintKey = (keyCode) ->
 
 class Main
 
-class NewtralMode
+class NeutralMode
   @keyUpHitAHintStart =->
     Main.mode = HitAHintMode
     Main.links.addClass('links').html((i, oldHtml) ->
@@ -45,7 +45,7 @@ class HitAHintMode
   @keyUpFocusForm =-> false
 
   @keyUpCancel =->
-    Main.mode = NewtralMode
+    Main.mode = NeutralMode
     Main.links.removeClass('links')
     $('.hintKey').remove()
 
@@ -58,7 +58,7 @@ class HitAHintMode
       console.log('idx: ' + idx)
       console.log(Main.links)
       Main.links[idx].click()
-      Main.mode = NewtralMode
+      Main.mode = NeutralMode
       Main.links.removeClass('links')
       $('.hintKey').remove()
       @firstKeyCode = null
@@ -70,17 +70,24 @@ class FormFocusMode
   @keyUpFocusForm =-> false
 
   @keyUpCancel =->
-    Main.mode = NewtralMode
+    Main.mode = NeutralMode
     $(':focus').blur()
 
   @keyUpHintKey = (keyCode) -> false
   @keyUpOthers =-> false
 
 $(->
-  Main.mode = NewtralMode
+  Main.mode = NeutralMode
   Main.links = if $('a').length is undefined then [$('a')] else $('a')
 
-  $('input, textarea').focus(-> Main.mode = FormFocusMode)
+  $('input, textarea').focus(->
+    console.log('form focus')
+    Main.mode = FormFocusMode
+  )
+  $('input, textarea').blur(->
+    console.log('form blur')
+    Main.mode = NeutralMode
+  )
 
   $(document).keyup((e) ->
     console.log('keyCode: ' + e.keyCode)
