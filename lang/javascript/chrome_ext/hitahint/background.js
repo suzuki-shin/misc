@@ -10,6 +10,14 @@ tabSelect = function(f){
 console.log('background');
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
   console.log(msg);
-  tabSelect(sendResponse);
+  if (msg.mes === "makeSelectorConsole") {
+    tabSelect(sendResponse);
+  } else if (msg.mes === "keyUpSelectorCursorEnter") {
+    console.log('tabs.update');
+    console.log(msg);
+    chrome.tabs.update(parseInt(msg.tabId), {
+      active: true
+    });
+  }
   return true;
 });

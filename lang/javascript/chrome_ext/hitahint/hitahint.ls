@@ -28,7 +28,7 @@ isHitAHintKey = (keyCode) ->
 makeSelectorConsole = (tabs) ->
   if $('#selectorList') then $('#selectorList').remove()
   console.log(tabs)
-  ts = p.concat(['<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>' for t in tabs])
+  ts = p.concat(['<tr id="' + t.id + '"><td>' + t.title + '</td></tr>' for t in tabs])
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
   $('#selectorList tr:first').addClass("selected")
 
@@ -146,6 +146,12 @@ class SelectorMode
     console.log('keyUpSelectorCursorPrev')
     $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected")
 
+  @keyUpSelectorCursorEnter =->
+    console.log('keyUpSelectorCursorEnter')
+    tabId = $('#selectorList tr.selected').attr('id')
+    console.log(tabId)
+    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", tabId: tabId}, ((res) -> console.log(res)))
+
 $(->
   Main.mode = NeutralMode
   Main.links = if $('a').length is undefined then [$('a')] else $('a')
@@ -183,6 +189,8 @@ $(->
       Main.mode.keyUpSelectorCursorNext(e.keyCode)
     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
       Main.mode.keyUpSelectorCursorPrev(e.keyCode)
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
+      Main.mode.keyUpSelectorCursorEnter()
     else if isHitAHintKey(e.keyCode)
       Main.mode.keyUpHintKey(e.keyCode)
     else

@@ -9,6 +9,11 @@ console.log('background')
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) ->
   console.log(msg)
 #   sendResponse(msg.mes + "---")
-  tabSelect(sendResponse)
+  if msg.mes == "makeSelectorConsole"
+    tabSelect(sendResponse)
+  else if msg.mes == "keyUpSelectorCursorEnter"
+    console.log('tabs.update')
+    console.log(msg)
+    chrome.tabs.update(parseInt(msg.tabId), {active: true})
   true
 )

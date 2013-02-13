@@ -87,7 +87,7 @@ makeSelectorConsole = function(tabs){
     var i$, ref$, len$, results$ = [];
     for (i$ = 0, len$ = (ref$ = tabs).length; i$ < len$; ++i$) {
       t = ref$[i$];
-      results$.push('<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>');
+      results$.push('<tr id="' + t.id + '"><td>' + t.title + '</td></tr>');
     }
     return results$;
   }()));
@@ -247,6 +247,18 @@ SelectorMode = (function(){
     console.log('keyUpSelectorCursorPrev');
     return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
   };
+  SelectorMode.keyUpSelectorCursorEnter = function(){
+    var tabId;
+    console.log('keyUpSelectorCursorEnter');
+    tabId = $('#selectorList tr.selected').attr('id');
+    console.log(tabId);
+    return chrome.extension.sendMessage({
+      mes: "keyUpSelectorCursorEnter",
+      tabId: tabId
+    }, function(res){
+      return console.log(res);
+    });
+  };
   function SelectorMode(){}
   return SelectorMode;
 }());
@@ -288,6 +300,8 @@ $(function(){
       return Main.mode.keyUpSelectorCursorNext(e.keyCode);
     } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_PREV) {
       return Main.mode.keyUpSelectorCursorPrev(e.keyCode);
+    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_ENTER) {
+      return Main.mode.keyUpSelectorCursorEnter();
     } else if (isHitAHintKey(e.keyCode)) {
       return Main.mode.keyUpHintKey(e.keyCode);
     } else {
