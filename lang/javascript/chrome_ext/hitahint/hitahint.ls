@@ -5,7 +5,7 @@ p = prelude
 KEY_CODE_HITAHINT_START = 69
 KEY_CODE_FOCUS_FORM = 70
 KEY_CODE_CANCEL = 27
-KEY_CODE_SELECTOR_START = 187
+KEY_CODE_SELECTOR_TOGGLE = 186
 
 
 _HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
@@ -21,6 +21,23 @@ indexToKeyCode = (index) -> [k for k,v of HINT_KEYS][index]
 
 isHitAHintKey = (keyCode) ->
   $.inArray(String(keyCode), [k for k,v of _HINT_KEYS]) isnt -1
+
+makeSelectorConsole = (tabs) ->
+  if $('#selectorList') then $('#selectorList').remove()
+  console.log(tabs)
+  ts = p.concat(['<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>' for t in tabs])
+  $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
+
+filteringTabs = (text, tabs) ->
+  p.filter(
+    ((t) ->
+      a = t.title.search(text) isnt -1
+      console.log(t)
+      console.log(a)
+      a
+    ),
+    tabs)
+
 
 class Main
 
@@ -38,7 +55,15 @@ class NeutralMode
 
   @keyUpCancel =-> false
   @keyUpHintKey = (keyCode) -> false
+
+  @keyUpSelectorToggle =->
+    Main.mode = SelectorMode
+    $('#selectorConsole').show()
+    $('#selectorInput').focus()
+
   @keyUpOthers =-> false
+  @keyUpAny = (keyCode) -> false
+
 
 class HitAHintMode
   @firstKeyCode = null
@@ -65,7 +90,9 @@ class HitAHintMode
       $('.hintKey').remove()
       @firstKeyCode = null
 
+  @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
+  @keyUpAny = (keyCode) -> false
 
 class FormFocusMode
   @keyUpHitAHintStart =-> false
@@ -76,20 +103,40 @@ class FormFocusMode
     $(':focus').blur()
 
   @keyUpHintKey = (keyCode) -> false
+  @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
+  @keyUpAny = (keyCode) -> false
+
+class SelectorMode
+  @keyUpHitAHintStart =-> false
+  @keyUpFocusForm =-> false
+
+  @keyUpCancel =->
+    Main.mode = NeutralMode
+    $('#selectorConsole').hide()
+    $(':focus').blur()
+
+  @keyUpHintKey = (keyCode) -> false
+  @keyUpOthers =-> false
+
+  @keyUpSelectorToggle =->
+    Main.mode = NeutralMode
+    $('#selectorConsole').hide()
+
+  @keyUpAny = (keyCode) ->
+    text = $('#selectorInput').val()
+    console.log(text)
+    makeSelectorConsole(filteringTabs(text, Main.tabs))
+    $('#selectorConsole').show()
 
 $(->
   Main.mode = NeutralMode
   Main.links = if $('a').length is undefined then [$('a')] else $('a')
 
-  chrome.extension.sendMessage({mes:"hello"}, ((tabs) ->
-    console.log('sendResponse!!')
-    console.log(tabs)
-    ts = ['<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>' for t in tabs]
-    console.log(ts)
-    ts_ = p.concat(ts)
-    console.log(ts_)
-    $('body').append('<div id="selectorConsole"><table>' + ts_ + '</table></div>')
+  chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((tabs) ->
+    Main.tabs = tabs
+    $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>')
+    makeSelectorConsole(tabs)
   ))
 
   $('input, textarea').focus(->
@@ -111,9 +158,12 @@ $(->
       Main.mode.keyUpFocusForm()
     else if e.keyCode == KEY_CODE_CANCEL
       Main.mode.keyUpCancel()
+    else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
+      Main.mode.keyUpSelectorToggle()
     else if isHitAHintKey(e.keyCode)
       Main.mode.keyUpHintKey(e.keyCode)
     else
       Main.mode.keyUpOthers()
+    Main.mode.keyUpAny()
   )
 )

@@ -1,10 +1,10 @@
-var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_START, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, Main, NeutralMode, HitAHintMode, FormFocusMode;
+var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 console.log('hitahint');
 p = prelude;
 KEY_CODE_HITAHINT_START = 69;
 KEY_CODE_FOCUS_FORM = 70;
 KEY_CODE_CANCEL = 27;
-KEY_CODE_SELECTOR_START = 187;
+KEY_CODE_SELECTOR_TOGGLE = 186;
 _HINT_KEYS = {
   65: 'a',
   66: 'b',
@@ -74,6 +74,31 @@ isHitAHintKey = function(keyCode){
     return results$;
   }())) !== -1;
 };
+makeSelectorConsole = function(tabs){
+  var ts, t;
+  if ($('#selectorList')) {
+    $('#selectorList').remove();
+  }
+  console.log(tabs);
+  ts = p.concat((function(){
+    var i$, ref$, len$, results$ = [];
+    for (i$ = 0, len$ = (ref$ = tabs).length; i$ < len$; ++i$) {
+      t = ref$[i$];
+      results$.push('<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>');
+    }
+    return results$;
+  }()));
+  return $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>');
+};
+filteringTabs = function(text, tabs){
+  return p.filter(function(t){
+    var a;
+    a = t.title.search(text) !== -1;
+    console.log(t);
+    console.log(a);
+    return a;
+  }, tabs);
+};
 Main = (function(){
   Main.displayName = 'Main';
   var prototype = Main.prototype, constructor = Main;
@@ -103,7 +128,15 @@ NeutralMode = (function(){
   NeutralMode.keyUpHintKey = function(keyCode){
     return false;
   };
+  NeutralMode.keyUpSelectorToggle = function(){
+    Main.mode = SelectorMode;
+    $('#selectorConsole').show();
+    return $('#selectorInput').focus();
+  };
   NeutralMode.keyUpOthers = function(){
+    return false;
+  };
+  NeutralMode.keyUpAny = function(keyCode){
     return false;
   };
   function NeutralMode(){}
@@ -140,7 +173,13 @@ HitAHintMode = (function(){
       return this.firstKeyCode = null;
     }
   };
+  HitAHintMode.keyUpSelectorToggle = function(){
+    return false;
+  };
   HitAHintMode.keyUpOthers = function(){
+    return false;
+  };
+  HitAHintMode.keyUpAny = function(keyCode){
     return false;
   };
   function HitAHintMode(){}
@@ -162,11 +201,51 @@ FormFocusMode = (function(){
   FormFocusMode.keyUpHintKey = function(keyCode){
     return false;
   };
+  FormFocusMode.keyUpSelectorToggle = function(){
+    return false;
+  };
   FormFocusMode.keyUpOthers = function(){
+    return false;
+  };
+  FormFocusMode.keyUpAny = function(keyCode){
     return false;
   };
   function FormFocusMode(){}
   return FormFocusMode;
+}());
+SelectorMode = (function(){
+  SelectorMode.displayName = 'SelectorMode';
+  var prototype = SelectorMode.prototype, constructor = SelectorMode;
+  SelectorMode.keyUpHitAHintStart = function(){
+    return false;
+  };
+  SelectorMode.keyUpFocusForm = function(){
+    return false;
+  };
+  SelectorMode.keyUpCancel = function(){
+    Main.mode = NeutralMode;
+    $('#selectorConsole').hide();
+    return $(':focus').blur();
+  };
+  SelectorMode.keyUpHintKey = function(keyCode){
+    return false;
+  };
+  SelectorMode.keyUpOthers = function(){
+    return false;
+  };
+  SelectorMode.keyUpSelectorToggle = function(){
+    Main.mode = NeutralMode;
+    return $('#selectorConsole').hide();
+  };
+  SelectorMode.keyUpAny = function(keyCode){
+    var text;
+    text = $('#selectorInput').val();
+    console.log(text);
+    makeSelectorConsole(filteringTabs(text, Main.tabs));
+    return $('#selectorConsole').show();
+  };
+  function SelectorMode(){}
+  return SelectorMode;
 }());
 $(function(){
   Main.mode = NeutralMode;
@@ -174,21 +253,11 @@ $(function(){
     ? [$('a')]
     : $('a');
   chrome.extension.sendMessage({
-    mes: "hello"
+    mes: "makeSelectorConsole"
   }, function(tabs){
-    var ts, res$, i$, len$, t, ts_;
-    console.log('sendResponse!!');
-    console.log(tabs);
-    res$ = [];
-    for (i$ = 0, len$ = tabs.length; i$ < len$; ++i$) {
-      t = tabs[i$];
-      res$.push('<tr><td>' + t.id + '</td><td>' + t.title + '</td></tr>');
-    }
-    ts = res$;
-    console.log(ts);
-    ts_ = p.concat(ts);
-    console.log(ts_);
-    return $('body').append('<div id="selectorConsole"><table>' + ts_ + '</table></div>');
+    Main.tabs = tabs;
+    $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>');
+    return makeSelectorConsole(tabs);
   });
   $('input, textarea').focus(function(){
     console.log('form focus');
@@ -202,15 +271,18 @@ $(function(){
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
     if (e.keyCode === KEY_CODE_HITAHINT_START) {
-      return Main.mode.keyUpHitAHintStart();
+      Main.mode.keyUpHitAHintStart();
     } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
-      return Main.mode.keyUpFocusForm();
+      Main.mode.keyUpFocusForm();
     } else if (e.keyCode === KEY_CODE_CANCEL) {
-      return Main.mode.keyUpCancel();
+      Main.mode.keyUpCancel();
+    } else if (e.keyCode === KEY_CODE_SELECTOR_TOGGLE) {
+      Main.mode.keyUpSelectorToggle();
     } else if (isHitAHintKey(e.keyCode)) {
-      return Main.mode.keyUpHintKey(e.keyCode);
+      Main.mode.keyUpHintKey(e.keyCode);
     } else {
-      return Main.mode.keyUpOthers();
+      Main.mode.keyUpOthers();
     }
+    return Main.mode.keyUpAny();
   });
 });
