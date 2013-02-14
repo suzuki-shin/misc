@@ -88,8 +88,22 @@ makeSelectorConsole = function(tabs){
   return $('#selectorList tr:first').addClass("selected");
 };
 filteringTabs = function(text, tabs){
+  var queries, titleAndUrlMatch;
+  queries = text.split(' ');
+  console.log(queries);
+  titleAndUrlMatch = function(tab){
+    var q;
+    return p.all(p.id, (function(){
+      var i$, ref$, len$, results$ = [];
+      for (i$ = 0, len$ = (ref$ = queries).length; i$ < len$; ++i$) {
+        q = ref$[i$];
+        results$.push(tab.title.toLowerCase().search(q) !== -1 || tab.url.toLowerCase().search(q) !== -1);
+      }
+      return results$;
+    }()));
+  };
   return p.filter(function(t){
-    return t.title.search(text) !== -1;
+    return titleAndUrlMatch(t);
   }, tabs);
 };
 isFocusingForm = function(){

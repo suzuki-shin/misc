@@ -24,7 +24,11 @@ makeSelectorConsole = (tabs) ->
   $('#selectorList tr:first').addClass("selected")
 
 filteringTabs = (text, tabs) ->
-  p.filter(((t) -> t.title.search(text) isnt -1), tabs)
+  queries = text.split(' ')
+  console.log(queries)
+  titleAndUrlMatch = (tab) ->
+    p.all(p.id, [tab.title.toLowerCase().search(q) isnt -1 or tab.url.toLowerCase().search(q) isnt -1 for q in queries])
+  p.filter(((t) -> titleAndUrlMatch(t)), tabs)
 
 isFocusingForm =->
   focusElems = $(':focus')
