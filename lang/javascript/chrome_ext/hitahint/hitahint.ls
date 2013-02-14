@@ -38,6 +38,7 @@ isFocusingForm =->
     focusElems[0].nodeName.toLowerCase() == "textarea"
   )
 
+
 class Main
 
 class NeutralMode
@@ -57,7 +58,7 @@ class NeutralMode
 
   @keyUpFocusForm =->
     Main.mode = FormFocusMode
-    $('input, textarea')[0].focus()
+    $('input[type="text"], textarea')[0].focus()
 
   @keyUpSelectorToggle =->
     Main.mode = SelectorMode

@@ -147,7 +147,7 @@ NeutralMode = (function(){
   };
   NeutralMode.keyUpFocusForm = function(){
     Main.mode = FormFocusMode;
-    return $('input, textarea')[0].focus();
+    return $('input[type="text"], textarea')[0].focus();
   };
   NeutralMode.keyUpSelectorToggle = function(){
     Main.mode = SelectorMode;
