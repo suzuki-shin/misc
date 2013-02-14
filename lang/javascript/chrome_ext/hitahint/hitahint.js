@@ -1,13 +1,6 @@
-var p, KEY_CODE_HITAHINT_START, KEY_CODE_FOCUS_FORM, KEY_CODE_CANCEL, KEY_CODE_SELECTOR_TOGGLE, KEY_CODE_SELECTOR_CURSOR_NEXT, KEY_CODE_SELECTOR_CURSOR_PREV, KEY_CODE_SELECTOR_CURSOR_ENTER, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 console.log('hitahint');
 p = prelude;
-KEY_CODE_HITAHINT_START = 69;
-KEY_CODE_FOCUS_FORM = 70;
-KEY_CODE_CANCEL = 27;
-KEY_CODE_SELECTOR_TOGGLE = 186;
-KEY_CODE_SELECTOR_CURSOR_NEXT = 40;
-KEY_CODE_SELECTOR_CURSOR_PREV = 38;
-KEY_CODE_SELECTOR_CURSOR_ENTER = 13;
 _HINT_KEYS = {
   65: 'A',
   66: 'B',
@@ -114,6 +107,20 @@ Main = (function(){
 NeutralMode = (function(){
   NeutralMode.displayName = 'NeutralMode';
   var prototype = NeutralMode.prototype, constructor = NeutralMode;
+  NeutralMode.keyMap = function(keyCode){
+    switch (keyCode) {
+    case 69:
+      return constructor.keyUpHitAHintStart();
+    case 70:
+      return constructor.keyUpFocusForm();
+    case 186:
+      return constructor.keyUpSelectorToggle();
+    default:
+      return function(){
+        return console.log('default');
+      };
+    }
+  };
   NeutralMode.keyUpHitAHintStart = function(){
     Main.mode = HitAHintMode;
     return Main.links.addClass('links').html(function(i, oldHtml){
@@ -128,19 +135,10 @@ NeutralMode = (function(){
     Main.mode = FormFocusMode;
     return $('input, textarea')[0].focus();
   };
-  NeutralMode.keyUpCancel = function(){
-    return false;
-  };
-  NeutralMode.keyUpHintKey = function(keyCode){
-    return false;
-  };
   NeutralMode.keyUpSelectorToggle = function(){
     Main.mode = SelectorMode;
     $('#selectorConsole').show();
     return $('#selectorInput').focus();
-  };
-  NeutralMode.keyUpOthers = function(){
-    return false;
   };
   function NeutralMode(){}
   return NeutralMode;
@@ -148,13 +146,15 @@ NeutralMode = (function(){
 HitAHintMode = (function(){
   HitAHintMode.displayName = 'HitAHintMode';
   var prototype = HitAHintMode.prototype, constructor = HitAHintMode;
+  HitAHintMode.keyMap = function(keyCode){
+    switch (keyCode) {
+    case 27:
+      return constructor.keyUpCancel();
+    default:
+      return constructor.keyUpHintKey(keyCode);
+    }
+  };
   HitAHintMode.firstKeyCode = null;
-  HitAHintMode.keyUpHitAHintStart = function(){
-    return false;
-  };
-  HitAHintMode.keyUpFocusForm = function(){
-    return false;
-  };
   HitAHintMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     Main.links.removeClass('links');
@@ -163,6 +163,11 @@ HitAHintMode = (function(){
   HitAHintMode.keyUpHintKey = function(keyCode){
     var idx;
     console.log('hit!: ' + keyCode + ', 1stkey: ' + this.firstKeyCode);
+    if (!isHitAHintKey(keyCode)) {
+      console.log('not isHitAHintKey');
+      console.log(isHitAHintKey(keyCode));
+      return;
+    }
     if (this.firstKeyCode === null) {
       return this.firstKeyCode = keyCode;
     } else {
@@ -176,36 +181,25 @@ HitAHintMode = (function(){
       return this.firstKeyCode = null;
     }
   };
-  HitAHintMode.keyUpSelectorToggle = function(){
-    return false;
-  };
-  HitAHintMode.keyUpOthers = function(){
-    return false;
-  };
   function HitAHintMode(){}
   return HitAHintMode;
 }());
 FormFocusMode = (function(){
   FormFocusMode.displayName = 'FormFocusMode';
   var prototype = FormFocusMode.prototype, constructor = FormFocusMode;
-  FormFocusMode.keyUpHitAHintStart = function(){
-    return false;
-  };
-  FormFocusMode.keyUpFocusForm = function(){
-    return false;
+  FormFocusMode.keyMap = function(keyCode){
+    switch (keyCode) {
+    case 27:
+      return constructor.keyUpCancel();
+    default:
+      return function(){
+        return console.log('default');
+      };
+    }
   };
   FormFocusMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     return $(':focus').blur();
-  };
-  FormFocusMode.keyUpHintKey = function(keyCode){
-    return false;
-  };
-  FormFocusMode.keyUpSelectorToggle = function(){
-    return false;
-  };
-  FormFocusMode.keyUpOthers = function(){
-    return false;
   };
   function FormFocusMode(){}
   return FormFocusMode;
@@ -213,19 +207,26 @@ FormFocusMode = (function(){
 SelectorMode = (function(){
   SelectorMode.displayName = 'SelectorMode';
   var prototype = SelectorMode.prototype, constructor = SelectorMode;
-  SelectorMode.keyUpHitAHintStart = function(){
-    return this.keyUpOthers();
-  };
-  SelectorMode.keyUpFocusForm = function(){
-    return this.keyUpOthers();
+  SelectorMode.keyMap = function(keyCode){
+    switch (keyCode) {
+    case 27:
+      return constructor.keyUpCancel();
+    case 186:
+      return constructor.keyUpSelectorToggle();
+    case 40:
+      return constructor.keyUpSelectorCursorNext();
+    case 38:
+      return constructor.keyUpSelectorCursorPrev();
+    case 13:
+      return constructor.keyUpSelectorCursorEnter();
+    default:
+      return constructor.keyUpOthers();
+    }
   };
   SelectorMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     $('#selectorConsole').hide();
     return $(':focus').blur();
-  };
-  SelectorMode.keyUpHintKey = function(){
-    return this.keyUpOthers();
   };
   SelectorMode.keyUpOthers = function(){
     var text;
@@ -288,33 +289,6 @@ $(function(){
   return $(document).keyup(function(e){
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
-    if (e.keyCode === KEY_CODE_HITAHINT_START) {
-      console.log('KEY_CODE_HITAHINT_START');
-      return Main.mode.keyUpHitAHintStart();
-    } else if (e.keyCode === KEY_CODE_FOCUS_FORM) {
-      console.log('KEY_CODE_FOCUS_FORM');
-      return Main.mode.keyUpFocusForm();
-    } else if (e.keyCode === KEY_CODE_CANCEL) {
-      console.log('KEY_CODE_CANCEL');
-      return Main.mode.keyUpCancel();
-    } else if (e.keyCode === KEY_CODE_SELECTOR_TOGGLE) {
-      console.log('KEY_CODE_SELECTOR_TOGGLE');
-      return Main.mode.keyUpSelectorToggle();
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_NEXT) {
-      console.log('KEY_CODE_SELECTOR_CURSOR_NEXT');
-      return Main.mode.keyUpSelectorCursorNext(e.keyCode);
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_PREV) {
-      console.log('KEY_CODE_SELECTOR_CURSOR_PREV');
-      return Main.mode.keyUpSelectorCursorPrev(e.keyCode);
-    } else if (e.keyCode === KEY_CODE_SELECTOR_CURSOR_ENTER) {
-      console.log('KEY_CODE_SELECTOR_CURSOR_ENTER');
-      return Main.mode.keyUpSelectorCursorEnter();
-    } else if (isHitAHintKey(e.keyCode)) {
-      console.log('KEY_CODE_HIT_HINT');
-      return Main.mode.keyUpHintKey(e.keyCode);
-    } else {
-      console.log('KEY_CODE_DEFAULT');
-      return Main.mode.keyUpOthers();
-    }
+    return Main.mode.keyMap(e.keyCode);
   });
 });
