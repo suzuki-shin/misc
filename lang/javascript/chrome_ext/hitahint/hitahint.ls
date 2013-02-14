@@ -11,7 +11,7 @@ KEY_CODE_SELECTOR_CURSOR_PREV = 38
 KEY_CODE_SELECTOR_CURSOR_ENTER = 13
 
 
-_HINT_KEYS = {65:'a', 66:'b', 67:'c', 68:'d', 69:'e', 70:'f', 71:'g', 72:'h', 73:'i', 74:'j', 75:'k', 76:'l', 77:'m', 78:'n', 79:'o', 80:'p', 81:'q', 82:'r', 83:'s', 84:'t', 85:'u', 86:'v', 87:'w', 88:'x', 89:'y', 90:'z'}
+_HINT_KEYS = {65:'A', 66:'B', 67:'C', 68:'D', 69:'E', 70:'F', 71:'G', 72:'H', 73:'I', 74:'J', 75:'K', 76:'L', 77:'M', 78:'N', 79:'O', 80:'P', 81:'Q', 82:'R', 83:'S', 84:'T', 85:'U', 86:'V', 87:'W', 88:'X', 89:'Y', 90:'Z'}
 HINT_KEYS = {}
 for k1, v1 of _HINT_KEYS
   for k2, v2 of _HINT_KEYS
@@ -96,7 +96,6 @@ class HitAHintMode
 
   @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
-#   @keyUpAny = (keyCode) -> false
 
 class FormFocusMode
   @keyUpHitAHintStart =-> false
@@ -109,7 +108,6 @@ class FormFocusMode
   @keyUpHintKey = (keyCode) -> false
   @keyUpSelectorToggle =-> false
   @keyUpOthers =-> false
-#   @keyUpAny = (keyCode) -> false
 
 class SelectorMode
   @keyUpHitAHintStart =-> @keyUpOthers()
@@ -132,12 +130,6 @@ class SelectorMode
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
 
-#   @keyUpAny = (keyCode) ->
-#     text = $('#selectorInput').val()
-#     console.log(text)
-#     makeSelectorConsole(filteringTabs(text, Main.tabs))
-#     $('#selectorConsole').show()
-
   @keyUpSelectorCursorNext =->
     console.log('keyUpSelectorCursorNext')
     $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected")
@@ -155,7 +147,6 @@ class SelectorMode
 $(->
   Main.mode = NeutralMode
   Main.links = if $('a').length is void then [$('a')] else $('a')
-
   if isFocusingForm() then Main.mode = FormFocusMode
 
   chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((tabs) ->
@@ -177,50 +168,69 @@ $(->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
 
-    switch
-    case e.keyCode == KEY_CODE_HITAHINT_START
-      if not Main.mode.keyUpHitAHintStart()
-        fallthrough
-    case e.keyCode == KEY_CODE_FOCUS_FORM
-      if not Main.mode.keyUpFocusForm()
-        fallthrough
-    case e.keyCode == KEY_CODE_CANCEL
-      if not Main.mode.keyUpCancel()
-        fallthrough
-    case e.keyCode == KEY_CODE_SELECTOR_TOGGLE
-      if not Main.mode.keyUpSelectorToggle()
-        fallthrough
-    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
-      if not Main.mode.keyUpSelectorCursorNext(e.keyCode)
-        fallthrough
-    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
-      if not Main.mode.keyUpSelectorCursorPrev(e.keyCode)
-        fallthrough
-    case e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
-      if not Main.mode.keyUpSelectorCursorEnter()
-        fallthrough
-    case isHitAHintKey(e.keyCode)
-      if not Main.mode.keyUpHintKey(e.keyCode)
-        fallthrough
-    default
+    if e.keyCode == KEY_CODE_HITAHINT_START
+      console.log('KEY_CODE_HITAHINT_START')
+      Main.mode.keyUpHitAHintStart()
+    else if e.keyCode == KEY_CODE_FOCUS_FORM
+      console.log('KEY_CODE_FOCUS_FORM')
+      Main.mode.keyUpFocusForm()
+    else if e.keyCode == KEY_CODE_CANCEL
+      console.log('KEY_CODE_CANCEL')
+      Main.mode.keyUpCancel()
+    else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
+      console.log('KEY_CODE_SELECTOR_TOGGLE')
+      Main.mode.keyUpSelectorToggle()
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
+      console.log('KEY_CODE_SELECTOR_CURSOR_NEXT')
+      Main.mode.keyUpSelectorCursorNext(e.keyCode)
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
+      console.log('KEY_CODE_SELECTOR_CURSOR_PREV')
+      Main.mode.keyUpSelectorCursorPrev(e.keyCode)
+    else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
+      console.log('KEY_CODE_SELECTOR_CURSOR_ENTER')
+      Main.mode.keyUpSelectorCursorEnter()
+    else if isHitAHintKey(e.keyCode)
+      console.log('KEY_CODE_HIT_HINT')
+      Main.mode.keyUpHintKey(e.keyCode)
+    else
+      console.log('KEY_CODE_DEFAULT')
       Main.mode.keyUpOthers()
-#     if e.keyCode == KEY_CODE_HITAHINT_START
-#       Main.mode.keyUpHitAHintStart()
-#     else if e.keyCode == KEY_CODE_FOCUS_FORM
-#       Main.mode.keyUpFocusForm()
-#     else if e.keyCode == KEY_CODE_CANCEL
-#       Main.mode.keyUpCancel()
-#     else if e.keyCode == KEY_CODE_SELECTOR_TOGGLE
-#       Main.mode.keyUpSelectorToggle()
-#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
-#       Main.mode.keyUpSelectorCursorNext(e.keyCode)
-#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
-#       Main.mode.keyUpSelectorCursorPrev(e.keyCode)
-#     else if e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
-#       Main.mode.keyUpSelectorCursorEnter()
-#     else if isHitAHintKey(e.keyCode)
-#       Main.mode.keyUpHintKey(e.keyCode)
-#     else
+
+#     switch
+#     case e.keyCode == KEY_CODE_HITAHINT_START
+#       console.log('KEY_CODE_HITAHINT_START')
+#       if Main.mode.keyUpHitAHintStart() then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_FOCUS_FORM
+#       console.log('KEY_CODE_FOCUS_FORM')
+#       if Main.mode.keyUpFocusForm() then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_CANCEL
+#       console.log('KEY_CODE_CANCEL')
+#       if Main.mode.keyUpCancel() then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_SELECTOR_TOGGLE
+#       console.log('KEY_CODE_SELECTOR_TOGGLE')
+#       if Main.mode.keyUpSelectorToggle() then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_SELECTOR_CURSOR_NEXT
+#       console.log('KEY_CODE_SELECTOR_CURSOR_NEXT')
+#       if Main.mode.keyUpSelectorCursorNext(e.keyCode) then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_SELECTOR_CURSOR_PREV
+#       console.log('KEY_CODE_SELECTOR_CURSOR_PREV')
+#       if Main.mode.keyUpSelectorCursorPrev(e.keyCode) then break
+#       fallthrough
+#     case e.keyCode == KEY_CODE_SELECTOR_CURSOR_ENTER
+#       console.log('KEY_CODE_SELECTOR_CURSOR_ENTER')
+#       if Main.mode.keyUpSelectorCursorEnter() then break
+#       fallthrough
+#     case isHitAHintKey(e.keyCode)
+#       console.log('KEY_CODE_HIT_HINT')
+#       if Main.mode.keyUpHintKey(e.keyCode) then break
+#       fallthrough
+#     default
+#       console.log('KEY_CODE_DEFAULT')
 #       Main.mode.keyUpOthers()
   )
 )
