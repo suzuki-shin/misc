@@ -112,15 +112,15 @@ class SelectorMode
     case 40 then @@keyUpSelectorCursorNext()
     case 38 then @@keyUpSelectorCursorPrev()
     case 13 then @@keyUpSelectorCursorEnter()
-    default @@keyUpOthers()
+    default @@keyUpSelectorFiltering()
 
   @keyUpCancel =->
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
     $(':focus').blur()
 
-  @keyUpOthers =->
-    console.log('keyUpOthers')
+  @keyUpSelectorFiltering =->
+    console.log('keyUpSelectorFiltering')
     text = $('#selectorInput').val()
     console.log(text)
     makeSelectorConsole(filteringTabs(text, Main.tabs))
@@ -142,6 +142,7 @@ class SelectorMode
     console.log('keyUpSelectorCursorEnter')
     tabId = $('#selectorList tr.selected').attr('id')
     console.log(tabId)
+    @@keyUpCancel()
     chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", tabId: tabId}, ((res) -> console.log(res)))
 
 $(->
@@ -167,7 +168,6 @@ $(->
   $(document).keyup((e) ->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
-
     Main.mode.keyMap(e.keyCode)
   )
 )

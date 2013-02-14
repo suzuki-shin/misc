@@ -220,7 +220,7 @@ SelectorMode = (function(){
     case 13:
       return constructor.keyUpSelectorCursorEnter();
     default:
-      return constructor.keyUpOthers();
+      return constructor.keyUpSelectorFiltering();
     }
   };
   SelectorMode.keyUpCancel = function(){
@@ -228,9 +228,9 @@ SelectorMode = (function(){
     $('#selectorConsole').hide();
     return $(':focus').blur();
   };
-  SelectorMode.keyUpOthers = function(){
+  SelectorMode.keyUpSelectorFiltering = function(){
     var text;
-    console.log('keyUpOthers');
+    console.log('keyUpSelectorFiltering');
     text = $('#selectorInput').val();
     console.log(text);
     makeSelectorConsole(filteringTabs(text, Main.tabs));
@@ -253,6 +253,7 @@ SelectorMode = (function(){
     console.log('keyUpSelectorCursorEnter');
     tabId = $('#selectorList tr.selected').attr('id');
     console.log(tabId);
+    constructor.keyUpCancel();
     return chrome.extension.sendMessage({
       mes: "keyUpSelectorCursorEnter",
       tabId: tabId
