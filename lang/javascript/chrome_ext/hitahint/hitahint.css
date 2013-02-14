@@ -1,14 +1,11 @@
 .links {
 /* 	background-color: pink; */
 }
-/* {display:inline; position:absolute; border:1px solid #cccccc; background:#ffffff; color:#6c6c6c;} */
 
 .links .hintKey {
 	position: absolute;
 	display: inline;
 	opacity: 0.7;
-/* 	height: 20px; */
-/* 	width: 20px; */
 	padding: 3px;
 	background-color: #f11;
 	border-radius: 5px;
@@ -19,7 +16,7 @@
 }
 #selectorConsole {
 	display: none;
-	z-index: 10;
+	z-index: 10000000;
 	background-color: #000;
 	opacity: 0.9;
 	color: #fff;
@@ -38,11 +35,19 @@
 	color: #fff;
 	font-size: 11pt;
 }
+#selectorConsole td span.tabUrl {
+	padding-left: 20px;
+	font-size: 9pt;
+	color: #aaf;
+}
 #selectorConsole tr.selected {
 	background-color: #0d0;
 }
 #selectorConsole tr.selected td {
 	color: #000;
+}
+#selectorConsole tr.selected td span.tabUrl {
+	color: #009;
 }
 
 #selectorConsole input {

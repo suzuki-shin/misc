@@ -80,7 +80,7 @@ makeSelectorConsole = function(tabs){
     var i$, ref$, len$, results$ = [];
     for (i$ = 0, len$ = (ref$ = tabs).length; i$ < len$; ++i$) {
       t = ref$[i$];
-      results$.push('<tr id="' + t.id + '"><td>' + t.title + '</td></tr>');
+      results$.push('<tr id="' + t.id + '"><td><span class="tabTitle">' + t.title + ' </span><span class="tabUrl"> ' + t.url + '</span></td></tr>');
     }
     return results$;
   }()));

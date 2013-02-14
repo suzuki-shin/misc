@@ -19,7 +19,7 @@ isHitAHintKey = (keyCode) ->
 makeSelectorConsole = (tabs) ->
   if $('#selectorList') then $('#selectorList').remove()
   console.log(tabs)
-  ts = p.concat(['<tr id="' + t.id + '"><td>' + t.title + '</td></tr>' for t in tabs])
+  ts = p.concat(['<tr id="' + t.id + '"><td><span class="tabTitle">' + t.title + ' </span><span class="tabUrl"> ' + t.url + '</span></td></tr>' for t in tabs])
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
   $('#selectorList tr:first').addClass("selected")
 
