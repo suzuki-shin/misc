@@ -1,6 +1,12 @@
-var p, FORM_INPUT_FIELDS, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filteringTabs, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filtering, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 p = prelude;
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select';
+ITEM_TYPE_OF = {
+  tab: 'T',
+  history: 'H',
+  bookmarks: 'B'
+};
+SELECTOR_NUM = 20;
 KEY_CODE = {
   START_HITAHINT: 69,
   FOCUS_FORM: 70,
@@ -82,24 +88,24 @@ isHitAHintKey = function(keyCode){
     return results$;
   }())) !== -1;
 };
-makeSelectorConsole = function(tabs){
+makeSelectorConsole = function(list){
   var ts, t;
   if ($('#selectorList')) {
     $('#selectorList').remove();
   }
-  console.log(tabs);
-  ts = p.concat((function(){
+  console.log(list);
+  ts = p.concat(p.take(SELECTOR_NUM, (function(){
     var i$, ref$, len$, results$ = [];
-    for (i$ = 0, len$ = (ref$ = tabs).length; i$ < len$; ++i$) {
+    for (i$ = 0, len$ = (ref$ = list).length; i$ < len$; ++i$) {
       t = ref$[i$];
-      results$.push('<tr id="tab-' + t.id + '"><td><span class="tabTitle">[T] ' + t.title + ' </span><span class="tabUrl"> ' + t.url + '</span></td></tr>');
+      results$.push('<tr id="' + t.type + '-' + t.id + '"><td><span class="title">[' + ITEM_TYPE_OF[t.type] + '] ' + t.title + ' </span><span class="url"> ' + t.url + '</span></td></tr>');
     }
     return results$;
-  }()));
+  }())));
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>');
   return $('#selectorList tr:first').addClass("selected");
 };
-filteringTabs = function(text, tabs){
+filtering = function(text, list){
   var matchP;
   matchP = function(tab, queries){
     var q;
@@ -114,7 +120,7 @@ filteringTabs = function(text, tabs){
   };
   return p.filter(function(t){
     return matchP(t, text.toLowerCase().split(' '));
-  }, tabs);
+  }, list);
 };
 isFocusingForm = function(){
   var focusElems;
@@ -301,7 +307,7 @@ SelectorMode = (function(){
     console.log('keyUpSelectorFiltering');
     text = $('#selectorInput').val();
     console.log(text);
-    makeSelectorConsole(filteringTabs(text, Main.tabs));
+    makeSelectorConsole(filtering(text, Main.list));
     return $('#selectorConsole').show();
   };
   SelectorMode.keyUpSelectorToggle = function(){
@@ -317,13 +323,14 @@ SelectorMode = (function(){
     return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
   };
   SelectorMode.keyUpSelectorCursorEnter = function(){
-    var tabId;
+    var ref$, type, id;
     console.log('keyUpSelectorCursorEnter');
-    tabId = $('#selectorList tr.selected').attr('id').split('-')[1];
+    ref$ = $('#selectorList tr.selected').attr('id').split('-'), type = ref$[0], id = ref$[1];
     constructor.keyUpCancel();
     return chrome.extension.sendMessage({
       mes: "keyUpSelectorCursorEnter",
-      tabId: tabId
+      id: id,
+      type: type
     }, function(res){
       return console.log(res);
     });
@@ -341,10 +348,12 @@ Main.start = function(){
   }
   chrome.extension.sendMessage({
     mes: "makeSelectorConsole"
-  }, function(tabs){
-    Main.tabs = tabs;
+  }, function(list){
+    console.log('extension.sendMessage');
+    console.log(list);
+    Main.list = list;
     $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>');
-    return makeSelectorConsole(tabs);
+    return makeSelectorConsole(list);
   });
   $(FORM_INPUT_FIELDS).focus(function(){
     console.log('form focus');

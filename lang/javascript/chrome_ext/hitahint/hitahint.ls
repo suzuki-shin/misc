@@ -3,6 +3,9 @@ p = prelude
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select'
 # CLICKABLES = 'a, input, button, textarea, select'
 
+ITEM_TYPE_OF = {tab: 'T', history: 'H', bookmarks: 'B'}
+SELECTOR_NUM = 20
+
 KEY_CODE =
   START_HITAHINT: 69            # e
   FOCUS_FORM: 70                # f
@@ -35,23 +38,25 @@ indexToKeyCode = (index) -> [k for k,v of HINT_KEYS][index]
 isHitAHintKey = (keyCode) ->
   $.inArray(String(keyCode), [k for k,v of _HINT_KEYS]) isnt -1
 
-# tabのリストをうけとりそれをhtmlにしてappendする
-# makeSelectorConsole :: [Tab] -> IO Jquery
-makeSelectorConsole = (tabs) ->
+# (tab|history|bookmark)のリストをうけとりそれをhtmlにしてappendする
+# makeSelectorConsole :: [{title, url, type}] -> IO Jquery
+makeSelectorConsole = (list) ->
   if $('#selectorList') then $('#selectorList').remove()
-  console.log(tabs)
-  ts = p.concat(['<tr id="tab-' + t.id + '"><td><span class="tabTitle">[T] ' + t.title + ' </span><span class="tabUrl"> ' + t.url + '</span></td></tr>' for t in tabs])
+  console.log(list)
+  ts = p.concat(
+    p.take(SELECTOR_NUM,
+           ['<tr id="' + t.type + '-' + t.id + '"><td><span class="title">['+ ITEM_TYPE_OF[t.type] + '] ' + t.title + ' </span><span class="url"> ' + t.url + '</span></td></tr>' for t in list]))
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
   $('#selectorList tr:first').addClass("selected")
 
-# 受け取ったテキストをスペース区切りで分割して、その要素すべてがtabのtitleかtabのurlに含まれるtabのみ返す
-# filteringTabs :: String -> [Tab] -> [Tab]
-filteringTabs = (text, tabs) ->
+# 受け取ったテキストをスペース区切りで分割して、その要素すべてが(tab|history|bookmark)のtitleかtabのurlに含まれるtabのみ返す
+# filtering :: String -> [{title, url, type}] -> [{title, url, type}]
+filtering = (text, list) ->
   # queriesのすべての要素がtabのtitleかtabのurlに見つかるかどうかを返す
   # titleAndUrlMatch :: Tab -> [String] -> Bool
   matchP = (tab, queries) ->
     p.all(p.id, [tab.title.toLowerCase().search(q) isnt -1 or tab.url.toLowerCase().search(q) isnt -1 for q in queries])
-  p.filter(((t) -> matchP(t, text.toLowerCase().split(' '))), tabs)
+  p.filter(((t) -> matchP(t, text.toLowerCase().split(' '))), list)
 
 # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
 # isFocusingForm :: Bool
@@ -183,7 +188,7 @@ class SelectorMode
     console.log('keyUpSelectorFiltering')
     text = $('#selectorInput').val()
     console.log(text)
-    makeSelectorConsole(filteringTabs(text, Main.tabs))
+    makeSelectorConsole(filtering(text, Main.list))
     $('#selectorConsole').show()
 
   @keyUpSelectorToggle =->
@@ -200,9 +205,9 @@ class SelectorMode
 
   @keyUpSelectorCursorEnter =->
     console.log('keyUpSelectorCursorEnter')
-    tabId = $('#selectorList tr.selected').attr('id').split('-')[1]
+    [type, id] = $('#selectorList tr.selected').attr('id').split('-')
     @@keyUpCancel()
-    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", tabId: tabId}, ((res) -> console.log(res)))
+    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", id: id, type: type}, ((res) -> console.log(res)))
 
 Main.start =->
   Main.mode = NeutralMode
@@ -210,10 +215,12 @@ Main.start =->
   Main.links = if _clickables.length is void then [_clickables] else _clickables
   if isFocusingForm() then Main.mode = FormFocusMode
 
-  chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((tabs) ->
-    Main.tabs = tabs
+  chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((list) ->
+    console.log('extension.sendMessage')
+    console.log(list)
+    Main.list = list
     $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>')
-    makeSelectorConsole(tabs)
+    makeSelectorConsole(list)
   ))
 
   $(FORM_INPUT_FIELDS).focus(->
