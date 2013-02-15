@@ -16,6 +16,7 @@
 	z-index:10000000;
 }
 #selectorConsole {
+	align: left;
 	display: none;
 	z-index: 10000000;
 	background-color: #000;
