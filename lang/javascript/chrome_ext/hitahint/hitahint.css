@@ -16,6 +16,7 @@
 	z-index:10000000;
 }
 #selectorConsole {
+	align: left;
 	display: none;
 	z-index: 10000000;
 	background-color: #000;
@@ -36,7 +37,7 @@
 	color: #fff;
 	font-size: 11pt;
 }
-#selectorConsole td span.tabUrl {
+#selectorConsole td span.url {
 	padding-left: 20px;
 	font-size: 10pt;
 	color: #aaf;
@@ -47,7 +48,7 @@
 #selectorConsole tr.selected td {
 	color: #000;
 }
-#selectorConsole tr.selected td span.tabUrl {
+#selectorConsole tr.selected td span.url {
 	color: #009;
 }
 

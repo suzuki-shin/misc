@@ -1,6 +1,22 @@
-console.log('hitahint')
-
 p = prelude
+
+FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select'
+# CLICKABLES = 'a, input, button, textarea, select'
+
+ITEM_TYPE_OF = {tab: 'T', history: 'H', bookmarks: 'B'}
+SELECTOR_NUM = 20
+
+KEY_CODE =
+  START_HITAHINT: 69            # e
+  FOCUS_FORM: 70                # f
+  TOGGLE_SELECTOR: 186          # ;
+  CANCEL: 27                    # ESC
+  MOVE_NEXT_SELECTOR_CURSOR: 40 # down
+  MOVE_PREV_SELECTOR_CURSOR: 38 # up
+  ENTER_SELECTOR_CURSOR: 13     # ENTER
+  MOVE_NEXT_FORM: 34            # pageup
+  MOVE_PREV_FORM: 33            # pagedown
+  BACK_HISTORY: 72              # h
 
 _HINT_KEYS = {65:'A', 66:'B', 67:'C', 68:'D', 69:'E', 70:'F', 71:'G', 72:'H', 73:'I', 74:'J', 75:'K', 76:'L', 77:'M', 78:'N', 79:'O', 80:'P', 81:'Q', 82:'R', 83:'S', 84:'T', 85:'U', 86:'V', 87:'W', 88:'X', 89:'Y', 90:'Z'}
 HINT_KEYS = {}
@@ -8,29 +24,44 @@ for k1, v1 of _HINT_KEYS
   for k2, v2 of _HINT_KEYS
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2
 
+# 打ったHintKeyの一打目と二打目のキーコードをうけとり、それに対応するクリック要素のインデックスを返す
+# keyCodeToIndex :: Int -> Int -> Int
 keyCodeToIndex = (firstKeyCode, secondKeyCode) ->
   $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), [parseInt(k) for k,v of HINT_KEYS])
 
+# インデックスを受取り、HintKeyのリストの中から対応するキーコードを返す
+# indexToKeyCode :: Int -> String
 indexToKeyCode = (index) -> [k for k,v of HINT_KEYS][index]
 
+# キーコードを受取り、それがHintKeyかどうかを返す
+# isHitAHintKey :: Int -> Bool
 isHitAHintKey = (keyCode) ->
   $.inArray(String(keyCode), [k for k,v of _HINT_KEYS]) isnt -1
 
-makeSelectorConsole = (tabs) ->
+# (tab|history|bookmark)のリストをうけとりそれをhtmlにしてappendする
+# makeSelectorConsole :: [{title, url, type}] -> IO Jquery
+makeSelectorConsole = (list) ->
   if $('#selectorList') then $('#selectorList').remove()
-  console.log(tabs)
-  ts = p.concat(['<tr id="' + t.id + '"><td><span class="tabTitle">' + t.title + ' </span><span class="tabUrl"> ' + t.url + '</span></td></tr>' for t in tabs])
+  console.log(list)
+  ts = p.concat(
+    p.take(SELECTOR_NUM,
+           ['<tr id="' + t.type + '-' + t.id + '"><td><span class="title">['+ ITEM_TYPE_OF[t.type] + '] ' + t.title + ' </span><span class="url"> ' + t.url + '</span></td></tr>' for t in list]))
   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
   $('#selectorList tr:first').addClass("selected")
 
-filteringTabs = (text, tabs) ->
-  queries = text.split(' ')
-  console.log(queries)
-  titleAndUrlMatch = (tab) ->
+# 受け取ったテキストをスペース区切りで分割して、その要素すべてが(tab|history|bookmark)のtitleかtabのurlに含まれるtabのみ返す
+# filtering :: String -> [{title, url, type}] -> [{title, url, type}]
+filtering = (text, list) ->
+  # queriesのすべての要素がtabのtitleかtabのurlに見つかるかどうかを返す
+  # titleAndUrlMatch :: Tab -> [String] -> Bool
+  matchP = (tab, queries) ->
     p.all(p.id, [tab.title.toLowerCase().search(q) isnt -1 or tab.url.toLowerCase().search(q) isnt -1 for q in queries])
-  p.filter(((t) -> titleAndUrlMatch(t)), tabs)
+  p.filter(((t) -> matchP(t, text.toLowerCase().split(' '))), list)
 
+# 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
+# isFocusingForm :: Bool
 isFocusingForm =->
+  console.log('isFocusingForm')
   focusElems = $(':focus')
   console.log(focusElems.attr('type'))
   focusElems[0] and (
@@ -41,13 +72,16 @@ isFocusingForm =->
 
 class Main
 
+# 何のモードでもない状態を表すモードのクラス
 class NeutralMode
-  @keyMap = (keyCode) ->
-    switch keyCode
-    case 69 then @@keyUpHitAHintStart()
-    case 70 then @@keyUpFocusForm()
-    case 186 then @@keyUpSelectorToggle()
+  @keyMap = (e) ->
+    switch e.keyCode
+    case KEY_CODE.START_HITAHINT  then @@keyUpHitAHintStart()
+    case KEY_CODE.FOCUS_FORM      then @@keyUpFocusForm()
+    case KEY_CODE.TOGGLE_SELECTOR then @@keyUpSelectorToggle()
+    case KEY_CODE.BACK_HISTORY    then @@keyUpHistoryBack()
     default (-> console.log('default'))
+    e.preventDefault()
 
   @keyUpHitAHintStart =->
     Main.mode = HitAHintMode
@@ -58,19 +92,24 @@ class NeutralMode
 
   @keyUpFocusForm =->
     Main.mode = FormFocusMode
-    $('input[type="text"], textarea')[0].focus()
+    Main.formInputFieldIndex = 0
+    $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex).focus()
 
   @keyUpSelectorToggle =->
     Main.mode = SelectorMode
     $('#selectorConsole').show()
     $('#selectorInput').focus()
 
+  @keyUpHistoryBack =->
+    history.back()
+
 
 class HitAHintMode
-  @keyMap = (keyCode) ->
-    switch keyCode
-    case 27 then @@keyUpCancel()
-    default @@keyUpHintKey(keyCode)
+  @keyMap = (e) ->
+    switch e.keyCode
+    case KEY_CODE.CANCEL then @@keyUpCancel()
+    default @@keyUpHintKey(e.keyCode)
+    e.preventDefault()
 
   @firstKeyCode = null
 
@@ -81,17 +120,12 @@ class HitAHintMode
 
   @keyUpHintKey = (keyCode) ->
     console.log('hit!: ' + keyCode + ', 1stkey: ' + @firstKeyCode)
-    if not isHitAHintKey(keyCode)
-      console.log('not isHitAHintKey')
-      console.log(isHitAHintKey(keyCode))
-      return
+    return if not isHitAHintKey(keyCode)
 
     if @firstKeyCode is null
       @firstKeyCode = keyCode
     else
       idx = keyCodeToIndex(@firstKeyCode,  keyCode)
-      console.log('idx: ' + idx)
-      console.log(Main.links)
       Main.links[idx].click()
       Main.mode = NeutralMode
       Main.links.removeClass('links')
@@ -100,24 +134,50 @@ class HitAHintMode
 
 
 class FormFocusMode
-  @keyMap = (keyCode) ->
-    switch keyCode
-    case 27 then @@keyUpCancel()
+  @keyMap = (e) ->
+    switch e.keyCode
+    case KEY_CODE.MOVE_NEXT_FORM then @@keyUpFormNext()
+    case KEY_CODE.MOVE_PREV_FORM then @@keyUpFormPrev()
+    case KEY_CODE.CANCEL         then @@keyUpCancel()
     default (-> console.log('default'))
+    e.preventDefault()
+
+  @keyUpFormNext =->
+    console.log('keyUpFormNext')
+    Main.formInputFieldIndex += 1
+    console.log(Main.formInputFieldIndex)
+    console.log($(FORM_INPUT_FIELDS))
+    console.log($(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex))
+    if $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex)?
+      $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex).focus()
+#     if $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex]?
+#       $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex].focus()
+
+  @keyUpFormPrev =->
+    console.log('keyUpFormPrev')
+    Main.formInputFieldIndex -= 1
+    console.log(Main.formInputFieldIndex)
+    console.log($(FORM_INPUT_FIELDS))
+    console.log($(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex))
+    if $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex)?
+      $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex).focus()
+#     if $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex]?
+#       $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex].focus()
 
   @keyUpCancel =->
     Main.mode = NeutralMode
     $(':focus').blur()
 
 class SelectorMode
-  @keyMap = (keyCode) ->
-    switch keyCode
-    case 27 then @@keyUpCancel()
-    case 186 then @@keyUpSelectorToggle()
-    case 40 then @@keyUpSelectorCursorNext()
-    case 38 then @@keyUpSelectorCursorPrev()
-    case 13 then @@keyUpSelectorCursorEnter()
+  @keyMap = (e) ->
+    switch e.keyCode
+    case KEY_CODE.CANCEL                    then @@keyUpCancel()
+    case KEY_CODE.TOGGLE_SELECTOR           then @@keyUpSelectorToggle()
+    case KEY_CODE.MOVE_NEXT_SELECTOR_CURSOR then @@keyUpSelectorCursorNext()
+    case KEY_CODE.MOVE_PREV_SELECTOR_CURSOR then @@keyUpSelectorCursorPrev()
+    case KEY_CODE.ENTER_SELECTOR_CURSOR     then @@keyUpSelectorCursorEnter()
     default @@keyUpSelectorFiltering()
+    e.preventDefault()
 
   @keyUpCancel =->
     Main.mode = NeutralMode
@@ -128,7 +188,7 @@ class SelectorMode
     console.log('keyUpSelectorFiltering')
     text = $('#selectorInput').val()
     console.log(text)
-    makeSelectorConsole(filteringTabs(text, Main.tabs))
+    makeSelectorConsole(filtering(text, Main.list))
     $('#selectorConsole').show()
 
   @keyUpSelectorToggle =->
@@ -145,27 +205,29 @@ class SelectorMode
 
   @keyUpSelectorCursorEnter =->
     console.log('keyUpSelectorCursorEnter')
-    tabId = $('#selectorList tr.selected').attr('id')
-    console.log(tabId)
+    [type, id] = $('#selectorList tr.selected').attr('id').split('-')
     @@keyUpCancel()
-    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", tabId: tabId}, ((res) -> console.log(res)))
+    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", id: id, type: type}, ((res) -> console.log(res)))
 
-$(->
+Main.start =->
   Main.mode = NeutralMode
-  Main.links = if $('a').length is void then [$('a')] else $('a')
+  _clickables = $('a')
+  Main.links = if _clickables.length is void then [_clickables] else _clickables
   if isFocusingForm() then Main.mode = FormFocusMode
 
-  chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((tabs) ->
-    Main.tabs = tabs
+  chrome.extension.sendMessage({mes: "makeSelectorConsole"}, ((list) ->
+    console.log('extension.sendMessage')
+    console.log(list)
+    Main.list = list
     $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>')
-    makeSelectorConsole(tabs)
+    makeSelectorConsole(list)
   ))
 
-  $('input[type="text"], textarea').focus(->
+  $(FORM_INPUT_FIELDS).focus(->
     console.log('form focus')
     Main.mode = FormFocusMode
   )
-  $('input[type="text"], textarea').blur(->
+  $(FORM_INPUT_FIELDS).blur(->
     console.log('form blur')
     Main.mode = NeutralMode
   )
@@ -173,6 +235,7 @@ $(->
   $(document).keyup((e) ->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
-    Main.mode.keyMap(e.keyCode)
+    Main.mode.keyMap(e)
   )
-)
+
+Main.start()
