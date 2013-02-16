@@ -1,6 +1,6 @@
 {
     "name": "hah",
-    "description" : "hit a hint",
+    "description" : "hit a hint and tab switcher",
     "version": "0.0.1",
     "content_scripts": [
         {
