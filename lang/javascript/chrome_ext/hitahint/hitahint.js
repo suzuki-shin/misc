@@ -2,9 +2,9 @@ var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT
 p = prelude;
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select';
 ITEM_TYPE_OF = {
-  tab: 'T',
-  history: 'H',
-  bookmarks: 'B'
+  tab: 'TAB',
+  history: 'HIS',
+  bookmark: 'BKM'
 };
 SELECTOR_NUM = 20;
 KEY_CODE = {
@@ -107,13 +107,13 @@ makeSelectorConsole = function(list){
 };
 filtering = function(text, list){
   var matchP;
-  matchP = function(tab, queries){
+  matchP = function(elem, queries){
     var q;
     return p.all(p.id, (function(){
       var i$, ref$, len$, results$ = [];
       for (i$ = 0, len$ = (ref$ = queries).length; i$ < len$; ++i$) {
         q = ref$[i$];
-        results$.push(tab.title.toLowerCase().search(q) !== -1 || tab.url.toLowerCase().search(q) !== -1);
+        results$.push(elem.title.toLowerCase().search(q) !== -1 || elem.url.toLowerCase().search(q) !== -1 || ITEM_TYPE_OF[elem.type].toLowerCase().search(q) !== -1);
       }
       return results$;
     }()));
@@ -323,14 +323,18 @@ SelectorMode = (function(){
     return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
   };
   SelectorMode.keyUpSelectorCursorEnter = function(){
-    var ref$, type, id;
+    var ref$, type, id, url;
     console.log('keyUpSelectorCursorEnter');
     ref$ = $('#selectorList tr.selected').attr('id').split('-'), type = ref$[0], id = ref$[1];
+    url = $('#selectorList tr.selected span.url').text();
     constructor.keyUpCancel();
     return chrome.extension.sendMessage({
       mes: "keyUpSelectorCursorEnter",
-      id: id,
-      type: type
+      item: {
+        id: id,
+        url: url,
+        type: type
+      }
     }, function(res){
       return console.log(res);
     });

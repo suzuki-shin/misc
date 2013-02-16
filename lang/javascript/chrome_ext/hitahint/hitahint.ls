@@ -3,7 +3,7 @@ p = prelude
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select'
 # CLICKABLES = 'a, input, button, textarea, select'
 
-ITEM_TYPE_OF = {tab: 'T', history: 'H', bookmarks: 'B'}
+ITEM_TYPE_OF = {tab: 'TAB', history: 'HIS', bookmark: 'BKM'}
 SELECTOR_NUM = 20
 
 KEY_CODE =
@@ -52,10 +52,12 @@ makeSelectorConsole = (list) ->
 # 受け取ったテキストをスペース区切りで分割して、その要素すべてが(tab|history|bookmark)のtitleかtabのurlに含まれるtabのみ返す
 # filtering :: String -> [{title, url, type}] -> [{title, url, type}]
 filtering = (text, list) ->
-  # queriesのすべての要素がtabのtitleかtabのurlに見つかるかどうかを返す
-  # titleAndUrlMatch :: Tab -> [String] -> Bool
-  matchP = (tab, queries) ->
-    p.all(p.id, [tab.title.toLowerCase().search(q) isnt -1 or tab.url.toLowerCase().search(q) isnt -1 for q in queries])
+  # queriesのすべての要素がtitleかurlに見つかるかどうかを返す
+  # titleAndUrlMatch :: Elem -> [String] -> Bool
+  matchP = (elem, queries) ->
+    p.all(p.id, [elem.title.toLowerCase().search(q) isnt -1 or
+                 elem.url.toLowerCase().search(q) isnt -1 or
+                 ITEM_TYPE_OF[elem.type].toLowerCase().search(q) isnt -1 for q in queries])
   p.filter(((t) -> matchP(t, text.toLowerCase().split(' '))), list)
 
 # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
@@ -206,8 +208,11 @@ class SelectorMode
   @keyUpSelectorCursorEnter =->
     console.log('keyUpSelectorCursorEnter')
     [type, id] = $('#selectorList tr.selected').attr('id').split('-')
+    url = $('#selectorList tr.selected span.url').text()
     @@keyUpCancel()
-    chrome.extension.sendMessage({mes: "keyUpSelectorCursorEnter", id: id, type: type}, ((res) -> console.log(res)))
+    chrome.extension.sendMessage(
+      {mes: "keyUpSelectorCursorEnter", item:{id: id, url: url, type: type}},
+      ((res) -> console.log(res)))
 
 Main.start =->
   Main.mode = NeutralMode

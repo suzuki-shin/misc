@@ -5,9 +5,12 @@ tabSelect = (f, list) ->
 
 historySelect = (f, list) ->
   chrome.history.search({text:'', maxResults: 100}, (hs) ->
-    console.log('hs')
-    console.log(hs)
     f(list.concat([{id: e.id, title: e.title, url: e.url, type: 'history'} for e in hs]))
+  )
+
+bookmarkSelect = (f, list) ->
+  chrome.bookmarks.search("h", (es) ->
+    f(list.concat([{id: e.id, title: e.title, url: e.url, type: 'bookmark'} for e in es when e.url?]))
   )
 
 console.log('background')
@@ -15,14 +18,15 @@ console.log('background')
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) ->
   console.log(msg)
   if msg.mes == "makeSelectorConsole"
-    tabSelect(((es) -> historySelect(sendResponse, es)), [])
-#     tabSelect(sendResponse)
+    bookmarkSelect_ = (list) -> bookmarkSelect(sendResponse, list)
+    historySelect_ = (list) -> historySelect(bookmarkSelect_, list)
+    tabSelect(historySelect_, [])
   else if msg.mes == "keyUpSelectorCursorEnter"
     console.log(msg)
-    if msg.type == "tab"
+    if msg.item.type == "tab"
       console.log('tabs.update')
-      chrome.tabs.update(parseInt(msg.id), {active: true})
+      chrome.tabs.update(parseInt(msg.item.id), {active: true})
     else
-      alert('history.update ' + msg.id)
+      chrome.tabs.create({url: msg.item.url})
   true
 )
