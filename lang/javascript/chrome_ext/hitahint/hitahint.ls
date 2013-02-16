@@ -3,7 +3,7 @@ p = prelude
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select'
 # CLICKABLES = 'a, input, button, textarea, select'
 
-ITEM_TYPE_OF = {tab: 'TAB', history: 'HIS', bookmark: 'BKM'}
+ITEM_TYPE_OF = {tab: 'TAB', history: 'HIS', bookmark: 'BKM', websearch: 'WEB', command: 'COM'}
 SELECTOR_NUM = 20
 
 KEY_CODE =
@@ -24,6 +24,11 @@ for k1, v1 of _HINT_KEYS
   for k2, v2 of _HINT_KEYS
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2
 
+WEB_SEARCH_LIST =
+  {title: 'google検索', url: 'https://www.google.co.jp/#hl=ja&q=', type: 'websearch'}
+  {title: 'alc辞書', url: 'http://eow.alc.co.jp/search?ref=sa&q=', type: 'websearch'}
+
+
 # 打ったHintKeyの一打目と二打目のキーコードをうけとり、それに対応するクリック要素のインデックスを返す
 # keyCodeToIndex :: Int -> Int -> Int
 keyCodeToIndex = (firstKeyCode, secondKeyCode) ->
@@ -38,7 +43,7 @@ indexToKeyCode = (index) -> [k for k,v of HINT_KEYS][index]
 isHitAHintKey = (keyCode) ->
   $.inArray(String(keyCode), [k for k,v of _HINT_KEYS]) isnt -1
 
-# (tab|history|bookmark)のリストをうけとりそれをhtmlにしてappendする
+# (tab|history|bookmark|,,,)のリストをうけとりそれをhtmlにしてappendする
 # makeSelectorConsole :: [{title, url, type}] -> IO Jquery
 makeSelectorConsole = (list) ->
   if $('#selectorList') then $('#selectorList').remove()
@@ -190,7 +195,10 @@ class SelectorMode
     console.log('keyUpSelectorFiltering')
     text = $('#selectorInput').val()
     console.log(text)
-    makeSelectorConsole(filtering(text, Main.list))
+    list = filtering(text, Main.list).concat(WEB_SEARCH_LIST)
+    console.log(list)
+    makeSelectorConsole(list)
+#     makeSelectorConsole(filtering(text, Main.list).concat(WEB_SEARCH_LIST))
     $('#selectorConsole').show()
 
   @keyUpSelectorToggle =->
@@ -209,9 +217,10 @@ class SelectorMode
     console.log('keyUpSelectorCursorEnter')
     [type, id] = $('#selectorList tr.selected').attr('id').split('-')
     url = $('#selectorList tr.selected span.url').text()
+    query = $('#selectorInput').val()
     @@keyUpCancel()
     chrome.extension.sendMessage(
-      {mes: "keyUpSelectorCursorEnter", item:{id: id, url: url, type: type}},
+      {mes: "keyUpSelectorCursorEnter", item:{id: id, url: url, type: type, query: query}},
       ((res) -> console.log(res)))
 
 Main.start =->

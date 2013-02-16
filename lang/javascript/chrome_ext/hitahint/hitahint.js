@@ -1,10 +1,12 @@
-var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filtering, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, WEB_SEARCH_LIST, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filtering, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 p = prelude;
 FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select';
 ITEM_TYPE_OF = {
   tab: 'TAB',
   history: 'HIS',
-  bookmark: 'BKM'
+  bookmark: 'BKM',
+  websearch: 'WEB',
+  command: 'COM'
 };
 SELECTOR_NUM = 20;
 KEY_CODE = {
@@ -55,6 +57,17 @@ for (k1 in _HINT_KEYS) {
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2;
   }
 }
+WEB_SEARCH_LIST = [
+  {
+    title: 'google検索',
+    url: 'https://www.google.co.jp/#hl=ja&q=',
+    type: 'websearch'
+  }, {
+    title: 'alc辞書',
+    url: 'http://eow.alc.co.jp/search?ref=sa&q=',
+    type: 'websearch'
+  }
+];
 keyCodeToIndex = function(firstKeyCode, secondKeyCode){
   var k, v;
   return $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), (function(){
@@ -303,11 +316,13 @@ SelectorMode = (function(){
     return $(':focus').blur();
   };
   SelectorMode.keyUpSelectorFiltering = function(){
-    var text;
+    var text, list;
     console.log('keyUpSelectorFiltering');
     text = $('#selectorInput').val();
     console.log(text);
-    makeSelectorConsole(filtering(text, Main.list));
+    list = filtering(text, Main.list).concat(WEB_SEARCH_LIST);
+    console.log(list);
+    makeSelectorConsole(list);
     return $('#selectorConsole').show();
   };
   SelectorMode.keyUpSelectorToggle = function(){
@@ -323,17 +338,19 @@ SelectorMode = (function(){
     return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
   };
   SelectorMode.keyUpSelectorCursorEnter = function(){
-    var ref$, type, id, url;
+    var ref$, type, id, url, query;
     console.log('keyUpSelectorCursorEnter');
     ref$ = $('#selectorList tr.selected').attr('id').split('-'), type = ref$[0], id = ref$[1];
     url = $('#selectorList tr.selected span.url').text();
+    query = $('#selectorInput').val();
     constructor.keyUpCancel();
     return chrome.extension.sendMessage({
       mes: "keyUpSelectorCursorEnter",
       item: {
         id: id,
         url: url,
-        type: type
+        type: type,
+        query: query
       }
     }, function(res){
       return console.log(res);

@@ -18,15 +18,19 @@ console.log('background')
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) ->
   console.log(msg)
   if msg.mes == "makeSelectorConsole"
-    bookmarkSelect_ = (list) -> bookmarkSelect(sendResponse, list)
-    historySelect_ = (list) -> historySelect(bookmarkSelect_, list)
-    tabSelect(historySelect_, [])
+    historySelect_ = (list) -> historySelect(sendResponse, list)
+    bookmarkSelect_ = (list) -> bookmarkSelect(historySelect_, list)
+    tabSelect(bookmarkSelect_, [])
   else if msg.mes == "keyUpSelectorCursorEnter"
     console.log(msg)
-    if msg.item.type == "tab"
+    switch msg.item.type
+    case "tab"
       console.log('tabs.update')
       chrome.tabs.update(parseInt(msg.item.id), {active: true})
-    else
+    case "websearch"
+      console.log('web search')
+      chrome.tabs.create({url: msg.item.url + msg.item.query})
+    default
       chrome.tabs.create({url: msg.item.url})
   true
 )

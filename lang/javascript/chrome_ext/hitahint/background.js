@@ -62,24 +62,32 @@ bookmarkSelect = function(f, list){
 };
 console.log('background');
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
-  var bookmarkSelect_, historySelect_;
+  var historySelect_, bookmarkSelect_;
   console.log(msg);
   if (msg.mes === "makeSelectorConsole") {
-    bookmarkSelect_ = function(list){
-      return bookmarkSelect(sendResponse, list);
-    };
     historySelect_ = function(list){
-      return historySelect(bookmarkSelect_, list);
+      return historySelect(sendResponse, list);
     };
-    tabSelect(historySelect_, []);
+    bookmarkSelect_ = function(list){
+      return bookmarkSelect(historySelect_, list);
+    };
+    tabSelect(bookmarkSelect_, []);
   } else if (msg.mes === "keyUpSelectorCursorEnter") {
     console.log(msg);
-    if (msg.item.type === "tab") {
+    switch (msg.item.type) {
+    case "tab":
       console.log('tabs.update');
       chrome.tabs.update(parseInt(msg.item.id), {
         active: true
       });
-    } else {
+      break;
+    case "websearch":
+      console.log('web search');
+      chrome.tabs.create({
+        url: msg.item.url + msg.item.query
+      });
+      break;
+    default:
       chrome.tabs.create({
         url: msg.item.url
       });
