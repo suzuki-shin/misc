@@ -215,7 +215,8 @@ HitAHintMode = (function(){
   HitAHintMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     Main.links.removeClass('links');
-    return $('.hintKey').remove();
+    $('.hintKey').remove();
+    return constructor.firstKeyCode = null;
   };
   HitAHintMode.keyUpHintKey = function(keyCode){
     var idx;

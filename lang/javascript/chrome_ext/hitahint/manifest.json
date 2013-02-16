@@ -6,12 +6,13 @@
         {
             "matches": ["<all_urls>"],
             "exclude_matches": [
-				"*://mail.google.com/*",
-				"*://twitter.com/*"
-			],
+                "*://mail.google.com/*",
+                "*://twitter.com/*"
+            ],
             "css": ["hitahint.css"],
             "js": ["jquery-1.9.0.min.js", "prelude.min.js", "hitahint.js"],
-            "all_frames": true
+            "run_at": "document_end",
+            "all_frames": false
         }
     ],
     "background": {

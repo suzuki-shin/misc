@@ -124,6 +124,7 @@ class HitAHintMode
     Main.mode = NeutralMode
     Main.links.removeClass('links')
     $('.hintKey').remove()
+    @@firstKeyCode = null
 
   @keyUpHintKey = (keyCode) ->
     console.log('hit!: ' + keyCode + ', 1stkey: ' + @firstKeyCode)
@@ -225,6 +226,7 @@ class SelectorMode
 
 Main.start =->
   Main.mode = NeutralMode
+#   _clickables = $("a[href],input:not([type=hidden]),textarea,select,*[onclick],button")
   _clickables = $('a')
   Main.links = if _clickables.length is void then [_clickables] else _clickables
   if isFocusingForm() then Main.mode = FormFocusMode
