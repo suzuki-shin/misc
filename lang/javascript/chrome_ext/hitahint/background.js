@@ -72,7 +72,7 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
       return bookmarkSelect(historySelect_, list);
     };
     tabSelect(bookmarkSelect_, []);
-  } else if (msg.mes === "keyUpSelectorCursorEnter") {
+  } else if (msg.mes === "keyUpSelectorDecide") {
     console.log(msg);
     switch (msg.item.type) {
     case "tab":

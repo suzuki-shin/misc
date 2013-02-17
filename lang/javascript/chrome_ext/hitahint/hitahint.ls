@@ -1,6 +1,6 @@
 p = prelude
 
-FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select'
+FORM_INPUT_FIELDS = 'input[type="text"], textarea, select'
 # CLICKABLES = 'a, input, button, textarea, select'
 
 ITEM_TYPE_OF = {tab: 'TAB', history: 'HIS', bookmark: 'BKM', websearch: 'WEB', command: 'COM'}
@@ -13,7 +13,6 @@ KEY_CODE =
   CANCEL: 27                    # ESC
   MOVE_NEXT_SELECTOR_CURSOR: 40 # down
   MOVE_PREV_SELECTOR_CURSOR: 38 # up
-  ENTER_SELECTOR_CURSOR: 13     # ENTER
   MOVE_NEXT_FORM: 34            # pageup
   MOVE_PREV_FORM: 33            # pagedown
   BACK_HISTORY: 72              # h
@@ -81,7 +80,7 @@ class Main
 
 # 何のモードでもない状態を表すモードのクラス
 class NeutralMode
-  @keyMap = (e) ->
+  @keyupMap = (e) ->
     switch e.keyCode
     case KEY_CODE.START_HITAHINT  then @@keyUpHitAHintStart()
     case KEY_CODE.FOCUS_FORM      then @@keyUpFocusForm()
@@ -89,6 +88,11 @@ class NeutralMode
     case KEY_CODE.BACK_HISTORY    then @@keyUpHistoryBack()
     default (-> console.log('default'))
     e.preventDefault()
+
+  @keydownMap = (e) ->
+    console.log('keydownMap')
+#     switch e.keyCode
+#     default (-> console.log('default'))
 
   @keyUpHitAHintStart =->
     Main.mode = HitAHintMode
@@ -112,11 +116,16 @@ class NeutralMode
 
 
 class HitAHintMode
-  @keyMap = (e) ->
+  @keyupMap = (e) ->
     switch e.keyCode
     case KEY_CODE.CANCEL then @@keyUpCancel()
     default @@keyUpHintKey(e.keyCode)
     e.preventDefault()
+
+  @keydownMap = (e) ->
+    console.log('keydownMap')
+#     switch e.keyCode
+#     default (-> console.log('default'))
 
   @firstKeyCode = null
 
@@ -142,13 +151,18 @@ class HitAHintMode
 
 
 class FormFocusMode
-  @keyMap = (e) ->
+  @keyupMap = (e) ->
     switch e.keyCode
     case KEY_CODE.MOVE_NEXT_FORM then @@keyUpFormNext()
     case KEY_CODE.MOVE_PREV_FORM then @@keyUpFormPrev()
     case KEY_CODE.CANCEL         then @@keyUpCancel()
     default (-> console.log('default'))
     e.preventDefault()
+
+  @keydownMap = (e) ->
+    console.log('keydownMap')
+#     switch e.keyCode
+#     default (-> console.log('default'))
 
   @keyUpFormNext =->
     console.log('keyUpFormNext')
@@ -158,8 +172,6 @@ class FormFocusMode
     console.log($(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex))
     if $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex)?
       $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex).focus()
-#     if $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex]?
-#       $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex].focus()
 
   @keyUpFormPrev =->
     console.log('keyUpFormPrev')
@@ -169,30 +181,34 @@ class FormFocusMode
     console.log($(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex))
     if $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex)?
       $(FORM_INPUT_FIELDS).eq(Main.formInputFieldIndex).focus()
-#     if $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex]?
-#       $(FORM_INPUT_FIELDS)[Main.formInputFieldIndex].focus()
 
   @keyUpCancel =->
     Main.mode = NeutralMode
     $(':focus').blur()
 
 class SelectorMode
-  @keyMap = (e) ->
+  @keyupMap = (e) ->
     switch e.keyCode
-    case KEY_CODE.CANCEL                    then @@keyUpCancel()
-    case KEY_CODE.TOGGLE_SELECTOR           then @@keyUpSelectorToggle()
-    case KEY_CODE.MOVE_NEXT_SELECTOR_CURSOR then @@keyUpSelectorCursorNext()
-    case KEY_CODE.MOVE_PREV_SELECTOR_CURSOR then @@keyUpSelectorCursorPrev()
-    case KEY_CODE.ENTER_SELECTOR_CURSOR     then @@keyUpSelectorCursorEnter()
-    default @@keyUpSelectorFiltering()
+    case KEY_CODE.CANCEL          then @@keyUpCancel()
+    case KEY_CODE.TOGGLE_SELECTOR then @@keyUpSelectorToggle()
+    default @@keyUpSelectorFiltering(e)
     e.preventDefault()
+
+  @keydownMap = (e) ->
+    switch e.keyCode
+    case KEY_CODE.MOVE_NEXT_SELECTOR_CURSOR then @@keyUpSelectorCursorNext(e)
+    case KEY_CODE.MOVE_PREV_SELECTOR_CURSOR then @@keyUpSelectorCursorPrev(e)
+    default (-> alert(e.keyCode))
+#     default (-> if e.keyCode == 13 then alert('eeenter') else console.log('default'))
 
   @keyUpCancel =->
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
     $(':focus').blur()
 
-  @keyUpSelectorFiltering =->
+  @keyUpSelectorFiltering = (e) ->
+    return false if e.keyCode < 65 or e.keyCode > 90
+
     console.log('keyUpSelectorFiltering')
     text = $('#selectorInput').val()
     console.log(text)
@@ -206,23 +222,36 @@ class SelectorMode
     Main.mode = NeutralMode
     $('#selectorConsole').hide()
 
-  @keyUpSelectorCursorNext =->
+  @keyUpSelectorCursorNext = (e) ->
     console.log('keyUpSelectorCursorNext')
     $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected")
+    e.preventDefault()
 
-  @keyUpSelectorCursorPrev =->
+  @keyUpSelectorCursorPrev = (e) ->
     console.log('keyUpSelectorCursorPrev')
     $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected")
+    e.preventDefault()
 
-  @keyUpSelectorCursorEnter =->
-    console.log('keyUpSelectorCursorEnter')
+  @keyUpSelectorDecide =->
+    console.log('keyUpSelectorDecide')
     [type, id] = $('#selectorList tr.selected').attr('id').split('-')
     url = $('#selectorList tr.selected span.url').text()
     query = $('#selectorInput').val()
     @@keyUpCancel()
     chrome.extension.sendMessage(
-      {mes: "keyUpSelectorCursorEnter", item:{id: id, url: url, type: type, query: query}},
+      {mes: "keyUpSelectorDecide", item:{id: id, url: url, type: type, query: query}},
       ((res) -> console.log(res)))
+    false
+#   @keyUpSelectorCursorEnter =->
+#     console.log('keyUpSelectorCursorEnter')
+#     [type, id] = $('#selectorList tr.selected').attr('id').split('-')
+#     url = $('#selectorList tr.selected span.url').text()
+#     query = $('#selectorInput').val()
+#     @@keyUpCancel()
+#     chrome.extension.sendMessage(
+#       {mes: "keyUpSelectorCursorEnter", item:{id: id, url: url, type: type, query: query}},
+#       ((res) -> console.log(res)))
+#     false
 
 Main.start =->
   Main.mode = NeutralMode
@@ -235,7 +264,7 @@ Main.start =->
     console.log('extension.sendMessage')
     console.log(list)
     Main.list = list
-    $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>')
+    $('body').append('<div id="selectorConsole"><form id="selectorForm"><input id="selectorInput" type="text" /></form></div>')
     makeSelectorConsole(list)
   ))
 
@@ -248,10 +277,19 @@ Main.start =->
     Main.mode = NeutralMode
   )
 
+  $('body').on('submit', '#selectorForm', (->
+    SelectorMode.keyUpSelectorDecide()
+  ))
+
   $(document).keyup((e) ->
     console.log('keyCode: ' + e.keyCode)
     console.log('mode: ' + Main.mode)
-    Main.mode.keyMap(e)
+    Main.mode.keyupMap(e)
+  )
+  $(document).keydown((e) ->
+    console.log('keyCode: ' + e.keyCode)
+    console.log('mode: ' + Main.mode)
+    Main.mode.keydownMap(e)
   )
 
 Main.start()

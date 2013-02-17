@@ -21,7 +21,7 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) ->
     historySelect_ = (list) -> historySelect(sendResponse, list)
     bookmarkSelect_ = (list) -> bookmarkSelect(historySelect_, list)
     tabSelect(bookmarkSelect_, [])
-  else if msg.mes == "keyUpSelectorCursorEnter"
+  else if msg.mes == "keyUpSelectorDecide"
     console.log(msg)
     switch msg.item.type
     case "tab"
