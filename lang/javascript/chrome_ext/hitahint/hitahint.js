@@ -1,10 +1,12 @@
-var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filtering, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
+var p, FORM_INPUT_FIELDS, ITEM_TYPE_OF, SELECTOR_NUM, KEY_CODE, _HINT_KEYS, HINT_KEYS, k1, v1, k2, v2, WEB_SEARCH_LIST, keyCodeToIndex, indexToKeyCode, isHitAHintKey, makeSelectorConsole, filtering, isFocusingForm, Main, NeutralMode, HitAHintMode, FormFocusMode, SelectorMode;
 p = prelude;
-FORM_INPUT_FIELDS = 'input[type!="hidden"], textarea, select';
+FORM_INPUT_FIELDS = 'input[type="text"], textarea, select';
 ITEM_TYPE_OF = {
-  tab: 'T',
-  history: 'H',
-  bookmarks: 'B'
+  tab: 'TAB',
+  history: 'HIS',
+  bookmark: 'BKM',
+  websearch: 'WEB',
+  command: 'COM'
 };
 SELECTOR_NUM = 20;
 KEY_CODE = {
@@ -14,7 +16,6 @@ KEY_CODE = {
   CANCEL: 27,
   MOVE_NEXT_SELECTOR_CURSOR: 40,
   MOVE_PREV_SELECTOR_CURSOR: 38,
-  ENTER_SELECTOR_CURSOR: 13,
   MOVE_NEXT_FORM: 34,
   MOVE_PREV_FORM: 33,
   BACK_HISTORY: 72
@@ -55,6 +56,17 @@ for (k1 in _HINT_KEYS) {
     HINT_KEYS[parseInt(k1) * 100 + parseInt(k2)] = v1 + v2;
   }
 }
+WEB_SEARCH_LIST = [
+  {
+    title: 'google検索',
+    url: 'https://www.google.co.jp/#hl=ja&q=',
+    type: 'websearch'
+  }, {
+    title: 'alc辞書',
+    url: 'http://eow.alc.co.jp/search?ref=sa&q=',
+    type: 'websearch'
+  }
+];
 keyCodeToIndex = function(firstKeyCode, secondKeyCode){
   var k, v;
   return $.inArray(parseInt(firstKeyCode) * 100 + parseInt(secondKeyCode), (function(){
@@ -107,13 +119,13 @@ makeSelectorConsole = function(list){
 };
 filtering = function(text, list){
   var matchP;
-  matchP = function(tab, queries){
+  matchP = function(elem, queries){
     var q;
     return p.all(p.id, (function(){
       var i$, ref$, len$, results$ = [];
       for (i$ = 0, len$ = (ref$ = queries).length; i$ < len$; ++i$) {
         q = ref$[i$];
-        results$.push(tab.title.toLowerCase().search(q) !== -1 || tab.url.toLowerCase().search(q) !== -1);
+        results$.push(elem.title.toLowerCase().search(q) !== -1 || elem.url.toLowerCase().search(q) !== -1 || ITEM_TYPE_OF[elem.type].toLowerCase().search(q) !== -1);
       }
       return results$;
     }()));
@@ -138,7 +150,7 @@ Main = (function(){
 NeutralMode = (function(){
   NeutralMode.displayName = 'NeutralMode';
   var prototype = NeutralMode.prototype, constructor = NeutralMode;
-  NeutralMode.keyMap = function(e){
+  NeutralMode.keyupMap = function(e){
     switch (e.keyCode) {
     case KEY_CODE.START_HITAHINT:
       constructor.keyUpHitAHintStart();
@@ -158,6 +170,9 @@ NeutralMode = (function(){
       });
     }
     return e.preventDefault();
+  };
+  NeutralMode.keydownMap = function(e){
+    return console.log('keydownMap');
   };
   NeutralMode.keyUpHitAHintStart = function(){
     Main.mode = HitAHintMode;
@@ -188,7 +203,7 @@ NeutralMode = (function(){
 HitAHintMode = (function(){
   HitAHintMode.displayName = 'HitAHintMode';
   var prototype = HitAHintMode.prototype, constructor = HitAHintMode;
-  HitAHintMode.keyMap = function(e){
+  HitAHintMode.keyupMap = function(e){
     switch (e.keyCode) {
     case KEY_CODE.CANCEL:
       constructor.keyUpCancel();
@@ -198,11 +213,15 @@ HitAHintMode = (function(){
     }
     return e.preventDefault();
   };
+  HitAHintMode.keydownMap = function(e){
+    return console.log('keydownMap');
+  };
   HitAHintMode.firstKeyCode = null;
   HitAHintMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     Main.links.removeClass('links');
-    return $('.hintKey').remove();
+    $('.hintKey').remove();
+    return constructor.firstKeyCode = null;
   };
   HitAHintMode.keyUpHintKey = function(keyCode){
     var idx;
@@ -227,7 +246,7 @@ HitAHintMode = (function(){
 FormFocusMode = (function(){
   FormFocusMode.displayName = 'FormFocusMode';
   var prototype = FormFocusMode.prototype, constructor = FormFocusMode;
-  FormFocusMode.keyMap = function(e){
+  FormFocusMode.keyupMap = function(e){
     switch (e.keyCode) {
     case KEY_CODE.MOVE_NEXT_FORM:
       constructor.keyUpFormNext();
@@ -244,6 +263,9 @@ FormFocusMode = (function(){
       });
     }
     return e.preventDefault();
+  };
+  FormFocusMode.keydownMap = function(e){
+    return console.log('keydownMap');
   };
   FormFocusMode.keyUpFormNext = function(){
     console.log('keyUpFormNext');
@@ -275,7 +297,7 @@ FormFocusMode = (function(){
 SelectorMode = (function(){
   SelectorMode.displayName = 'SelectorMode';
   var prototype = SelectorMode.prototype, constructor = SelectorMode;
-  SelectorMode.keyMap = function(e){
+  SelectorMode.keyupMap = function(e){
     switch (e.keyCode) {
     case KEY_CODE.CANCEL:
       constructor.keyUpCancel();
@@ -283,57 +305,74 @@ SelectorMode = (function(){
     case KEY_CODE.TOGGLE_SELECTOR:
       constructor.keyUpSelectorToggle();
       break;
-    case KEY_CODE.MOVE_NEXT_SELECTOR_CURSOR:
-      constructor.keyUpSelectorCursorNext();
-      break;
-    case KEY_CODE.MOVE_PREV_SELECTOR_CURSOR:
-      constructor.keyUpSelectorCursorPrev();
-      break;
-    case KEY_CODE.ENTER_SELECTOR_CURSOR:
-      constructor.keyUpSelectorCursorEnter();
-      break;
     default:
-      constructor.keyUpSelectorFiltering();
+      constructor.keyUpSelectorFiltering(e);
     }
     return e.preventDefault();
+  };
+  SelectorMode.keydownMap = function(e){
+    switch (e.keyCode) {
+    case KEY_CODE.MOVE_NEXT_SELECTOR_CURSOR:
+      return constructor.keyUpSelectorCursorNext(e);
+    case KEY_CODE.MOVE_PREV_SELECTOR_CURSOR:
+      return constructor.keyUpSelectorCursorPrev(e);
+    default:
+      return function(){
+        return alert(e.keyCode);
+      };
+    }
   };
   SelectorMode.keyUpCancel = function(){
     Main.mode = NeutralMode;
     $('#selectorConsole').hide();
     return $(':focus').blur();
   };
-  SelectorMode.keyUpSelectorFiltering = function(){
-    var text;
+  SelectorMode.keyUpSelectorFiltering = function(e){
+    var text, list;
+    if (e.keyCode < 65 || e.keyCode > 90) {
+      return false;
+    }
     console.log('keyUpSelectorFiltering');
     text = $('#selectorInput').val();
     console.log(text);
-    makeSelectorConsole(filtering(text, Main.list));
+    list = filtering(text, Main.list).concat(WEB_SEARCH_LIST);
+    console.log(list);
+    makeSelectorConsole(list);
     return $('#selectorConsole').show();
   };
   SelectorMode.keyUpSelectorToggle = function(){
     Main.mode = NeutralMode;
     return $('#selectorConsole').hide();
   };
-  SelectorMode.keyUpSelectorCursorNext = function(){
+  SelectorMode.keyUpSelectorCursorNext = function(e){
     console.log('keyUpSelectorCursorNext');
-    return $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected");
+    $('#selectorList .selected').removeClass("selected").next("tr").addClass("selected");
+    return e.preventDefault();
   };
-  SelectorMode.keyUpSelectorCursorPrev = function(){
+  SelectorMode.keyUpSelectorCursorPrev = function(e){
     console.log('keyUpSelectorCursorPrev');
-    return $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
+    $('#selectorList .selected').removeClass("selected").prev("tr").addClass("selected");
+    return e.preventDefault();
   };
-  SelectorMode.keyUpSelectorCursorEnter = function(){
-    var ref$, type, id;
-    console.log('keyUpSelectorCursorEnter');
+  SelectorMode.keyUpSelectorDecide = function(){
+    var ref$, type, id, url, query;
+    console.log('keyUpSelectorDecide');
     ref$ = $('#selectorList tr.selected').attr('id').split('-'), type = ref$[0], id = ref$[1];
+    url = $('#selectorList tr.selected span.url').text();
+    query = $('#selectorInput').val();
     constructor.keyUpCancel();
-    return chrome.extension.sendMessage({
-      mes: "keyUpSelectorCursorEnter",
-      id: id,
-      type: type
+    chrome.extension.sendMessage({
+      mes: "keyUpSelectorDecide",
+      item: {
+        id: id,
+        url: url,
+        type: type,
+        query: query
+      }
     }, function(res){
       return console.log(res);
     });
+    return false;
   };
   function SelectorMode(){}
   return SelectorMode;
@@ -352,7 +391,7 @@ Main.start = function(){
     console.log('extension.sendMessage');
     console.log(list);
     Main.list = list;
-    $('body').append('<div id="selectorConsole"><input id="selectorInput" type="text" /></div>');
+    $('body').append('<div id="selectorConsole"><form id="selectorForm"><input id="selectorInput" type="text" /></form></div>');
     return makeSelectorConsole(list);
   });
   $(FORM_INPUT_FIELDS).focus(function(){
@@ -363,10 +402,18 @@ Main.start = function(){
     console.log('form blur');
     return Main.mode = NeutralMode;
   });
-  return $(document).keyup(function(e){
+  $('body').on('submit', '#selectorForm', function(){
+    return SelectorMode.keyUpSelectorDecide();
+  });
+  $(document).keyup(function(e){
     console.log('keyCode: ' + e.keyCode);
     console.log('mode: ' + Main.mode);
-    return Main.mode.keyMap(e);
+    return Main.mode.keyupMap(e);
+  });
+  return $(document).keydown(function(e){
+    console.log('keyCode: ' + e.keyCode);
+    console.log('mode: ' + Main.mode);
+    return Main.mode.keydownMap(e);
   });
 };
 Main.start();
