@@ -11,6 +11,13 @@ import MyPrelude
 main :: Fay ()
 main = do
   ready $ do
+--     chromeStorageSyncSet "{\"aahoge\":\"XX12345\"}"
+--     chromeStorageSyncGet "aahoge" (\d -> do{putStrLn "aahoge";putStrLn (showString d)})
+    putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
+    putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+    body <- select "body"
+    append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
+    makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
     putStrLn $ snd $ hintKeys!!0
     putStrLn $ snd $ hintKeys!!110
     putStrLn $ show $ fst $ hintKeys!!1
@@ -20,11 +27,11 @@ main = do
     putStrLn $ show $ isHitAHintKey 7
     putStrLn "$ fst $ defaultSettings!!0"
     putStrLn $ fst $ defaultSettings!!0
-    putStrLn $ show $ code $ snd $ defaultSettings!!0
+    putStrLn $ show $ getCode $ snd $ defaultSettings!!0
     putStrLn $ show $ fromJust $ keyCodeFromKeyName "A"
-    chromeStorageSyncSet
-    chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
-    chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
+--     chromeStorageSyncSet
+--     chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
+--     chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
     localStorageSet "111" "000YYY%%%"
     putStrLn $ localStorageGet "111"
 
@@ -70,7 +77,7 @@ ready = ffi "jQuery(%1)"
 --
 --
 
-data Key = Key { code :: Int, ctrl :: Bool, alt :: Bool } deriving (Show)
+data Key = Key { getCode :: Int, getCtrl :: Bool, getAlt :: Bool } deriving (Show, Eq)
 
 defaultSettings :: [(String, Key)]
 defaultSettings = [
@@ -171,11 +178,11 @@ keyCodeFromKeyName = keyCodeFromKeyName' keyMap
 -- addClassWith :: (Double -> String -> Fay String) -> JQuery -> Fay JQuery
 -- addClassWith = ffi "%2.addClass(%1)"
 
-chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
-chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
+-- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
+-- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
 
-chromeStorageSyncSet :: Fay ()
-chromeStorageSyncSet = ffi "chrome.storage.sync.set({\"settings\":\"hogefugabz\"})"
+-- chromeStorageSyncSet :: Fay ()
+-- chromeStorageSyncSet = ffi "chrome.storage.sync.set({\"settings\":\"hogefugabz\"})"
 
 localStorageSet :: String -> String -> Fay ()
 localStorageSet = ffi "localStorage.setItem(%1, %2)"
@@ -223,7 +230,9 @@ isHitAHintKey keyCode = elem keyCode $ map fst _hintKeys
 
 -- # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
 -- isFocusingForm :: Fay Bool
--- isFocusingForm =
+-- isFocusingForm = do
+--   focusElems <- select ":focus"
+
 --   console.log('isFocusingForm')
 --   focusElems = $(':focus')
 --   console.log(focusElems.attr('type'))
@@ -232,13 +241,135 @@ isHitAHintKey keyCode = elem keyCode $ map fst _hintKeys
 --     focusElems[0].nodeName.toLowerCase() == "textarea"
 --   )
 
+data Item = Item { getId :: String, getTitle :: String, getUrl :: String, getType :: String } deriving (Show)
+
 -- # (tab|history|bookmark|,,,)のリストをうけとりそれをhtmlにしてappendする
--- # makeSelectorConsole :: [{title, url, type}] -> IO Jquery
--- makeSelectorConsole = (list) ->
---   if $('#selectorList') then $('#selectorList').remove()
---   console.log(list)
---   ts = p.concat(
---     p.take(SELECTOR_NUM,
---            ['<tr id="' + t.type + '-' + t.id + '"><td><span class="title">['+ ITEM_TYPE_OF[t.type] + '] ' + t.title + ' </span><span class="url"> ' + t.url + '</span></td></tr>' for t in list]))
---   $('#selectorConsole').append('<table id="selectorList">' + ts + '</table>')
---   $('#selectorList tr:first').addClass("selected")
+makeSelectorConsole :: [Item] -> Fay JQuery
+makeSelectorConsole items = do
+  selectorList <- select "#selectorList"
+  remove selectorList
+  selectorConsole <- select "#selectorConsole"
+  append ts selectorConsole
+  firstSelectorElem <- select "#selectorList tr:first"
+  addClass "selected" firstSelectorElem
+  where
+    num = 20
+    trs = ["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
+    ts = "<table id=\"selectorList\">" ++ concat(take num trs) ++ "</table>"
+
+remove :: JQuery -> Fay JQuery
+remove = ffi "%1.remove()"
+
+append :: String -> JQuery -> Fay JQuery
+append = ffi "%2.append(%1)"
+
+addClass :: String -> JQuery -> Fay JQuery
+addClass = ffi "%2.addClass(%1)"
+
+-- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
+-- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
+
+-- chromeStorageSyncSet :: String -> Fay ()
+-- chromeStorageSyncSet = ffi "chrome.storage.sync.set(JSON.parse(%1))"
+
+keyMapper :: Key -> [(String, Key)] -> Maybe String
+keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
+
+data Mode = NeutralMode | HitAHintMode | SelectorMode | FormFocusMode deriving (Show)
+data Event
+
+getKeyCode :: Event -> Int
+getKeyCode = ffi "%1.keyCode"
+
+keyupMap :: Event -> (Mode, Bool, Bool) -> Fay (Mode, Bool, Bool)
+keyupMap e (SelectorMode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (SelectorMode, False, alt)
+    altKeyCode  -> return (SelectorMode, ctrl, False)
+    otherwise   -> filterSelector e
+keyupMap e (FormFocusMode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (FormFocusMode, False, alt)
+    altKeyCode  -> return (FormFocusMode, ctrl, False)
+    otherwise   -> do
+      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+        Just "MOVE_NEXT_FORM" -> focusNextForm e
+        Just "MOVE_PREV_FORM" -> focusPrevForm e
+        Just "CANCEL"         -> cancel e
+        _ -> return (NeutralMode, ctrl, alt)
+keyupMap e (mode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (mode, False, alt)
+    altKeyCode  -> return (mode, ctrl, False)
+    otherwise   -> return (mode, ctrl, alt)
+
+startHah = undefined
+focusForm = undefined
+toggleSelector = undefined
+filterSelector = undefined
+focusNextForm = undefined
+focusPrevForm = undefined
+cancel = undefined
+hitHintKey = undefined
+
+keydownMap :: Event -> (Mode, Bool, Bool) -> Fay (Mode, Bool, Bool)
+keydownMap e (NeutralMode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (NeutralMode, True, alt)
+    altKeyCode  -> return (NeutralMode, ctrl, True)
+    otherwise   -> do
+      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+        Just "START_HITAHINT"  -> startHah e
+        Just "FOCUS_FORM"      -> focusForm e
+        Just "TOGGLE_SELECTOR" -> toggleSelector e
+        _ -> return (NeutralMode, ctrl, alt)
+keydownMap e (HitAHintMode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (HitAHintMode, True, alt)
+    altKeyCode  -> return (HitAHintMode, ctrl, True)
+    otherwise   -> do
+      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+        Just "CANCEL" -> cancel
+        _ -> if isHitAHintKey (getKeyCode e)
+             then hitHintKey e
+             else return (HitAHintMode, ctrl, alt)
+keydownMap e (mode, ctrl, alt) = do
+  case getKeyCode e of
+    ctrlKeyCode -> return (mode, True, alt)
+    altKeyCode  -> return (mode, ctrl, True)
+    otherwise   -> return (mode, ctrl, alt)
+
+
+keyup :: (Event -> Fay (Mode, Bool, Bool)) -> Fay (Mode, Bool, Bool)
+keyup = ffi "$(document).keyup(%1)"
+keydown :: (Event -> Fay (Mode, Bool, Bool)) -> Fay (Mode, Bool, Bool)
+keydown = ffi "$(document).keydown(%1)"
+
+
+on :: String -> String -> (Event -> Fay ()) -> JQuery -> Fay JQuery
+on = ffi "%4.on(%1, %2, %3)"
+
+start' :: (Mode, Bool, Bool) -> Fay ()
+start' (mode, ctrl, alt) = do
+  body <- select "body"
+  keydown (\e -> keydownMap e (mode, ctrl, alt))
+  keyup (\e -> keyupMap e (mode, ctrl, alt))
+  on "submit" "#selectorForm" decideSelector body
+--   on "focus" formInputFields (\_ -> )
+--   on "blur" formInputFields (\_ -> )
+  return ()
+
+decideSelector :: Event -> Fay ()
+decideSelector e = do
+  preventDefault e
+  --
+  --
+  --
+  return ()
+
+preventDefault :: Event -> Fay ()
+preventDefault = ffi "%1.preventDefault()"
+
+{--
+
+--}
