@@ -11,29 +11,37 @@ import MyPrelude
 main :: Fay ()
 main = do
   ready $ do
+    modeRef <- newRef NeutralMode
+    mode <- readRef modeRef
+    putStrLn $ show $ mode
+    writeRef modeRef HitAHintMode
+    mode1 <- readRef modeRef
+    putStrLn $ show $ mode1
+
 --     chromeStorageSyncSet "{\"aahoge\":\"XX12345\"}"
 --     chromeStorageSyncGet "aahoge" (\d -> do{putStrLn "aahoge";putStrLn (showString d)})
-    putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
-    putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
-    body <- select "body"
-    append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
-    makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
-    putStrLn $ snd $ hintKeys!!0
-    putStrLn $ snd $ hintKeys!!110
-    putStrLn $ show $ fst $ hintKeys!!1
-    putStrLn $ show $ fromJust $ keyCodeToIndex 69 71
-    putStrLn $ show $ fromJust $ indexToKeyCode 110
-    putStrLn $ show $ isHitAHintKey 70
-    putStrLn $ show $ isHitAHintKey 7
-    putStrLn "$ fst $ defaultSettings!!0"
-    putStrLn $ fst $ defaultSettings!!0
-    putStrLn $ show $ getCode $ snd $ defaultSettings!!0
-    putStrLn $ show $ fromJust $ keyCodeFromKeyName "A"
---     chromeStorageSyncSet
---     chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
---     chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
-    localStorageSet "111" "000YYY%%%"
-    putStrLn $ localStorageGet "111"
+
+--     putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
+--     putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+--     body <- select "body"
+--     append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
+--     makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
+--     putStrLn $ snd $ hintKeys!!0
+--     putStrLn $ snd $ hintKeys!!110
+--     putStrLn $ show $ fst $ hintKeys!!1
+--     putStrLn $ show $ fromJust $ keyCodeToIndex 69 71
+--     putStrLn $ show $ fromJust $ indexToKeyCode 110
+--     putStrLn $ show $ isHitAHintKey 70
+--     putStrLn $ show $ isHitAHintKey 7
+--     putStrLn "$ fst $ defaultSettings!!0"
+--     putStrLn $ fst $ defaultSettings!!0
+--     putStrLn $ show $ getCode $ snd $ defaultSettings!!0
+--     putStrLn $ show $ fromJust $ keyCodeFromKeyName "A"
+-- --     chromeStorageSyncSet
+-- --     chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
+-- --     chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
+--     localStorageSet "111" "000YYY%%%"
+--     putStrLn $ localStorageGet "111"
 
 --     putStrLn (showDouble 123)
 --     body <- select "body"
@@ -281,79 +289,133 @@ data Event
 getKeyCode :: Event -> Int
 getKeyCode = ffi "%1.keyCode"
 
-keyupMap :: Event -> (Mode, Bool, Bool) -> Fay (Mode, Bool, Bool)
-keyupMap e (SelectorMode, ctrl, alt) = do
+
+keyupMap :: Event -> St -> Fay ()
+keyupMap e (St modeRef ctrlRef altRef inputIdxRef) = do
   case getKeyCode e of
-    ctrlKeyCode -> return (SelectorMode, False, alt)
-    altKeyCode  -> return (SelectorMode, ctrl, False)
-    otherwise   -> filterSelector e
-keyupMap e (FormFocusMode, ctrl, alt) = do
-  case getKeyCode e of
-    ctrlKeyCode -> return (FormFocusMode, False, alt)
-    altKeyCode  -> return (FormFocusMode, ctrl, False)
+    ctrlKeyCode -> writeRef ctrlRef False
+    altKeyCode  -> writeRef altRef False
     otherwise   -> do
+      mode <- readRef modeRef
+      keyupMap' e mode ctrlRef altRef
+  return ()
+  where
+    keyupMap' :: Event -> Mode -> Ref Bool -> Ref Bool -> Fay ()
+    keyupMap' e SelectorMode ctrlRef altRef = filterSelector e
+    keyupMap' e FormFocusMode ctrlRef altRef = do
+      ctrl <- readRef ctrlRef
+      alt <- readRef altRef 
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
         Just "MOVE_NEXT_FORM" -> focusNextForm e
         Just "MOVE_PREV_FORM" -> focusPrevForm e
         Just "CANCEL"         -> cancel e
-        _ -> return (NeutralMode, ctrl, alt)
-keyupMap e (mode, ctrl, alt) = do
-  case getKeyCode e of
-    ctrlKeyCode -> return (mode, False, alt)
-    altKeyCode  -> return (mode, ctrl, False)
-    otherwise   -> return (mode, ctrl, alt)
+        _ -> return ()
+    keyupMap' _ _ _ _ = return ()
 
-startHah = undefined
-focusForm = undefined
-toggleSelector = undefined
+keydownMap :: Event -> St -> Fay ()
+keydownMap e (St modeRef ctrlRef altRef inputIdxRef) = do
+  case getKeyCode e of
+    ctrlKeyCode -> writeRef ctrlRef True
+    altKeyCode  -> writeRef altRef True
+    otherwise   -> do
+      mode <- readRef modeRef
+      keydownMap' e mode ctrlRef altRef
+  return ()
+  where
+    keydownMap' :: Event -> Mode -> Ref Bool -> Ref Bool -> Fay ()
+    keydownMap' e NeutralMode ctrlRef altRef = do
+          ctrl <- readRef ctrlRef
+          alt <- readRef altRef
+          case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+            Just "START_HITAHINT"  -> startHah modeRef
+            Just "FOCUS_FORM"      -> focusForm modeRef inputIdxRef
+            Just "TOGGLE_SELECTOR" -> toggleSelector modeRef
+            _ -> return ()
+    keydownMap' e HitAHintMode ctrlRef altRef = do
+          ctrl <- readRef ctrlRef
+          alt <- readRef altRef
+          case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+            Just "CANCEL" -> cancel e
+            _ -> if isHitAHintKey (getKeyCode e)
+                 then hitHintKey e
+                 else return ()
+    keydownMap' _ _ _ _ = return ()
+
+keyup :: (Event -> Fay ()) -> Fay ()
+keyup = ffi "$(document).keyup(%1)"
+keydown :: (Event -> Fay ()) -> Fay ()
+keydown = ffi "$(document).keydown(%1)"
+
+
+startHah :: Ref Mode -> Fay ()
+startHah modeRef = do
+  writeRef modeRef HitAHintMode
+  select clickables >>= addClass "links" >>= jqHtml f
+  return ()
+  where
+    f (i, oldHtml) = case indexToKeyCode i of
+      Just keyCode -> case lookup keyCode hintKeys of
+        Just hintKeyName -> "<div class=\"hintKey\">" ++ hintKeyName ++ "</div> " ++ oldHtml
+        _ -> oldHtml
+      _ -> oldHtml
+--     f (i, oldHtml) = case lookup (indexToKeyCode i) hintKeys of
+--       Just hintKeyName -> "<div class=\"hintKey\">" + hintKeyName + "</div> " ++ oldHtml
+--       _ -> oldHtml
+
+focusForm :: Ref Mode -> Ref Int -> Fay ()
+focusForm modeRef inputIdxRef = do
+  writeRef modeRef FormFocusMode
+  writeRef inputIdxRef 0
+  inputFields <- select formInputFields
+  jqEq 0 inputFields >>= jqFocus
+  return ()
+
+toggleSelector :: Ref Mode -> Fay ()
+toggleSelector modeRef = do
+  writeRef modeRef SelectorMode
+  console <- select "#selectorConsole"
+  jqShow console
+  input <- select "#selectorInput"
+  jqFocus input
+  return ()
+
 filterSelector = undefined
 focusNextForm = undefined
 focusPrevForm = undefined
 cancel = undefined
 hitHintKey = undefined
 
-keydownMap :: Event -> (Mode, Bool, Bool) -> Fay (Mode, Bool, Bool)
-keydownMap e (NeutralMode, ctrl, alt) = do
-  case getKeyCode e of
-    ctrlKeyCode -> return (NeutralMode, True, alt)
-    altKeyCode  -> return (NeutralMode, ctrl, True)
-    otherwise   -> do
-      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "START_HITAHINT"  -> startHah e
-        Just "FOCUS_FORM"      -> focusForm e
-        Just "TOGGLE_SELECTOR" -> toggleSelector e
-        _ -> return (NeutralMode, ctrl, alt)
-keydownMap e (HitAHintMode, ctrl, alt) = do
-  case getKeyCode e of
-    ctrlKeyCode -> return (HitAHintMode, True, alt)
-    altKeyCode  -> return (HitAHintMode, ctrl, True)
-    otherwise   -> do
-      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "CANCEL" -> cancel
-        _ -> if isHitAHintKey (getKeyCode e)
-             then hitHintKey e
-             else return (HitAHintMode, ctrl, alt)
-keydownMap e (mode, ctrl, alt) = do
-  case getKeyCode e of
-    ctrlKeyCode -> return (mode, True, alt)
-    altKeyCode  -> return (mode, ctrl, True)
-    otherwise   -> return (mode, ctrl, alt)
+jqHtml :: ((Int, String) -> a) -> JQuery -> Fay JQuery
+jqHtml = ffi "%2.html(f)"
 
+jqEq :: Int -> JQuery -> Fay JQuery
+jqEq = ffi "%2.eq(%1)"
 
-keyup :: (Event -> Fay (Mode, Bool, Bool)) -> Fay (Mode, Bool, Bool)
-keyup = ffi "$(document).keyup(%1)"
-keydown :: (Event -> Fay (Mode, Bool, Bool)) -> Fay (Mode, Bool, Bool)
-keydown = ffi "$(document).keydown(%1)"
-
+jqShow :: JQuery -> Fay JQuery
+jqShow = ffi "%1.show()"
+jqFocus :: JQuery -> Fay JQuery
+jqFocus = ffi "%1.focus()"
 
 on :: String -> String -> (Event -> Fay ()) -> JQuery -> Fay JQuery
 on = ffi "%4.on(%1, %2, %3)"
 
-start' :: (Mode, Bool, Bool) -> Fay ()
-start' (mode, ctrl, alt) = do
+data St = St {
+    getModeRef :: Ref Mode
+  , getCtrlRef :: Ref Bool
+  , getAltRef :: Ref Bool
+  , getInputIdxRef :: Ref Int
+  }
+
+start :: Fay ()
+start = do
+  modeRef <- newRef NeutralMode
+  ctrlRef <- newRef False
+  altRef <- newRef False
+  inputIdxRef <- newRef 0
+  let st = St { getModeRef = modeRef, getCtrlRef = ctrlRef, getAltRef = altRef, getInputIdxRef = inputIdxRef }
   body <- select "body"
-  keydown (\e -> keydownMap e (mode, ctrl, alt))
-  keyup (\e -> keyupMap e (mode, ctrl, alt))
+  keydown (\e -> keydownMap e st)
+  keyup (\e -> keyupMap e st)
   on "submit" "#selectorForm" decideSelector body
 --   on "focus" formInputFields (\_ -> )
 --   on "blur" formInputFields (\_ -> )
@@ -369,6 +431,19 @@ decideSelector e = do
 
 preventDefault :: Event -> Fay ()
 preventDefault = ffi "%1.preventDefault()"
+
+
+data Ref a
+
+newRef :: a -> Fay (Ref a)
+newRef = ffi "new Fay$$Ref(%1)"
+
+writeRef :: Ref a -> a -> Fay ()
+writeRef = ffi "Fay$$writeRef(%1,%2)"
+
+readRef :: Ref a -> Fay a
+readRef = ffi "Fay$$readRef(%1)"
+
 
 {--
 
