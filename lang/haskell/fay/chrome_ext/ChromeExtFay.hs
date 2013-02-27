@@ -258,7 +258,7 @@ makeSelectorConsole :: [Item] -> Fay JQuery
 makeSelectorConsole items = do
   putStrLn "makeSelectorConsole"
   putStrLn $ show $ length items
-  putStrLn $ show $ getTitle (items!!0)
+  putStrLn $ show $ (items!!0)
 --   putStrLn ts
   select "#selectorList" >>= remove
   select "#selectorConsole" >>= append ts
@@ -468,11 +468,11 @@ start = do
   chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" $ \is -> do
     putStrLn "extension.sendMessage"
 --     putStrLn $ show (is!!0)
---     putStrLn $ show is
+    putStrLn $ show is
 --     putStrLn "---"
 --     putStrLn is
-    items <- jsonParse is
-    putStrLn $ show items
+--     items <- toItemsfromJSON is
+    items <- toItemsfromJSON $ show is
     writeRef listRef items
     select "body" >>= append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>"
     makeSelectorConsole items
@@ -512,8 +512,11 @@ chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %
 -- getItemFromJSON :: a -> (String, String, String, String)
 -- getItemFromJSON = ffi "%1.id,
 
-jsonParse :: String -> Fay a
-jsonParse = ffi "JSON.parse(%1)"
+-- jsonParse :: String -> Fay a
+-- jsonParse = ffi "JSON.stringify(%1)"
+
+toItemsfromJSON :: String -> Fay [Item]
+toItemsfromJSON = ffi "JSON.parse(%1)"
 
 {--
 
