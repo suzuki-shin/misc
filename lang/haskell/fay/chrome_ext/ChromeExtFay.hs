@@ -11,18 +11,20 @@ import MyPrelude
 main :: Fay ()
 main = do
   ready $ do
-    modeRef <- newRef NeutralMode
-    mode <- readRef modeRef
-    putStrLn $ show $ mode
-    writeRef modeRef HitAHintMode
-    mode1 <- readRef modeRef
-    putStrLn $ show $ mode1
+--     chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" (\is -> putStrLn "chromeExtensionSendMessage")
+    putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
+    putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+    start
+--     modeRef <- newRef NeutralMode
+--     mode <- readRef modeRef
+--     putStrLn $ show $ mode
+--     writeRef modeRef HitAHintMode
+--     mode1 <- readRef modeRef
+--     putStrLn $ show $ mode1
 
 --     chromeStorageSyncSet "{\"aahoge\":\"XX12345\"}"
 --     chromeStorageSyncGet "aahoge" (\d -> do{putStrLn "aahoge";putStrLn (showString d)})
 
---     putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
---     putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
 --     body <- select "body"
 --     append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
 --     makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
@@ -254,12 +256,13 @@ data Item = Item { getId :: String, getTitle :: String, getUrl :: String, getTyp
 -- # (tab|history|bookmark|,,,)のリストをうけとりそれをhtmlにしてappendする
 makeSelectorConsole :: [Item] -> Fay JQuery
 makeSelectorConsole items = do
-  selectorList <- select "#selectorList"
-  remove selectorList
-  selectorConsole <- select "#selectorConsole"
-  append ts selectorConsole
-  firstSelectorElem <- select "#selectorList tr:first"
-  addClass "selected" firstSelectorElem
+  putStrLn "makeSelectorConsole"
+  putStrLn $ show $ length items
+  putStrLn $ show $ getTitle (items!!0)
+--   putStrLn ts
+  select "#selectorList" >>= remove
+  select "#selectorConsole" >>= append ts
+  select "#selectorList tr:first" >>= addClass "selected"
   where
     num = 20
     trs = ["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
@@ -291,54 +294,84 @@ getKeyCode = ffi "%1.keyCode"
 
 
 keyupMap :: Event -> St -> Fay ()
-keyupMap e (St modeRef ctrlRef altRef inputIdxRef) = do
+keyupMap e (St modeRef ctrlRef altRef _ _) = do
+  putStrLn $ "keyupMap: " ++ (show $ getKeyCode e)
   case getKeyCode e of
-    ctrlKeyCode -> writeRef ctrlRef False
-    altKeyCode  -> writeRef altRef False
-    otherwise   -> do
+--     ctrlKeyCode -> writeRef ctrlRef False
+--     altKeyCode  -> writeRef altRef False
+    17 -> do
+      putStrLn "ctrlKeyCode"
+      writeRef ctrlRef False
+    18  -> do
+      putStrLn "altKeyCode"
+      writeRef altRef False
+    _           -> do
       mode <- readRef modeRef
+      putStrLn $ show mode
       keyupMap' e mode ctrlRef altRef
   return ()
   where
     keyupMap' :: Event -> Mode -> Ref Bool -> Ref Bool -> Fay ()
-    keyupMap' e SelectorMode ctrlRef altRef = filterSelector e
+    keyupMap' e SelectorMode ctrlRef altRef = filterSelector $ getKeyCode e
     keyupMap' e FormFocusMode ctrlRef altRef = do
+      putStrLn "keyupMap'"
       ctrl <- readRef ctrlRef
-      alt <- readRef altRef 
+      alt <- readRef altRef
+      putStrLn $ show ctrl
+      putStrLn $ show alt
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
         Just "MOVE_NEXT_FORM" -> focusNextForm e
         Just "MOVE_PREV_FORM" -> focusPrevForm e
         Just "CANCEL"         -> cancel e
-        _ -> return ()
+        a -> do
+          putStrLn $ show a
+          putStrLn $ show $ Key (getKeyCode e) ctrl alt
+          putStrLn $ show $ keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings
+          return ()
     keyupMap' _ _ _ _ = return ()
 
 keydownMap :: Event -> St -> Fay ()
-keydownMap e (St modeRef ctrlRef altRef inputIdxRef) = do
+keydownMap e (St modeRef ctrlRef altRef inputIdxRef _) = do
+  putStrLn $ "keydownMap: " ++ (show $ getKeyCode e)
   case getKeyCode e of
-    ctrlKeyCode -> writeRef ctrlRef True
-    altKeyCode  -> writeRef altRef True
-    otherwise   -> do
+--     ctrlKeyCode -> writeRef ctrlRef True
+--     altKeyCode  -> writeRef altRef True
+    17 -> do
+      putStrLn "ctrlKeyCode"
+      writeRef ctrlRef True
+    18  -> do
+      putStrLn "altKeyCode"
+      writeRef altRef True
+    _           -> do
       mode <- readRef modeRef
+      putStrLn $ show mode
       keydownMap' e mode ctrlRef altRef
   return ()
   where
     keydownMap' :: Event -> Mode -> Ref Bool -> Ref Bool -> Fay ()
     keydownMap' e NeutralMode ctrlRef altRef = do
-          ctrl <- readRef ctrlRef
-          alt <- readRef altRef
-          case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-            Just "START_HITAHINT"  -> startHah modeRef
-            Just "FOCUS_FORM"      -> focusForm modeRef inputIdxRef
-            Just "TOGGLE_SELECTOR" -> toggleSelector modeRef
-            _ -> return ()
+      putStrLn "keydownMap'"
+      ctrl <- readRef ctrlRef
+      alt <- readRef altRef
+      putStrLn $ show ctrl
+      putStrLn $ show alt
+      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+        Just "START_HITAHINT"  -> startHah modeRef
+        Just "FOCUS_FORM"      -> focusForm modeRef inputIdxRef
+        Just "TOGGLE_SELECTOR" -> toggleSelector modeRef
+        a -> do
+          putStrLn $ show a
+          putStrLn $ show $ Key (getKeyCode e) ctrl alt
+          putStrLn $ show $ keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings
+          return ()
     keydownMap' e HitAHintMode ctrlRef altRef = do
-          ctrl <- readRef ctrlRef
-          alt <- readRef altRef
-          case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-            Just "CANCEL" -> cancel e
-            _ -> if isHitAHintKey (getKeyCode e)
-                 then hitHintKey e
-                 else return ()
+      ctrl <- readRef ctrlRef
+      alt <- readRef altRef
+      case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
+        Just "CANCEL" -> cancel e
+        _ -> if isHitAHintKey (getKeyCode e)
+             then hitHintKey e
+             else return ()
     keydownMap' _ _ _ _ = return ()
 
 keyup :: (Event -> Fay ()) -> Fay ()
@@ -349,6 +382,7 @@ keydown = ffi "$(document).keydown(%1)"
 
 startHah :: Ref Mode -> Fay ()
 startHah modeRef = do
+  putStrLn "startHah"
   writeRef modeRef HitAHintMode
   select clickables >>= addClass "links" >>= jqHtml f
   return ()
@@ -364,6 +398,7 @@ startHah modeRef = do
 
 focusForm :: Ref Mode -> Ref Int -> Fay ()
 focusForm modeRef inputIdxRef = do
+  putStrLn "focusForm"
   writeRef modeRef FormFocusMode
   writeRef inputIdxRef 0
   inputFields <- select formInputFields
@@ -372,6 +407,7 @@ focusForm modeRef inputIdxRef = do
 
 toggleSelector :: Ref Mode -> Fay ()
 toggleSelector modeRef = do
+  putStrLn "toggleSelector"
   writeRef modeRef SelectorMode
   console <- select "#selectorConsole"
   jqShow console
@@ -379,7 +415,9 @@ toggleSelector modeRef = do
   jqFocus input
   return ()
 
-filterSelector = undefined
+filterSelector keyCode = do
+  putStrLn "filterSelector"
+
 focusNextForm = undefined
 focusPrevForm = undefined
 cancel = undefined
@@ -404,6 +442,7 @@ data St = St {
   , getCtrlRef :: Ref Bool
   , getAltRef :: Ref Bool
   , getInputIdxRef :: Ref Int
+  , getListRef :: Ref [Item]
   }
 
 start :: Fay ()
@@ -412,13 +451,35 @@ start = do
   ctrlRef <- newRef False
   altRef <- newRef False
   inputIdxRef <- newRef 0
-  let st = St { getModeRef = modeRef, getCtrlRef = ctrlRef, getAltRef = altRef, getInputIdxRef = inputIdxRef }
+  listRef <- newRef []
+  let st = St { getModeRef = modeRef
+              , getCtrlRef = ctrlRef
+              , getAltRef = altRef
+              , getInputIdxRef = inputIdxRef
+              , getListRef = listRef
+              }
   body <- select "body"
   keydown (\e -> keydownMap e st)
   keyup (\e -> keyupMap e st)
   on "submit" "#selectorForm" decideSelector body
---   on "focus" formInputFields (\_ -> )
---   on "blur" formInputFields (\_ -> )
+  on "focus" formInputFields (\_ -> writeRef modeRef FormFocusMode) body
+  on "blur" formInputFields (\_ -> writeRef modeRef NeutralMode) body
+
+  chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" $ \is -> do
+    putStrLn "extension.sendMessage"
+--     putStrLn $ show (is!!0)
+--     putStrLn $ show is
+--     putStrLn "---"
+--     putStrLn is
+    items <- jsonParse is
+    putStrLn $ show items
+    writeRef listRef items
+    select "body" >>= append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>"
+    makeSelectorConsole items
+--     makeSelectorConsole $ map (\i -> Item { getId = (id i), getTitle = (title i), getUrl = (url i), getType = (type i)) is
+    return ()
+
+--   isFocusingForm then writeRef modeRef FormFocusMode else Fay ()
   return ()
 
 decideSelector :: Event -> Fay ()
@@ -444,6 +505,15 @@ writeRef = ffi "Fay$$writeRef(%1,%2)"
 readRef :: Ref a -> Fay a
 readRef = ffi "Fay$$readRef(%1)"
 
+chromeExtensionSendMessage :: String -> (a -> Fay ()) -> Fay ()
+chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %2)"
+
+-- { getId :: String, getTitle :: String, getUrl :: String, getType :: String }
+-- getItemFromJSON :: a -> (String, String, String, String)
+-- getItemFromJSON = ffi "%1.id,
+
+jsonParse :: String -> Fay a
+jsonParse = ffi "JSON.parse(%1)"
 
 {--
 
