@@ -259,14 +259,24 @@ makeSelectorConsole items = do
   putStrLn "makeSelectorConsole"
   putStrLn $ show $ length items
   putStrLn $ show $ (items!!0)
---   putStrLn ts
+  putStrLn $ show $ getTitle (items!!0)
+--   putStrLn (["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]!!0)
+  putStrLn "---"
+  putStrLn $ ts items
+--   putStrLn $ show $ concat $ map (\t -> getType t ++ "-" ++ getId t) $ take 10 items
+--   putStrLn $ show $ concat $ take 10 [getType t ++ "-" ++ getId t| t <- items]
+--   putStrLn $ show $ head $ map getTitle items
   select "#selectorList" >>= remove
-  select "#selectorConsole" >>= append ts
+  select "#selectorConsole" >>= append "ABCDEFG"
   select "#selectorList tr:first" >>= addClass "selected"
   where
     num = 20
-    trs = ["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
-    ts = "<table id=\"selectorList\">" ++ concat(take num trs) ++ "</table>"
+--     trs = map (\t -> getTitle t) items
+--     trs = map (\t -> "<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>") items
+    trs :: [Item] -> [String]
+    trs items = ["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">[" ++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
+    ts :: [Item] -> String
+    ts items = "<table id=\"selectorList\">" ++ concat (trs (take 1 items)) ++ "</table>"
 
 remove :: JQuery -> Fay JQuery
 remove = ffi "%1.remove()"
