@@ -258,25 +258,55 @@ makeSelectorConsole :: [Item] -> Fay JQuery
 makeSelectorConsole items = do
   putStrLn "makeSelectorConsole"
   putStrLn $ show $ length items
-  putStrLn $ show $ (items!!0)
-  putStrLn $ show $ getTitle (items!!0)
+  putStrLn $ show $ (items!!0)  -- OK {"getId":4,"getTitle":"拡張機能","getUrl":"chrome://extensions/","getType":"tab"}
+  putStrLn $ show $ getTitle (items!!0) -- OK "拡張機能"
 --   putStrLn (["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]!!0)
-  putStrLn "---"
-  putStrLn $ ts items
+  putStrLn "--- 0"
+  putStrLn $ "aaa" ++ "bbb"     -- OK "aaabbb"
+  let a = getTitle (items!!0)
+      b = getType (items!!0)
+  putStrLn a                    -- NG なにも出力されない
+  putStrLn b                    -- NG なにも出力されない
+  putStrLn $ show a ++ show b   -- OK 
+--   let a = show $ getTitle (items!!0)
+--       b = show $ getType (items!!0)
+--   putStrLn a
+--   putStrLn b
+--   putStrLn $ a ++ b
+  putStrLn $ show $ head $ map getTitle items    -- OK "拡張機能"
+  putStrLn $ show $ [getTitle t | t <- items]!!0 -- OK "拡張機能"
+  putStrLn $ [getTitle t | t <- items]!!0 -- NG なにも出力されないみたい
+--   putStrLn $ show $ [concat [getTitle t, " ", getUrl t] | t <- items]!!0 -- NG Error in event handler for 'undefined': undefined undefined 
+--   putStrLn $ show $ [getTitle t ++ " " ++ getUrl t | t <- items]!!0 -- NG Error in event handler for 'undefined': undefined undefined 
+  putStrLn $ show $ (trs items)!!0               -- NG {"car":"<","cdr":{"forced":false}}
+  putStrLn "--- 1"
+  putStrLn $ show $ ts items
+  putStrLn $ show $ ts' items   -- NG {"car":"#","cdr":{"forced":false}}
+
+  putStrLn "--- 2"
+  hoge <- arrToStr $ ts items
+  putStrLn hoge
 --   putStrLn $ show $ concat $ map (\t -> getType t ++ "-" ++ getId t) $ take 10 items
 --   putStrLn $ show $ concat $ take 10 [getType t ++ "-" ++ getId t| t <- items]
 --   putStrLn $ show $ head $ map getTitle items
   select "#selectorList" >>= remove
-  select "#selectorConsole" >>= append "ABCDEFG"
+  select "#selectorConsole" >>= append hoge
+--   select "#selectorConsole" >>= append "ABCDEFG"
   select "#selectorList tr:first" >>= addClass "selected"
   where
     num = 20
 --     trs = map (\t -> getTitle t) items
 --     trs = map (\t -> "<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">["++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>") items
     trs :: [Item] -> [String]
-    trs items = ["<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">[" ++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
+    trs items = ["<tr id=\"" ++ show (getType t) ++ "-" ++ show (getId t) ++ "\"><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- items]
     ts :: [Item] -> String
-    ts items = "<table id=\"selectorList\">" ++ concat (trs (take 1 items)) ++ "</table>"
+    ts items = "<table id=\"selectorList\">" ++ concat (trs (take 10 items)) ++ "</table>"
+    trs' :: [Item] -> [String]
+    trs' items = ["###<tr id=\"" ++ getType t ++ "-" ++ getId t ++ "\"><td><span class=\"title\">[" ++ getType t ++ "] " ++ getTitle t ++ " </span><span class=\"url\"> " ++ getUrl t ++ "</span></td></tr>" | t <- items]
+    ts' :: [Item] -> String
+    ts' items = (trs' items)!!5
+--     ts' items = concat (trs' items)
+--     ts' items = concat (trs' (take 10 items))
 
 remove :: JQuery -> Fay JQuery
 remove = ffi "%1.remove()"
@@ -479,10 +509,12 @@ start = do
     putStrLn "extension.sendMessage"
 --     putStrLn $ show (is!!0)
     putStrLn $ show is
---     putStrLn "---"
+    putStrLn "---"
 --     putStrLn is
---     items <- toItemsfromJSON is
-    items <- toItemsfromJSON $ show is
+    items <- fromJSON $ show is
+    putStrLn $ show $ items!!0
+--     putStrLn $ show $ (\x -> Item getId x getTitle x getUrl x getType x) (items!!0)
+--     items <- toItemsFromJSON $ show is
     writeRef listRef items
     select "body" >>= append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>"
     makeSelectorConsole items
@@ -525,8 +557,11 @@ chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %
 -- jsonParse :: String -> Fay a
 -- jsonParse = ffi "JSON.stringify(%1)"
 
-toItemsfromJSON :: String -> Fay [Item]
-toItemsfromJSON = ffi "JSON.parse(%1)"
+fromJSON :: String -> Fay [Item]
+fromJSON = ffi "JSON.parse(%1)"
+
+arrToStr :: [Char] -> Fay String
+arrToStr = ffi "%1.join('')"
 
 {--
 
