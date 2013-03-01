@@ -11,9 +11,10 @@ import MyPrelude
 main :: Fay ()
 main = do
   ready $ do
+    putStrLn "[2013-03-01 14:52]"
 --     chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" (\is -> putStrLn "chromeExtensionSendMessage")
-    putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
-    putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+--     putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
+--     putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
     start
 --     modeRef <- newRef NeutralMode
 --     mode <- readRef modeRef
@@ -282,7 +283,7 @@ getKeyCode = ffi "%1.keyCode"
 
 
 keyupMap :: Event -> St -> Fay ()
-keyupMap e (St modeRef ctrlRef altRef _ _) = do
+keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
   putStrLn $ "keyupMap: " ++ (show $ getKeyCode e)
   case getKeyCode e of
 --     ctrlKeyCode -> writeRef ctrlRef False
@@ -310,7 +311,7 @@ keyupMap e (St modeRef ctrlRef altRef _ _) = do
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
         Just "MOVE_NEXT_FORM" -> focusNextForm e
         Just "MOVE_PREV_FORM" -> focusPrevForm e
-        Just "CANCEL"         -> cancel e
+        Just "CANCEL"         -> cancel modeRef firstKeyCodeRef e
         a -> do
           putStrLn $ show a
           putStrLn $ show $ Key (getKeyCode e) ctrl alt
@@ -319,7 +320,7 @@ keyupMap e (St modeRef ctrlRef altRef _ _) = do
     keyupMap' _ _ _ _ = return ()
 
 keydownMap :: Event -> St -> Fay ()
-keydownMap e (St modeRef ctrlRef altRef inputIdxRef _) = do
+keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
   putStrLn $ "keydownMap: " ++ (show $ getKeyCode e)
   case getKeyCode e of
 --     ctrlKeyCode -> writeRef ctrlRef True
@@ -356,9 +357,9 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _) = do
       ctrl <- readRef ctrlRef
       alt <- readRef altRef
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "CANCEL" -> cancel e
+        Just "CANCEL" -> cancel modeRef firstKeyCodeRef e
         _ -> if isHitAHintKey (getKeyCode e)
-             then hitHintKey e
+             then hitHintKey modeRef firstKeyCodeRef e
              else return ()
     keydownMap' e SelectorMode ctrlRef altRef = do
       ctrl <- readRef ctrlRef
@@ -366,7 +367,7 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _) = do
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
         Just "MOVE_NEXT_SELECTOR_CURSOR" -> moveNextCursor e
         Just "MOVE_PREV_SELECTOR_CURSOR" -> movePrevCursor e
-        Just "CANCEL" -> cancel e
+        Just "CANCEL" -> cancel modeRef firstKeyCodeRef e
         _ -> return ()
     keydownMap' _ _ _ _ = return ()
 
@@ -380,10 +381,10 @@ startHah :: Ref Mode -> Fay ()
 startHah modeRef = do
   putStrLn "startHah"
   writeRef modeRef HitAHintMode
-  select clickables >>= addClass "links" >>= jqHtml f
+  select clickables >>= addClass "links" >>= jqHtml addHintKeyChip
   return ()
   where
-    f (i, oldHtml) = case indexToKeyCode i of
+    addHintKeyChip i oldHtml = case indexToKeyCode i of
       Just keyCode -> case lookup keyCode hintKeys of
         Just hintKeyName -> "<div class=\"hintKey\">" ++ hintKeyName ++ "</div> " ++ oldHtml
         _ -> oldHtml
@@ -429,21 +430,78 @@ focusNextForm = undefined
 
 
 focusPrevForm = undefined
-cancel = undefined
-hitHintKey = undefined
+
+cancel modeRef firstKeyCodeRef event = do
+  preventDefault event
+  readRef modeRef >>= cancel'
+--   mode <- readRef modeRef
+--   cancel' mode
+  writeRef modeRef NeutralMode
+  where
+    cancel' SelectorMode = do
+      putStrLn "SelectorMode cancel"
+      select "#selectorConsole" >>= jqHide
+      select ":focus" >>= jqBlur
+      return ()
+    cancel' HitAHintMode = do
+      putStrLn "HitAHintMode cancel"
+      writeRef firstKeyCodeRef Nothing
+      select clickables >>= jqRemoveClass "links"
+      select ".hintKey" >>= jqRemove
+      return ()
+    cancel' _ = select ":focus" >>= jqBlur >> return ()
+
+hitHintKey modeRef firstKeyCodeRef event = do
+  mFirstKeyCode <- readRef firstKeyCodeRef
+  case mFirstKeyCode of
+    Just firstKeyCode -> do
+      preventDefault event
+      putStrLn $ "hit: " ++ show (getKeyCode event) ++ ", 1stkey: " ++ show firstKeyCode
+      case keyCodeToIndex firstKeyCode (getKeyCode event) of
+        Just idx -> do
+          writeRef modeRef NeutralMode
+          writeRef firstKeyCodeRef Nothing
+          select clickables >>= jqIdx idx >>= jqClick >>= jqRemoveClass "links"
+          select ".hintKey" >>= jqRemove
+          return ()
+        _ -> return ()
+    Nothing -> do
+      writeRef firstKeyCodeRef $ Just $ getKeyCode event
+  return ()
+
+
 moveNextCursor = undefined
 movePrevCursor = undefined
 
-jqHtml :: ((Int, String) -> a) -> JQuery -> Fay JQuery
-jqHtml = ffi "%2.html(f)"
+jqClick :: JQuery -> Fay JQuery
+jqClick = ffi "%1.click()"
+
+jqHtml :: (Int -> String -> String) -> JQuery -> Fay String
+jqHtml = ffi "%2.html(%1)"
+
+jqRemoveClass :: String -> JQuery -> Fay JQuery
+jqRemoveClass = ffi "%2.removeClass(%1)"
+
+jqRemove :: JQuery -> Fay JQuery
+jqRemove = ffi "%1.remove()"
 
 jqEq :: Int -> JQuery -> Fay JQuery
 jqEq = ffi "%2.eq(%1)"
 
+jqIdx :: Int -> JQuery -> Fay JQuery
+jqIdx = ffi "%2[%1]"
+
 jqShow :: JQuery -> Fay JQuery
 jqShow = ffi "%1.show()"
+
+jqHide :: JQuery -> Fay JQuery
+jqHide = ffi "%1.hide()"
+
 jqFocus :: JQuery -> Fay JQuery
 jqFocus = ffi "%1.focus()"
+
+jqBlur :: JQuery -> Fay JQuery
+jqBlur = ffi "%1.blur()"
 
 on :: String -> String -> (Event -> Fay ()) -> JQuery -> Fay JQuery
 on = ffi "%4.on(%1, %2, %3)"
@@ -454,6 +512,7 @@ data St = St {
   , getAltRef :: Ref Bool
   , getInputIdxRef :: Ref Int
   , getListRef :: Ref [Item]
+  , getFirstKeyCodeRef :: Ref (Maybe Int)
   }
 
 start :: Fay ()
@@ -463,11 +522,13 @@ start = do
   altRef <- newRef False
   inputIdxRef <- newRef 0
   listRef <- newRef []
+  firstKeyCodeRef <- newRef Nothing
   let st = St { getModeRef = modeRef
               , getCtrlRef = ctrlRef
               , getAltRef = altRef
               , getInputIdxRef = inputIdxRef
               , getListRef = listRef
+              , getFirstKeyCodeRef = firstKeyCodeRef
               }
   body <- select "body"
   keydown (\e -> keydownMap e st)
