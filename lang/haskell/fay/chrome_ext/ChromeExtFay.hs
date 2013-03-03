@@ -236,12 +236,14 @@ isHitAHintKey :: Int -> Bool
 isHitAHintKey keyCode = elem keyCode $ map fst _hintKeys
 
 -- # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
--- isFocusingForm :: Fay Bool
--- isFocusingForm = do
---   focusElems <- select ":focus"
+isFocusingForm :: Fay Bool
+isFocusingForm = do
+  putStrLn "sFocusingForm"
+  focusElems <- select ":focus"
+  lowerName <- jqIdx 0 focusElems >>= nodeName >>= toLowerCase
+  putStrLn $ show lowerName
+  return $ ((lowerName == "input") && (attr "type" focusElems == "text")) || lowerName == "textarea"
 
---   console.log('isFocusingForm')
---   focusElems = $(':focus')
 --   console.log(focusElems.attr('type'))
 --   focusElems[0] and (
 --     (focusElems[0].nodeName.toLowerCase() == "input" and focusElems.attr('type') == "text") or
@@ -489,6 +491,7 @@ jqEq :: Int -> JQuery -> Fay JQuery
 jqEq = ffi "%2.eq(%1)"
 
 jqIdx :: Int -> JQuery -> Fay JQuery
+-- jqIdx :: Int -> a -> Fay a
 jqIdx = ffi "%2[%1]"
 
 jqShow :: JQuery -> Fay JQuery
@@ -546,7 +549,11 @@ start = do
     makeSelectorConsole items'
     return ()
 
---   isFocusingForm then writeRef modeRef FormFocusMode else Fay ()
+  isFocus <- isFocusingForm
+  if isFocus then writeRef modeRef FormFocusMode else return ()
+
+  readRef modeRef >>= (putStrLn . show)
+
   return ()
 
 decideSelector :: Event -> Fay ()
@@ -576,6 +583,16 @@ chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %
 
 fromJSON :: String -> Fay [Item]
 fromJSON = ffi "JSON.parse(%1)"
+
+-- nodeName :: JQuery -> Fay JQuery
+nodeName :: JQuery -> Fay String
+nodeName = ffi "%1.nodeName"
+
+toLowerCase :: String -> Fay String
+toLowerCase = ffi "%1.toLowerCase()"
+
+attr :: String -> JQuery -> String
+attr = ffi "%2.attr(%1)"
 
 arrToStr :: [Char] -> Fay String
 arrToStr = ffi "%1.join('')"
