@@ -5,222 +5,24 @@ module ChromeExtFay where
 
 import Prelude
 import FFI
-
 import MyPrelude
+import Hah.Types
+import Hah.Configs
+import JS
+import ChromeExt
 
 main :: Fay ()
 main = do
   ready $ do
-    putStrLn "[2013-03-01 14:52]"
---     chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" (\is -> putStrLn "chromeExtensionSendMessage")
---     putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
---     putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+    putStrLn "[2013-03-04 22:38]"
     start
---     modeRef <- newRef NeutralMode
---     mode <- readRef modeRef
---     putStrLn $ show $ mode
---     writeRef modeRef HitAHintMode
---     mode1 <- readRef modeRef
---     putStrLn $ show $ mode1
-
---     chromeStorageSyncSet "{\"aahoge\":\"XX12345\"}"
---     chromeStorageSyncGet "aahoge" (\d -> do{putStrLn "aahoge";putStrLn (showString d)})
-
---     body <- select "body"
---     append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
---     makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
---     putStrLn $ snd $ hintKeys!!0
---     putStrLn $ snd $ hintKeys!!110
---     putStrLn $ show $ fst $ hintKeys!!1
---     putStrLn $ show $ fromJust $ keyCodeToIndex 69 71
---     putStrLn $ show $ fromJust $ indexToKeyCode 110
---     putStrLn $ show $ isHitAHintKey 70
---     putStrLn $ show $ isHitAHintKey 7
---     putStrLn "$ fst $ defaultSettings!!0"
---     putStrLn $ fst $ defaultSettings!!0
---     putStrLn $ show $ getCode $ snd $ defaultSettings!!0
---     putStrLn $ show $ fromJust $ keyCodeFromKeyName "A"
--- --     chromeStorageSyncSet
--- --     chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
--- --     chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
---     localStorageSet "111" "000YYY%%%"
---     putStrLn $ localStorageGet "111"
-
---     putStrLn (showDouble 123)
---     body <- select "body"
---     printArg body
---     addClassWith (\i s -> do putStrLn ("i… " ++ showDouble i)
---                              putStrLn ("s… " ++ showString s)
---                              return "abc")
---                  body
---     addClassWith (\i s -> do putStrLn ("i… " ++ showDouble i)
---                              putStrLn ("s… " ++ showString s)
---                              putStrLn (showString ("def: " ++ s))
---                              return "foo")
---                  body
---     printArg body
     return ()
-
-data JQuery
-instance Show JQuery
-
-data Element
-
-printArg :: a -> Fay ()
-printArg = ffi "console.log(\"%%o\",%1)"
-
-showDouble :: Double -> String
-showDouble = ffi "(%1).toString()"
-
-showString :: String -> String
-showString = ffi "JSON.stringify(%1)"
-
-select :: String -> Fay JQuery
-select = ffi "jQuery(%1)"
-
-addClassWith :: (Double -> String -> Fay String) -> JQuery -> Fay JQuery
-addClassWith = ffi "%2.addClass(%1)"
-
-ready :: Fay () -> Fay ()
-ready = ffi "jQuery(%1)"
-
---
---
---
-
-data Key = Key { getCode :: Int, getCtrl :: Bool, getAlt :: Bool } deriving (Show, Eq)
-
-defaultSettings :: [(String, Key)]
-defaultSettings = [
-  ("START_HITAHINT",            Key 69  True False),
-  ("FOCUS_FORM",                Key 70  True False),
-  ("TOGGLE_SELECTOR",           Key 186 True False),
-  ("CANCEL",                    Key 27  False False),
-  ("MOVE_NEXT_SELECTOR_CURSOR", Key 40  False False),
-  ("MOVE_PREV_SELECTOR_CURSOR", Key 38  False False),
-  ("MOVE_NEXT_FORM",            Key 34  False False),
-  ("MOVE_PREV_FORM",            Key 33  False False),
-  ("BACK_HISTORY",              Key 72  True False)
-  ]
-
-keyMap :: [(Int, String)]
-keyMap = [
-  (9   , "TAB"),
-  (16  , "SHIFT"),
-  (17  , "CTRL"),
-  (18  , "ALT"),
-  (27  , "ESC"),
-  (33  , "PAGEUP"),
-  (34  , "PAGEDONW"),
-  (35  , "END"),
-  (36  , "HOME"),
-  (37  , "BACK"),
-  (38  , "UP"),
-  (39  , "FORWARD"),
-  (40  , "DOWN"),
-  (48  , "0"),
-  (49  , "1"),
-  (50  , "2"),
-  (51  , "3"),
-  (52  , "4"),
-  (53  , "5"),
-  (54  , "6"),
-  (55  , "7"),
-  (56  , "8"),
-  (57  , "9"),
-  (65  , "A"),
-  (66  , "B"),
-  (67  , "C"),
-  (68  , "D"),
-  (69  , "E"),
-  (70  , "F"),
-  (71  , "G"),
-  (72  , "H"),
-  (73  , "I"),
-  (74  , "J"),
-  (75  , "K"),
-  (76  , "L"),
-  (77  , "M"),
-  (78  , "N"),
-  (79  , "O"),
-  (80  , "P"),
-  (81  , "Q"),
-  (82  , "R"),
-  (83  , "S"),
-  (84  , "T"),
-  (85  , "U"),
-  (86  , "V"),
-  (87  , "W"),
-  (88  , "X"),
-  (89  , "Y"),
-  (90  , "Z"),
-  (112 , "F1"),
-  (113 , "F2"),
-  (114 , "F3"),
-  (115 , "F4"),
-  (116 , "F5"),
-  (117 , "F6"),
-  (118 , "F7"),
-  (119 , "F8"),
-  (120 , "F9"),
-  (121 , "F10"),
-  (122 , "F11"),
-  (123 , "F12"),
-  (186 , ": (or ;)"),
-  (187 , "^"),
-  (188 , ","),
-  (189 , "-"),
-  (190 , ".")
-  ]
 
 keyCodeFromKeyName' :: [(Int, String)] -> String -> Maybe Int
 keyCodeFromKeyName' kMap name = listToMaybe [k | (k,v) <- kMap , v == name]
 
 keyCodeFromKeyName :: String -> Maybe Int
 keyCodeFromKeyName = keyCodeFromKeyName' keyMap
-
--- showString :: String -> String
--- showString = ffi "JSON.stringify(%1)"
-
--- addClassWith :: (Double -> String -> Fay String) -> JQuery -> Fay JQuery
--- addClassWith = ffi "%2.addClass(%1)"
-
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set({\"settings\":\"hogefugabz\"})"
-
-localStorageSet :: String -> String -> Fay ()
-localStorageSet = ffi "localStorage.setItem(%1, %2)"
-
-localStorageGet :: String -> String
-localStorageGet = ffi "localStorage.getItem(%1)"
-
-ctrlKeycode :: Int
-ctrlKeycode = 17
-altKeycode :: Int
-altKeycode = 18
-
--- data itemType = Tab | History | Bookmark | Websearch | Command
-selectorNum :: Int
-selectorNum = 20
-
--- WEB_SEARCH_LIST =
---   {title: 'google検索', url: 'https://www.google.co.jp/#hl=ja&q=', type: 'websearch'}
---   {title: 'alc辞書', url: 'http://eow.alc.co.jp/search?ref=sa&q=', type: 'websearch'}
-
-formInputFields :: String
-formInputFields = "input[type=\"text\"]:not(\"#selectorInput\"), textarea, select"
-clickables :: String
-clickables = "a"
--- CLICKABLES = "a[href],input:not([type=hidden]),textarea,select,*[onclick],button"
-
-_hintKeys :: [(Int, String)]
-_hintKeys = [(65, "A"), (66, "B"), (67, "C"), (68, "D"), (69, "E"), (70, "F"), (71, "G"), (72, "H"), (73, "I"), (74, "J"), (75, "K"), (76, "L"), (77, "M"), (78, "N"), (79, "O"), (80, "P"), (81, "Q"), (82, "R"), (83, "S"), (84, "T"), (85, "U"), (86, "V"), (87, "W"), (88, "X"), (89, "Y"), (90, "Z")]
-hintKeys :: [(Int, String)]
-hintKeys =  [(i1*100+i2, s1 ++ s2)|(i1, s1) <- _hintKeys, (i2, s2) <- _hintKeys]
-
 
 keyCodeToIndex :: Int -> Int -> Maybe Int
 keyCodeToIndex firstKeyCode secondKeyCode = elemIndex (firstKeyCode*100+secondKeyCode) $ map fst hintKeys
@@ -238,51 +40,58 @@ isHitAHintKey keyCode = elem keyCode $ map fst _hintKeys
 -- # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
 isFocusingForm :: Fay Bool
 isFocusingForm = do
-  putStrLn "sFocusingForm"
   focusElems <- select ":focus"
-  lowerName <- jqIdx 0 focusElems >>= nodeName >>= toLowerCase
-  putStrLn $ show lowerName
-  return $ ((lowerName == "input") && (attr "type" focusElems == "text")) || lowerName == "textarea"
-
---   console.log(focusElems.attr('type'))
---   focusElems[0] and (
---     (focusElems[0].nodeName.toLowerCase() == "input" and focusElems.attr('type') == "text") or
---     focusElems[0].nodeName.toLowerCase() == "textarea"
---   )
-
-data Item = Item { getId :: String, getTitle :: String, getUrl :: String, getType :: String } deriving (Show)
+  elm <- jqIdx 0 focusElems
+  let lowerNodeName = toLowerCase $ nodeName elm
+      typeAttr = attr "type" focusElems
+  return $ (lowerNodeName == "input" && typeAttr == "text") || lowerNodeName == "textarea"
 
 makeSelectorConsole :: String -> Fay JQuery
 makeSelectorConsole htmlStr = do
   putStrLn "makeSelectorConsole"
+  putStrLn htmlStr
+  htmlStr' <- arrToStr htmlStr
+  putStrLn htmlStr'
   select "#selectorList" >>= remove
-  select "#selectorConsole" >>= append htmlStr
+  select "#selectorConsole" >>= append htmlStr'
   select "#selectorList tr:first" >>= addClass "selected"
 
-remove :: JQuery -> Fay JQuery
-remove = ffi "%1.remove()"
+makeSelectorConsole' :: [Item] -> Fay JQuery
+makeSelectorConsole' items = do
+  putStrLn "makeSelectorConsole'"
+  trList <- arrToStr $ concatMap makeTrList items
+  putStrLn "trList"
+  putStrLn trList
+  jqTable <- select "table" >>= setAttr "id" "selectorList" >>= append trList
+--   jqTable <- select "table"
+--   setAttr "id" "selectorList" jqTable
+--   append trList jqTable
+--   putStrLn $ show jqTable
+  select "#selectorList" >>= remove
+  select "#selectorConsole" >>= appendJ jqTable
+  select "#selectorList tr:first" >>= addClass "selected"
+  where
+    makeTrList :: Item -> String
+    makeTrList item = arrToStr' $ concat ["<tr itemType=", show (getType item), " itemId=", show (getId item), "><td><span class=\"title\">[" , show (getType item), "] ", show (getTitle item), " </span><span class=\"url\"> ", show (getUrl item), "</span></td></tr>"]
+--     items' <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr id=\"" ++ show (getType t) ++ "-" ++ show (getId t) ++ "\"><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
 
-append :: String -> JQuery -> Fay JQuery
-append = ffi "%2.append(%1)"
+--     makeTrList :: Item -> Fay JQuery
+--     makeTrList item = do
+--       let title = getTitle item
+--           id = getId item
+--           typ = getType item
+--           url = getUrl item
+--       jqTr <- select "tr" >>= setAttr "id" $ typ ++ id
+--       jqTd <- append "td" jqTr
+--       append "span" jqTd >>= addClass "title" >>= jqText $ "[" ++ typ ++ "]" ++ title
+--       append "span" jqTd >>= addClass "url" >>= jqText url
+--       jqTr
 
-addClass :: String -> JQuery -> Fay JQuery
-addClass = ffi "%2.addClass(%1)"
-
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: String -> Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set(JSON.parse(%1))"
+-- makeSelectorConsole'' :: [a] -> Fay ()
+-- makeSelectorConsole'' = ffi "function(%1){ var ts, t; if ($('#selectorList')) { $('#selectorList').remove(); } console.log(%1); ts = p.concat(p.take(20, (function(){ var i$, ref$, len$, results$ = []; for (i$ = 0, len$ = (ref$ = %1).length; i$ < len$; ++i$) { t = ref$[i$]; results$.push('<tr id=\"' + t.type + '-' + t.id + '\"><td><span class=\"title\">[' + t.type + '] ' + t.title + ' </span><span class=\"url\"> ' + t.url + '</span></td></tr>'); } return results$; }()))); $('#selectorConsole').append('<table id=\"selectorList\">' + ts + '</table>'); return $('#selectorList tr:first').addClass('selected'); }();"
 
 keyMapper :: Key -> [(String, Key)] -> Maybe String
 keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
-
-data Mode = NeutralMode | HitAHintMode | SelectorMode | FormFocusMode deriving (Show)
-data Event
-
-getKeyCode :: Event -> Int
-getKeyCode = ffi "%1.keyCode"
-
 
 keyupMap :: Event -> St -> Fay ()
 keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
@@ -373,12 +182,6 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
         _ -> return ()
     keydownMap' _ _ _ _ = return ()
 
-keyup :: (Event -> Fay ()) -> Fay ()
-keyup = ffi "$(document).keyup(%1)"
-keydown :: (Event -> Fay ()) -> Fay ()
-keydown = ffi "$(document).keydown(%1)"
-
-
 startHah :: Ref Mode -> Fay ()
 startHah modeRef = do
   putStrLn "startHah"
@@ -433,6 +236,7 @@ focusNextForm = undefined
 
 focusPrevForm = undefined
 
+cancel :: Ref Mode -> Ref (Maybe Int) -> Event -> Fay ()
 cancel modeRef firstKeyCodeRef event = do
   preventDefault event
   readRef modeRef >>= cancel'
@@ -472,51 +276,19 @@ hitHintKey modeRef firstKeyCodeRef event = do
   return ()
 
 
-moveNextCursor = undefined
-movePrevCursor = undefined
+moveNextCursor :: Event -> Fay ()
+moveNextCursor e = do
+  putStrLn "moveNextCursor"
+  preventDefault e
+  select "#selectorList .selected" >>= jqRemoveClass "selected" >>= jqNext "tr" >>= addClass "selected"
+  return ()
 
-jqClick :: JQuery -> Fay JQuery
-jqClick = ffi "%1.click()"
-
-jqHtml :: (Int -> String -> String) -> JQuery -> Fay String
-jqHtml = ffi "%2.html(%1)"
-
-jqRemoveClass :: String -> JQuery -> Fay JQuery
-jqRemoveClass = ffi "%2.removeClass(%1)"
-
-jqRemove :: JQuery -> Fay JQuery
-jqRemove = ffi "%1.remove()"
-
-jqEq :: Int -> JQuery -> Fay JQuery
-jqEq = ffi "%2.eq(%1)"
-
-jqIdx :: Int -> JQuery -> Fay JQuery
--- jqIdx :: Int -> a -> Fay a
-jqIdx = ffi "%2[%1]"
-
-jqShow :: JQuery -> Fay JQuery
-jqShow = ffi "%1.show()"
-
-jqHide :: JQuery -> Fay JQuery
-jqHide = ffi "%1.hide()"
-
-jqFocus :: JQuery -> Fay JQuery
-jqFocus = ffi "%1.focus()"
-
-jqBlur :: JQuery -> Fay JQuery
-jqBlur = ffi "%1.blur()"
-
-on :: String -> String -> (Event -> Fay ()) -> JQuery -> Fay JQuery
-on = ffi "%4.on(%1, %2, %3)"
-
-data St = St {
-    getModeRef :: Ref Mode
-  , getCtrlRef :: Ref Bool
-  , getAltRef :: Ref Bool
-  , getInputIdxRef :: Ref Int
-  , getListRef :: Ref [Item]
-  , getFirstKeyCodeRef :: Ref (Maybe Int)
-  }
+movePrevCursor :: Event -> Fay ()
+movePrevCursor e = do
+  putStrLn "movePrevCursor"
+  preventDefault e
+  select "#selectorList .selected" >>= jqRemoveClass "selected" >>= jqPrev "tr" >>= addClass "selected"
+  return ()
 
 start :: Fay ()
 start = do
@@ -536,7 +308,7 @@ start = do
   body <- select "body"
   keydown (\e -> keydownMap e st)
   keyup (\e -> keyupMap e st)
-  on "submit" "#selectorForm" decideSelector body
+  on "submit" "#selectorForm" (\e -> decideSelector modeRef firstKeyCodeRef listRef e) body
   on "focus" formInputFields (\_ -> writeRef modeRef FormFocusMode) body
   on "blur" formInputFields (\_ -> writeRef modeRef NeutralMode) body
 
@@ -545,54 +317,51 @@ start = do
     items <- fromJSON $ show is
     writeRef listRef items
     select "body" >>= append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>"
-    items' <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr id=\"" ++ show (getType t) ++ "-" ++ show (getId t) ++ "\"><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
+    items' <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr itemType=" ++ show (getType t) ++ " itemId=" ++ show (getId t) ++ "><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
     makeSelectorConsole items'
+--     makeSelectorConsole' items
     return ()
 
   isFocus <- isFocusingForm
   if isFocus then writeRef modeRef FormFocusMode else return ()
 
-  readRef modeRef >>= (putStrLn . show)
-
   return ()
 
-decideSelector :: Event -> Fay ()
-decideSelector e = do
+decideSelector :: Ref Mode -> Ref (Maybe Int) -> Ref [Item] -> Event -> Fay ()
+decideSelector modeRef firstKeyCodeRef listRef e = do
+  putStrLn "decideSelector"
   preventDefault e
-  --
-  --
-  --
+  (typ, id) <- getTypeAndId
+  url <- select "#selectorList tr.selected span.url" >>= jqText
+  query <- select "#selectorInput" >>= jqVal
+  putStrLn $ typ ++ ":" ++ id ++ ":" ++ url ++ ":" ++ query
+  id' <- arrToStr id
+  typ' <- arrToStr typ
+  url' <- arrToStr url
+  query' <- arrToStr query
+  putStrLn $ typ' ++ ":" ++ id' ++ ":" ++ url' ++ ":" ++ query'
+  cancel modeRef firstKeyCodeRef e
+  let jsonStr' = jsonStr id' typ' url' query'
+  putStrLn "jsonStr'"
+  putStrLn jsonStr'
+--   chromeExtensionSendMessage (jsonStr id typ url query) $ \list -> do
+  chromeExtensionSendMessage jsonStr' $ \list -> do
+    putStrLn "decideSelector callback"
+    items <- fromJSON $ show list
+    writeRef listRef items
+    return ()
+
+  select "#selectorInput" >>= jqVal
   return ()
+  where
+    getTypeAndId :: Fay (String, String)
+    getTypeAndId = do
+      j <- select "#selectorList tr.selected"
+      return $ (attr "itemtype" j, attr "itemid" j)
 
-preventDefault :: Event -> Fay ()
-preventDefault = ffi "%1.preventDefault()"
+    jsonStr :: String -> String -> String -> String -> String
+    jsonStr id typ url query = "{\"mes\": \"decideSelector\", \"item\":{\"id\":\"" ++ id ++ "\", \"url\":" ++ url ++ ", \"type\":\"" ++ typ ++ "\", \"query\":\"" ++ query ++ "\"}}"
 
-data Ref a
-
-newRef :: a -> Fay (Ref a)
-newRef = ffi "new Fay$$Ref(%1)"
-
-writeRef :: Ref a -> a -> Fay ()
-writeRef = ffi "Fay$$writeRef(%1,%2)"
-
-readRef :: Ref a -> Fay a
-readRef = ffi "Fay$$readRef(%1)"
-
-chromeExtensionSendMessage :: String -> (a -> Fay ()) -> Fay ()
-chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %2)"
-
-fromJSON :: String -> Fay [Item]
+-- fromJSON :: String -> Fay [Item]
+fromJSON :: String -> Fay [a]
 fromJSON = ffi "JSON.parse(%1)"
-
--- nodeName :: JQuery -> Fay JQuery
-nodeName :: JQuery -> Fay String
-nodeName = ffi "%1.nodeName"
-
-toLowerCase :: String -> Fay String
-toLowerCase = ffi "%1.toLowerCase()"
-
-attr :: String -> JQuery -> String
-attr = ffi "%2.attr(%1)"
-
-arrToStr :: [Char] -> Fay String
-arrToStr = ffi "%1.join('')"
