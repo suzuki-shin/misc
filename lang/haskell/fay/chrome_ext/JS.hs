@@ -118,3 +118,12 @@ chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %
 
 arrToStr :: [Char] -> Fay String
 arrToStr = ffi "%1.join('')"
+
+nodeName :: JQuery -> String
+nodeName = ffi "%1.nodeName"
+
+toLowerCase :: String -> String
+toLowerCase = ffi "%1.toLowerCase()"
+
+attr :: String -> JQuery -> String
+attr = ffi "%2.attr(%1)"

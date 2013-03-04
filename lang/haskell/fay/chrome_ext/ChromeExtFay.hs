@@ -145,17 +145,13 @@ isHitAHintKey :: Int -> Bool
 isHitAHintKey keyCode = elem keyCode $ map fst _hintKeys
 
 -- # 現在フォーカスがある要素がtextタイプのinputかtextareaである(文字入力可能なformの要素)かどうかを返す
--- isFocusingForm :: Fay Bool
--- isFocusingForm = do
---   focusElems <- select ":focus"
-
---   console.log('isFocusingForm')
---   focusElems = $(':focus')
---   console.log(focusElems.attr('type'))
---   focusElems[0] and (
---     (focusElems[0].nodeName.toLowerCase() == "input" and focusElems.attr('type') == "text") or
---     focusElems[0].nodeName.toLowerCase() == "textarea"
---   )
+isFocusingForm :: Fay Bool
+isFocusingForm = do
+  focusElems <- select ":focus"
+  elm <- jqIdx 0 focusElems
+  let lowerNodeName = toLowerCase $ nodeName elm
+      typeAttr = attr "type" focusElems
+  return $ (lowerNodeName == "input" && typeAttr == "text") || lowerNodeName == "textarea"
 
 data Item = Item { getId :: String, getTitle :: String, getUrl :: String, getType :: String } deriving (Show)
 
@@ -396,7 +392,9 @@ start = do
     makeSelectorConsole items'
     return ()
 
---   isFocusingForm then writeRef modeRef FormFocusMode else Fay ()
+  isFocus <- isFocusingForm
+  if isFocus then writeRef modeRef FormFocusMode else return ()
+
   return ()
 
 decideSelector :: Event -> Fay ()
