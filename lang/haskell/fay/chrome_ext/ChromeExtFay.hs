@@ -5,88 +5,15 @@ module ChromeExtFay where
 
 import Prelude
 import FFI
-
 import MyPrelude
+import JS
 
 main :: Fay ()
 main = do
   ready $ do
-    putStrLn "[2013-03-01 14:52]"
---     chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" (\is -> putStrLn "chromeExtensionSendMessage")
---     putStrLn $ show $ keyMapper (Key 80 True False) defaultSettings
---     putStrLn $ show $ keyMapper (Key 186 True False) defaultSettings
+    putStrLn "[2013-03-04 10:42]"
     start
---     modeRef <- newRef NeutralMode
---     mode <- readRef modeRef
---     putStrLn $ show $ mode
---     writeRef modeRef HitAHintMode
---     mode1 <- readRef modeRef
---     putStrLn $ show $ mode1
-
---     chromeStorageSyncSet "{\"aahoge\":\"XX12345\"}"
---     chromeStorageSyncGet "aahoge" (\d -> do{putStrLn "aahoge";putStrLn (showString d)})
-
---     body <- select "body"
---     append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>" body
---     makeSelectorConsole ([(Item "id00" "title00" "url00" "type00"),(Item "id01" "title01" "url01" "type01")])
---     putStrLn $ snd $ hintKeys!!0
---     putStrLn $ snd $ hintKeys!!110
---     putStrLn $ show $ fst $ hintKeys!!1
---     putStrLn $ show $ fromJust $ keyCodeToIndex 69 71
---     putStrLn $ show $ fromJust $ indexToKeyCode 110
---     putStrLn $ show $ isHitAHintKey 70
---     putStrLn $ show $ isHitAHintKey 7
---     putStrLn "$ fst $ defaultSettings!!0"
---     putStrLn $ fst $ defaultSettings!!0
---     putStrLn $ show $ getCode $ snd $ defaultSettings!!0
---     putStrLn $ show $ fromJust $ keyCodeFromKeyName "A"
--- --     chromeStorageSyncSet
--- --     chromeStorageSyncGet "settings" $ (\d -> putStrLn (showString d))
--- --     chromeStorageSyncGet "settings" $ (\_ -> putStrLn "UUU")
---     localStorageSet "111" "000YYY%%%"
---     putStrLn $ localStorageGet "111"
-
---     putStrLn (showDouble 123)
---     body <- select "body"
---     printArg body
---     addClassWith (\i s -> do putStrLn ("i… " ++ showDouble i)
---                              putStrLn ("s… " ++ showString s)
---                              return "abc")
---                  body
---     addClassWith (\i s -> do putStrLn ("i… " ++ showDouble i)
---                              putStrLn ("s… " ++ showString s)
---                              putStrLn (showString ("def: " ++ s))
---                              return "foo")
---                  body
---     printArg body
     return ()
-
-data JQuery
-instance Show JQuery
-
-data Element
-
-printArg :: a -> Fay ()
-printArg = ffi "console.log(\"%%o\",%1)"
-
-showDouble :: Double -> String
-showDouble = ffi "(%1).toString()"
-
-showString :: String -> String
-showString = ffi "JSON.stringify(%1)"
-
-select :: String -> Fay JQuery
-select = ffi "jQuery(%1)"
-
-addClassWith :: (Double -> String -> Fay String) -> JQuery -> Fay JQuery
-addClassWith = ffi "%2.addClass(%1)"
-
-ready :: Fay () -> Fay ()
-ready = ffi "jQuery(%1)"
-
---
---
---
 
 data Key = Key { getCode :: Int, getCtrl :: Bool, getAlt :: Bool } deriving (Show, Eq)
 
@@ -179,24 +106,6 @@ keyCodeFromKeyName' kMap name = listToMaybe [k | (k,v) <- kMap , v == name]
 keyCodeFromKeyName :: String -> Maybe Int
 keyCodeFromKeyName = keyCodeFromKeyName' keyMap
 
--- showString :: String -> String
--- showString = ffi "JSON.stringify(%1)"
-
--- addClassWith :: (Double -> String -> Fay String) -> JQuery -> Fay JQuery
--- addClassWith = ffi "%2.addClass(%1)"
-
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set({\"settings\":\"hogefugabz\"})"
-
-localStorageSet :: String -> String -> Fay ()
-localStorageSet = ffi "localStorage.setItem(%1, %2)"
-
-localStorageGet :: String -> String
-localStorageGet = ffi "localStorage.getItem(%1)"
-
 ctrlKeycode :: Int
 ctrlKeycode = 17
 altKeycode :: Int
@@ -257,30 +166,10 @@ makeSelectorConsole htmlStr = do
   select "#selectorConsole" >>= append htmlStr
   select "#selectorList tr:first" >>= addClass "selected"
 
-remove :: JQuery -> Fay JQuery
-remove = ffi "%1.remove()"
-
-append :: String -> JQuery -> Fay JQuery
-append = ffi "%2.append(%1)"
-
-addClass :: String -> JQuery -> Fay JQuery
-addClass = ffi "%2.addClass(%1)"
-
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: String -> Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set(JSON.parse(%1))"
-
 keyMapper :: Key -> [(String, Key)] -> Maybe String
 keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
 
 data Mode = NeutralMode | HitAHintMode | SelectorMode | FormFocusMode deriving (Show)
-data Event
-
-getKeyCode :: Event -> Int
-getKeyCode = ffi "%1.keyCode"
-
 
 keyupMap :: Event -> St -> Fay ()
 keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
@@ -370,12 +259,6 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
         Just "CANCEL" -> cancel modeRef firstKeyCodeRef e
         _ -> return ()
     keydownMap' _ _ _ _ = return ()
-
-keyup :: (Event -> Fay ()) -> Fay ()
-keyup = ffi "$(document).keyup(%1)"
-keydown :: (Event -> Fay ()) -> Fay ()
-keydown = ffi "$(document).keydown(%1)"
-
 
 startHah :: Ref Mode -> Fay ()
 startHah modeRef = do
@@ -473,39 +356,6 @@ hitHintKey modeRef firstKeyCodeRef event = do
 moveNextCursor = undefined
 movePrevCursor = undefined
 
-jqClick :: JQuery -> Fay JQuery
-jqClick = ffi "%1.click()"
-
-jqHtml :: (Int -> String -> String) -> JQuery -> Fay String
-jqHtml = ffi "%2.html(%1)"
-
-jqRemoveClass :: String -> JQuery -> Fay JQuery
-jqRemoveClass = ffi "%2.removeClass(%1)"
-
-jqRemove :: JQuery -> Fay JQuery
-jqRemove = ffi "%1.remove()"
-
-jqEq :: Int -> JQuery -> Fay JQuery
-jqEq = ffi "%2.eq(%1)"
-
-jqIdx :: Int -> JQuery -> Fay JQuery
-jqIdx = ffi "%2[%1]"
-
-jqShow :: JQuery -> Fay JQuery
-jqShow = ffi "%1.show()"
-
-jqHide :: JQuery -> Fay JQuery
-jqHide = ffi "%1.hide()"
-
-jqFocus :: JQuery -> Fay JQuery
-jqFocus = ffi "%1.focus()"
-
-jqBlur :: JQuery -> Fay JQuery
-jqBlur = ffi "%1.blur()"
-
-on :: String -> String -> (Event -> Fay ()) -> JQuery -> Fay JQuery
-on = ffi "%4.on(%1, %2, %3)"
-
 data St = St {
     getModeRef :: Ref Mode
   , getCtrlRef :: Ref Bool
@@ -557,25 +407,5 @@ decideSelector e = do
   --
   return ()
 
-preventDefault :: Event -> Fay ()
-preventDefault = ffi "%1.preventDefault()"
-
-data Ref a
-
-newRef :: a -> Fay (Ref a)
-newRef = ffi "new Fay$$Ref(%1)"
-
-writeRef :: Ref a -> a -> Fay ()
-writeRef = ffi "Fay$$writeRef(%1,%2)"
-
-readRef :: Ref a -> Fay a
-readRef = ffi "Fay$$readRef(%1)"
-
-chromeExtensionSendMessage :: String -> (a -> Fay ()) -> Fay ()
-chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %2)"
-
 fromJSON :: String -> Fay [Item]
 fromJSON = ffi "JSON.parse(%1)"
-
-arrToStr :: [Char] -> Fay String
-arrToStr = ffi "%1.join('')"
