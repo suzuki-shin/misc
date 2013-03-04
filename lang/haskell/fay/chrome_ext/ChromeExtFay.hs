@@ -6,130 +6,23 @@ module ChromeExtFay where
 import Prelude
 import FFI
 import MyPrelude
+import Hah.Types
+import Hah.Configs
 import JS
+import ChromeExt
 
 main :: Fay ()
 main = do
   ready $ do
-    putStrLn "[2013-03-04 10:42]"
+    putStrLn "[2013-03-04 12:38]"
     start
     return ()
-
-data Key = Key { getCode :: Int, getCtrl :: Bool, getAlt :: Bool } deriving (Show, Eq)
-
-defaultSettings :: [(String, Key)]
-defaultSettings = [
-  ("START_HITAHINT",            Key 69  True False),
-  ("FOCUS_FORM",                Key 70  True False),
-  ("TOGGLE_SELECTOR",           Key 186 True False),
-  ("CANCEL",                    Key 27  False False),
-  ("MOVE_NEXT_SELECTOR_CURSOR", Key 40  False False),
-  ("MOVE_PREV_SELECTOR_CURSOR", Key 38  False False),
-  ("MOVE_NEXT_FORM",            Key 34  False False),
-  ("MOVE_PREV_FORM",            Key 33  False False),
-  ("BACK_HISTORY",              Key 72  True False)
-  ]
-
-keyMap :: [(Int, String)]
-keyMap = [
-  (9   , "TAB"),
-  (16  , "SHIFT"),
-  (17  , "CTRL"),
-  (18  , "ALT"),
-  (27  , "ESC"),
-  (33  , "PAGEUP"),
-  (34  , "PAGEDONW"),
-  (35  , "END"),
-  (36  , "HOME"),
-  (37  , "BACK"),
-  (38  , "UP"),
-  (39  , "FORWARD"),
-  (40  , "DOWN"),
-  (48  , "0"),
-  (49  , "1"),
-  (50  , "2"),
-  (51  , "3"),
-  (52  , "4"),
-  (53  , "5"),
-  (54  , "6"),
-  (55  , "7"),
-  (56  , "8"),
-  (57  , "9"),
-  (65  , "A"),
-  (66  , "B"),
-  (67  , "C"),
-  (68  , "D"),
-  (69  , "E"),
-  (70  , "F"),
-  (71  , "G"),
-  (72  , "H"),
-  (73  , "I"),
-  (74  , "J"),
-  (75  , "K"),
-  (76  , "L"),
-  (77  , "M"),
-  (78  , "N"),
-  (79  , "O"),
-  (80  , "P"),
-  (81  , "Q"),
-  (82  , "R"),
-  (83  , "S"),
-  (84  , "T"),
-  (85  , "U"),
-  (86  , "V"),
-  (87  , "W"),
-  (88  , "X"),
-  (89  , "Y"),
-  (90  , "Z"),
-  (112 , "F1"),
-  (113 , "F2"),
-  (114 , "F3"),
-  (115 , "F4"),
-  (116 , "F5"),
-  (117 , "F6"),
-  (118 , "F7"),
-  (119 , "F8"),
-  (120 , "F9"),
-  (121 , "F10"),
-  (122 , "F11"),
-  (123 , "F12"),
-  (186 , ": (or ;)"),
-  (187 , "^"),
-  (188 , ","),
-  (189 , "-"),
-  (190 , ".")
-  ]
 
 keyCodeFromKeyName' :: [(Int, String)] -> String -> Maybe Int
 keyCodeFromKeyName' kMap name = listToMaybe [k | (k,v) <- kMap , v == name]
 
 keyCodeFromKeyName :: String -> Maybe Int
 keyCodeFromKeyName = keyCodeFromKeyName' keyMap
-
-ctrlKeycode :: Int
-ctrlKeycode = 17
-altKeycode :: Int
-altKeycode = 18
-
--- data itemType = Tab | History | Bookmark | Websearch | Command
-selectorNum :: Int
-selectorNum = 20
-
--- WEB_SEARCH_LIST =
---   {title: 'google検索', url: 'https://www.google.co.jp/#hl=ja&q=', type: 'websearch'}
---   {title: 'alc辞書', url: 'http://eow.alc.co.jp/search?ref=sa&q=', type: 'websearch'}
-
-formInputFields :: String
-formInputFields = "input[type=\"text\"]:not(\"#selectorInput\"), textarea, select"
-clickables :: String
-clickables = "a"
--- CLICKABLES = "a[href],input:not([type=hidden]),textarea,select,*[onclick],button"
-
-_hintKeys :: [(Int, String)]
-_hintKeys = [(65, "A"), (66, "B"), (67, "C"), (68, "D"), (69, "E"), (70, "F"), (71, "G"), (72, "H"), (73, "I"), (74, "J"), (75, "K"), (76, "L"), (77, "M"), (78, "N"), (79, "O"), (80, "P"), (81, "Q"), (82, "R"), (83, "S"), (84, "T"), (85, "U"), (86, "V"), (87, "W"), (88, "X"), (89, "Y"), (90, "Z")]
-hintKeys :: [(Int, String)]
-hintKeys =  [(i1*100+i2, s1 ++ s2)|(i1, s1) <- _hintKeys, (i2, s2) <- _hintKeys]
-
 
 keyCodeToIndex :: Int -> Int -> Maybe Int
 keyCodeToIndex firstKeyCode secondKeyCode = elemIndex (firstKeyCode*100+secondKeyCode) $ map fst hintKeys
@@ -153,8 +46,6 @@ isFocusingForm = do
       typeAttr = attr "type" focusElems
   return $ (lowerNodeName == "input" && typeAttr == "text") || lowerNodeName == "textarea"
 
-data Item = Item { getId :: String, getTitle :: String, getUrl :: String, getType :: String } deriving (Show)
-
 makeSelectorConsole :: String -> Fay JQuery
 makeSelectorConsole htmlStr = do
   putStrLn "makeSelectorConsole"
@@ -164,8 +55,6 @@ makeSelectorConsole htmlStr = do
 
 keyMapper :: Key -> [(String, Key)] -> Maybe String
 keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
-
-data Mode = NeutralMode | HitAHintMode | SelectorMode | FormFocusMode deriving (Show)
 
 keyupMap :: Event -> St -> Fay ()
 keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
@@ -310,6 +199,7 @@ focusNextForm = undefined
 
 focusPrevForm = undefined
 
+cancel :: Ref Mode -> Ref (Maybe Int) -> Event -> Fay ()
 cancel modeRef firstKeyCodeRef event = do
   preventDefault event
   readRef modeRef >>= cancel'
@@ -349,17 +239,19 @@ hitHintKey modeRef firstKeyCodeRef event = do
   return ()
 
 
-moveNextCursor = undefined
-movePrevCursor = undefined
+moveNextCursor :: Event -> Fay ()
+moveNextCursor e = do
+  putStrLn "moveNextCursor"
+  preventDefault e
+  select "#selectorList .selected" >>= jqRemoveClass "selected" >>= jqNext "tr" >>= addClass "selected"
+  return ()
 
-data St = St {
-    getModeRef :: Ref Mode
-  , getCtrlRef :: Ref Bool
-  , getAltRef :: Ref Bool
-  , getInputIdxRef :: Ref Int
-  , getListRef :: Ref [Item]
-  , getFirstKeyCodeRef :: Ref (Maybe Int)
-  }
+movePrevCursor :: Event -> Fay ()
+movePrevCursor e = do
+  putStrLn "movePrevCursor"
+  preventDefault e
+  select "#selectorList .selected" >>= jqRemoveClass "selected" >>= jqPrev "tr" >>= addClass "selected"
+  return ()
 
 start :: Fay ()
 start = do

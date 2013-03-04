@@ -29,18 +29,6 @@ addClassWith = ffi "%2.addClass(%1)"
 ready :: Fay () -> Fay ()
 ready = ffi "jQuery(%1)"
 
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set({\"settings\":\"hogefugabz\"})"
-
--- chromeStorageSyncGet :: String -> (String -> Fay ()) -> Fay ()
--- chromeStorageSyncGet = ffi "chrome.storage.sync.get(%1, %2)"
-
--- chromeStorageSyncSet :: String -> Fay ()
--- chromeStorageSyncSet = ffi "chrome.storage.sync.set(JSON.parse(%1))"
-
 localStorageSet :: String -> String -> Fay ()
 localStorageSet = ffi "localStorage.setItem(%1, %2)"
 
@@ -113,9 +101,6 @@ writeRef = ffi "Fay$$writeRef(%1,%2)"
 readRef :: Ref a -> Fay a
 readRef = ffi "Fay$$readRef(%1)"
 
-chromeExtensionSendMessage :: String -> (a -> Fay ()) -> Fay ()
-chromeExtensionSendMessage = ffi "chrome.extension.sendMessage(JSON.parse(%1), %2)"
-
 arrToStr :: [Char] -> Fay String
 arrToStr = ffi "%1.join('')"
 
@@ -127,3 +112,9 @@ toLowerCase = ffi "%1.toLowerCase()"
 
 attr :: String -> JQuery -> String
 attr = ffi "%2.attr(%1)"
+
+jqNext :: String -> JQuery -> Fay JQuery
+jqNext = ffi "%2.next(%1)"
+
+jqPrev :: String -> JQuery -> Fay JQuery
+jqPrev = ffi "%2.prev(%1)"
