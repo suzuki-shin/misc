@@ -22,3 +22,6 @@ findIndex p     = listToMaybe . findIndices p
 
 findIndices      :: (a -> Bool) -> [a] -> [Int]
 findIndices p xs = [ i | (x,i) <- zip xs [0..], p x]
+
+-- split :: ([a] -> Bool) -> [a] -> ([a], [a])
+split f xs = (fst (break f xs), dropWhile f (snd (break f xs)))

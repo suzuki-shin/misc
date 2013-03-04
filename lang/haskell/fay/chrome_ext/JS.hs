@@ -41,6 +41,9 @@ remove = ffi "%1.remove()"
 append :: String -> JQuery -> Fay JQuery
 append = ffi "%2.append(%1)"
 
+appendJ :: JQuery -> JQuery -> Fay JQuery
+appendJ = ffi "%2.append(%1)"
+
 addClass :: String -> JQuery -> Fay JQuery
 addClass = ffi "%2.addClass(%1)"
 
@@ -104,6 +107,9 @@ readRef = ffi "Fay$$readRef(%1)"
 arrToStr :: [Char] -> Fay String
 arrToStr = ffi "%1.join('')"
 
+arrToStr' :: [Char] -> String
+arrToStr' = ffi "%1.join('')"
+
 nodeName :: JQuery -> String
 nodeName = ffi "%1.nodeName"
 
@@ -113,8 +119,20 @@ toLowerCase = ffi "%1.toLowerCase()"
 attr :: String -> JQuery -> String
 attr = ffi "%2.attr(%1)"
 
+setAttr :: String -> String -> JQuery -> Fay JQuery
+setAttr = ffi "%3.attr(%1, %2)"
+
 jqNext :: String -> JQuery -> Fay JQuery
 jqNext = ffi "%2.next(%1)"
 
 jqPrev :: String -> JQuery -> Fay JQuery
 jqPrev = ffi "%2.prev(%1)"
+
+jqText :: JQuery -> Fay String
+jqText = ffi "%1.text()"
+
+jqVal :: JQuery -> Fay String
+jqVal = ffi "%1.val()"
+
+concatJQuery :: [JQuery] -> Fay JQuery
+concatJQuery = ffi "$(%1)"
