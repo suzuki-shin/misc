@@ -55,7 +55,7 @@ makeSelectorConsole items = do
   select "#selectorConsole" >>= append htmlStr
   select "#selectorList tr:first" >>= addClass "selected"
 
-keyMapper :: Key -> [(String, Key)] -> Maybe String
+keyMapper :: Key -> [(Method, Key)] -> Maybe Method
 keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
 
 keyupMap :: Event -> St -> Fay ()
@@ -85,9 +85,9 @@ keyupMap e (St modeRef ctrlRef altRef _ listRef firstKeyCodeRef) = do
       putStrLn $ show ctrl
       putStrLn $ show alt
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "MOVE_NEXT_FORM" -> focusNextForm e
-        Just "MOVE_PREV_FORM" -> focusPrevForm e
-        Just "CANCEL"         -> cancel modeRef firstKeyCodeRef e
+        Just MoveNextForm -> focusNextForm e
+        Just MovePrevForm -> focusPrevForm e
+        Just Cancel         -> cancel modeRef firstKeyCodeRef e
         a -> do
           putStrLn $ show a
           putStrLn $ show $ Key (getKeyCode e) ctrl alt
@@ -121,9 +121,9 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
       putStrLn $ show ctrl
       putStrLn $ show alt
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "START_HITAHINT"  -> startHah modeRef
-        Just "FOCUS_FORM"      -> focusForm modeRef inputIdxRef
-        Just "TOGGLE_SELECTOR" -> toggleSelector modeRef
+        Just StartHitahint  -> startHah modeRef
+        Just FocusForm      -> focusForm modeRef inputIdxRef
+        Just ToggleSelector -> toggleSelector modeRef
         a -> do
           putStrLn $ show a
           putStrLn $ show $ Key (getKeyCode e) ctrl alt
@@ -133,7 +133,7 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
       ctrl <- readRef ctrlRef
       alt <- readRef altRef
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "CANCEL" -> cancel modeRef firstKeyCodeRef e
+        Just Cancel -> cancel modeRef firstKeyCodeRef e
         _ -> if isHitAHintKey (getKeyCode e)
              then hitHintKey modeRef firstKeyCodeRef e
              else return ()
@@ -141,9 +141,9 @@ keydownMap e (St modeRef ctrlRef altRef inputIdxRef _ firstKeyCodeRef) = do
       ctrl <- readRef ctrlRef
       alt <- readRef altRef
       case keyMapper (Key (getKeyCode e) ctrl alt) defaultSettings of
-        Just "MOVE_NEXT_SELECTOR_CURSOR" -> moveNextCursor e
-        Just "MOVE_PREV_SELECTOR_CURSOR" -> movePrevCursor e
-        Just "CANCEL" -> cancel modeRef firstKeyCodeRef e
+        Just MoveNextSelectorCursor -> moveNextCursor e
+        Just MovePrevSelectorCursor -> movePrevCursor e
+        Just Cancel -> cancel modeRef firstKeyCodeRef e
         _ -> return ()
     keydownMap' _ _ _ _ = return ()
 

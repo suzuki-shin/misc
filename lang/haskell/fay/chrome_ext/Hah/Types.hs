@@ -31,3 +31,13 @@ data St = St {
   , getFirstKeyCodeRef :: Ref (Maybe Int)
   }
 
+data Method = StartHitahint
+            | FocusForm
+            | ToggleSelector
+            | Cancel
+            | MoveNextSelectorCursor
+            | MovePrevSelectorCursor
+            | MoveNextForm
+            | MovePrevForm
+            | BackHistory
+            deriving (Show)

@@ -10,17 +10,17 @@ import Hah.Types
 -- import JS
 -- import ChromeExt
 
-defaultSettings :: [(String, Key)]
+defaultSettings :: [(Method, Key)]
 defaultSettings = [
-  ("START_HITAHINT",            Key 69  True False),
-  ("FOCUS_FORM",                Key 70  True False),
-  ("TOGGLE_SELECTOR",           Key 186 True False),
-  ("CANCEL",                    Key 27  False False),
-  ("MOVE_NEXT_SELECTOR_CURSOR", Key 40  False False),
-  ("MOVE_PREV_SELECTOR_CURSOR", Key 38  False False),
-  ("MOVE_NEXT_FORM",            Key 34  False False),
-  ("MOVE_PREV_FORM",            Key 33  False False),
-  ("BACK_HISTORY",              Key 72  True False)
+  (StartHitahint,          Key 69  True False),
+  (FocusForm,              Key 70  True False),
+  (ToggleSelector,         Key 186 True False),
+  (Cancel,                 Key 27  False False),
+  (MoveNextSelectorCursor, Key 40  False False),
+  (MovePrevSelectorCursor, Key 38  False False),
+  (MoveNextForm,           Key 34  False False),
+  (MovePrevForm,           Key 33  False False),
+  (BackHistory,            Key 72  True False)
   ]
 
 keyMap :: [(Int, String)]
