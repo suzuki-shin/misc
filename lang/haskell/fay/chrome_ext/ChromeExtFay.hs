@@ -15,7 +15,6 @@ main :: Fay ()
 main = do
   ready $ do
     putStrLn "[2013-03-05 15:29]"
-    putStrLn $ toLowerCase $ "odkuRKJEAkj dkaj"
     start
     return ()
 
@@ -189,20 +188,8 @@ filterSelector listRef keyCode = do
     True -> do
       putStrLn "filterSelector 2"
       text <- select "#selectorInput" >>= jqVal
-      putStrLn text
       list <- readRef listRef
-      putStrLn $ show $ length list
-      putStrLn $ show $ list!!2
-      putStrLn "getTitle"
-      putStrLn $ show $ getTitle $ list!!2
-      putStrLn $ toLowerCase $ arrToStr' $ show $ getTitle $ list!!2
---       putStrLn $ show $ toLowerCase $ arrToStr' $ getTitle $ list!!2 -- NG
-      putStrLn "getUrl"
-      putStrLn $ show $ getUrl $ list!!2
-      putStrLn "filtering"
       let list' = filtering text list
-      putStrLn $ show $ length list'
-      putStrLn $ show $ list'!!0
       makeSelectorConsole list'
 --       makeSelectorConsole filtering(text, Main.list).concat(WEB_SEARCH_LIST)
       select "#selectorConsole" >>= jqShow
@@ -213,11 +200,6 @@ filterSelector listRef keyCode = do
     filtering text list = filter (\t -> matchP t (words text)) list
     -- queriesのすべての要素がtitleかurlに見つかるかどうかを返す
     matchP :: Item -> [String] -> Bool
---     matchP item queries = True
---     matchP item queries = "p" `isInfixOf` "pocket" where q = queries!!0
---     matchP item queries = (toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) || (toLowerCase q) `isInfixOf` (toLowerCase (show (getUrl item)))
---       where q = queries!!0 -- OK
---     matchP item queries = (toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) where q = queries!!0 -- OK
     matchP item queries = all id [(toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) || (toLowerCase q) `isInfixOf` (toLowerCase (show (getUrl item))) | q <- queries]
 
 focusNextForm = undefined
@@ -325,14 +307,14 @@ start = do
 
     -----------------
     -----------------
-    hoge <- readRef listRef
-    putStrLn "--------- hoge ---------"
-    putStrLn $ show $ length hoge -- 235
-    putStrLn $ show $ hoge!!0   -- {"getId":10,"getTitle":"ガントチャート - 季節情報スマートフォン対応 - Redmine","getUrl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%E…
-    putStrLn $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - Redmine"
-    putStrLn $ toLowerCase $ show $ hoge!!0 -- {"getid":10,"gettitle":"ガントチャート - 季節情報スマートフォン対応 - redmine","geturl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%e…
-    putStrLn $ toLowerCase $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - redmine"
-    putStrLn $ show  $ "min" `isInfixOf` (toLowerCase $ show $ getTitle $ hoge!!0) -- true
+--     hoge <- readRef listRef
+--     putStrLn "--------- hoge ---------"
+--     putStrLn $ show $ length hoge -- 235
+--     putStrLn $ show $ hoge!!0   -- {"getId":10,"getTitle":"ガントチャート - 季節情報スマートフォン対応 - Redmine","getUrl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%E…
+--     putStrLn $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - Redmine"
+--     putStrLn $ toLowerCase $ show $ hoge!!0 -- {"getid":10,"gettitle":"ガントチャート - 季節情報スマートフォン対応 - redmine","geturl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%e…
+--     putStrLn $ toLowerCase $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - redmine"
+--     putStrLn $ show  $ "min" `isInfixOf` (toLowerCase $ show $ getTitle $ hoge!!0) -- true
     -----------------
     -----------------
 
@@ -350,11 +332,11 @@ decideSelector modeRef firstKeyCodeRef listRef e = do
   putStrLn "decideSelector"
   preventDefault e
   (id, typ, url, query) <- idTypeUrlQuery
-  putStrLn $ typ ++ ":" ++ id ++ ":" ++ url ++ ":" ++ query
+--   putStrLn $ typ ++ ":" ++ id ++ ":" ++ url ++ ":" ++ query
   cancel modeRef firstKeyCodeRef e
   let jsonStr' = jsonStr id typ url query
-  putStrLn "jsonStr'"
-  putStrLn jsonStr'
+--   putStrLn "jsonStr'"
+--   putStrLn jsonStr'
 --   chromeExtensionSendMessage (jsonStr id typ url query) $ \list -> do
   chromeExtensionSendMessage jsonStr' $ \list -> do
     putStrLn "decideSelector callback"
