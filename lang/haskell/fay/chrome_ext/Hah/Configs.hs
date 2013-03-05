@@ -102,9 +102,11 @@ altKeycode = 18
 selectorNum :: Int
 selectorNum = 20
 
--- WEB_SEARCH_LIST =
---   {title: 'google検索', url: 'https://www.google.co.jp/#hl=ja&q=', type: 'websearch'}
---   {title: 'alc辞書', url: 'http://eow.alc.co.jp/search?ref=sa&q=', type: 'websearch'}
+webSearchList :: [Item]
+webSearchList = [
+  Item "" "google検索" "https://www.google.co.jp/#hl=ja&q=" "websearch",
+  Item "" "alc辞書" "http://eow.alc.co.jp/search?ref=sa&q=" "websearch"
+  ]
 
 formInputFields :: String
 formInputFields = "input[type=\"text\"]:not(\"#selectorInput\"), textarea, select"

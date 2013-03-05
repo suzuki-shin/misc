@@ -31,7 +31,7 @@ keyCodeToIndex firstKeyCode secondKeyCode = elemIndex (firstKeyCode*100+secondKe
 indexToKeyCode :: Int -> Maybe Int
 indexToKeyCode index
   | length hintKeys > index = Just $ fst $ hintKeys!!index
-  | otherwise = Nothing
+  | otherwise               = Nothing
 
 -- # キーコードを受取り、それがHintKeyかどうかを返す
 isHitAHintKey :: Int -> Bool
@@ -224,23 +224,12 @@ focusPrevForm = undefined
 cancel :: Ref Mode -> Ref (Maybe Int) -> Event -> Fay ()
 cancel modeRef firstKeyCodeRef event = do
   preventDefault event
-  readRef modeRef >>= cancel'
---   mode <- readRef modeRef
---   cancel' mode
+  select "#selectorConsole" >>= jqHide
+  select ":focus" >>= jqBlur
+  select clickables >>= jqRemoveClass "links"
+  select ".hintKey" >>= jqRemove
+  writeRef firstKeyCodeRef Nothing
   writeRef modeRef NeutralMode
-  where
-    cancel' SelectorMode = do
-      putStrLn "SelectorMode cancel"
-      select "#selectorConsole" >>= jqHide
-      select ":focus" >>= jqBlur
-      return ()
-    cancel' HitAHintMode = do
-      putStrLn "HitAHintMode cancel"
-      writeRef firstKeyCodeRef Nothing
-      select clickables >>= jqRemoveClass "links"
-      select ".hintKey" >>= jqRemove
-      return ()
-    cancel' _ = select ":focus" >>= jqBlur >> return ()
 
 hitHintKey modeRef firstKeyCodeRef event = do
   mFirstKeyCode <- readRef firstKeyCodeRef
