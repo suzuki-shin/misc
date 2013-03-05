@@ -14,7 +14,8 @@ import ChromeExt
 main :: Fay ()
 main = do
   ready $ do
-    putStrLn "[2013-03-04 22:38]"
+    putStrLn "[2013-03-05 15:29]"
+    putStrLn $ toLowerCase $ "odkuRKJEAkj dkaj"
     start
     return ()
 
@@ -46,55 +47,20 @@ isFocusingForm = do
       typeAttr = attr "type" focusElems
   return $ (lowerNodeName == "input" && typeAttr == "text") || lowerNodeName == "textarea"
 
-makeSelectorConsole :: String -> Fay JQuery
-makeSelectorConsole htmlStr = do
+makeSelectorConsole :: [Item] -> Fay JQuery
+makeSelectorConsole items = do
   putStrLn "makeSelectorConsole"
-  putStrLn htmlStr
-  htmlStr' <- arrToStr htmlStr
-  putStrLn htmlStr'
+  htmlStr <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr itemType=" ++ show (getType t) ++ " itemId=" ++ show (getId t) ++ "><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
+--   putStrLn htmlStr
   select "#selectorList" >>= remove
-  select "#selectorConsole" >>= append htmlStr'
+  select "#selectorConsole" >>= append htmlStr
   select "#selectorList tr:first" >>= addClass "selected"
-
-makeSelectorConsole' :: [Item] -> Fay JQuery
-makeSelectorConsole' items = do
-  putStrLn "makeSelectorConsole'"
-  trList <- arrToStr $ concatMap makeTrList items
-  putStrLn "trList"
-  putStrLn trList
-  jqTable <- select "table" >>= setAttr "id" "selectorList" >>= append trList
---   jqTable <- select "table"
---   setAttr "id" "selectorList" jqTable
---   append trList jqTable
---   putStrLn $ show jqTable
-  select "#selectorList" >>= remove
-  select "#selectorConsole" >>= appendJ jqTable
-  select "#selectorList tr:first" >>= addClass "selected"
-  where
-    makeTrList :: Item -> String
-    makeTrList item = arrToStr' $ concat ["<tr itemType=", show (getType item), " itemId=", show (getId item), "><td><span class=\"title\">[" , show (getType item), "] ", show (getTitle item), " </span><span class=\"url\"> ", show (getUrl item), "</span></td></tr>"]
---     items' <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr id=\"" ++ show (getType t) ++ "-" ++ show (getId t) ++ "\"><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
-
---     makeTrList :: Item -> Fay JQuery
---     makeTrList item = do
---       let title = getTitle item
---           id = getId item
---           typ = getType item
---           url = getUrl item
---       jqTr <- select "tr" >>= setAttr "id" $ typ ++ id
---       jqTd <- append "td" jqTr
---       append "span" jqTd >>= addClass "title" >>= jqText $ "[" ++ typ ++ "]" ++ title
---       append "span" jqTd >>= addClass "url" >>= jqText url
---       jqTr
-
--- makeSelectorConsole'' :: [a] -> Fay ()
--- makeSelectorConsole'' = ffi "function(%1){ var ts, t; if ($('#selectorList')) { $('#selectorList').remove(); } console.log(%1); ts = p.concat(p.take(20, (function(){ var i$, ref$, len$, results$ = []; for (i$ = 0, len$ = (ref$ = %1).length; i$ < len$; ++i$) { t = ref$[i$]; results$.push('<tr id=\"' + t.type + '-' + t.id + '\"><td><span class=\"title\">[' + t.type + '] ' + t.title + ' </span><span class=\"url\"> ' + t.url + '</span></td></tr>'); } return results$; }()))); $('#selectorConsole').append('<table id=\"selectorList\">' + ts + '</table>'); return $('#selectorList tr:first').addClass('selected'); }();"
 
 keyMapper :: Key -> [(String, Key)] -> Maybe String
 keyMapper key settings = listToMaybe $ map fst $ filter ((== key) . snd) settings
 
 keyupMap :: Event -> St -> Fay ()
-keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
+keyupMap e (St modeRef ctrlRef altRef _ listRef firstKeyCodeRef) = do
   putStrLn $ "keyupMap: " ++ (show $ getKeyCode e)
   case getKeyCode e of
 --     ctrlKeyCode -> writeRef ctrlRef False
@@ -112,7 +78,7 @@ keyupMap e (St modeRef ctrlRef altRef _ _ firstKeyCodeRef) = do
   return ()
   where
     keyupMap' :: Event -> Mode -> Ref Bool -> Ref Bool -> Fay ()
-    keyupMap' e SelectorMode ctrlRef altRef = filterSelector $ getKeyCode e
+    keyupMap' e SelectorMode ctrlRef altRef = filterSelector listRef $ getKeyCode e
     keyupMap' e FormFocusMode ctrlRef altRef = do
       putStrLn "keyupMap'"
       ctrl <- readRef ctrlRef
@@ -214,8 +180,45 @@ toggleSelector modeRef = do
   jqFocus input
   return ()
 
-filterSelector keyCode = do
+filterSelector :: Ref [Item] -> Int -> Fay ()
+filterSelector listRef keyCode = do
   putStrLn "filterSelector"
+  putStrLn $ show keyCode
+  case elem keyCode [65..90] of
+    False -> return ()
+    True -> do
+      putStrLn "filterSelector 2"
+      text <- select "#selectorInput" >>= jqVal
+      putStrLn text
+      list <- readRef listRef
+      putStrLn $ show $ length list
+      putStrLn $ show $ list!!2
+      putStrLn "getTitle"
+      putStrLn $ show $ getTitle $ list!!2
+      putStrLn $ toLowerCase $ arrToStr' $ show $ getTitle $ list!!2
+--       putStrLn $ show $ toLowerCase $ arrToStr' $ getTitle $ list!!2 -- NG
+      putStrLn "getUrl"
+      putStrLn $ show $ getUrl $ list!!2
+      putStrLn "filtering"
+      let list' = filtering text list
+      putStrLn $ show $ length list'
+      putStrLn $ show $ list'!!0
+      makeSelectorConsole list'
+--       makeSelectorConsole filtering(text, Main.list).concat(WEB_SEARCH_LIST)
+      select "#selectorConsole" >>= jqShow
+      return ()
+  where
+    -- # 受け取ったテキストをスペース区切りで分割して、その要素すべてが(tab|history|bookmark)のtitleかtabのurlに含まれるtabのみ返す
+    filtering :: String -> [Item] -> [Item]
+    filtering text list = filter (\t -> matchP t (words text)) list
+    -- queriesのすべての要素がtitleかurlに見つかるかどうかを返す
+    matchP :: Item -> [String] -> Bool
+--     matchP item queries = True
+--     matchP item queries = "p" `isInfixOf` "pocket" where q = queries!!0
+--     matchP item queries = (toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) || (toLowerCase q) `isInfixOf` (toLowerCase (show (getUrl item)))
+--       where q = queries!!0 -- OK
+--     matchP item queries = (toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) where q = queries!!0 -- OK
+    matchP item queries = all id [(toLowerCase q) `isInfixOf` (toLowerCase (show (getTitle item))) || (toLowerCase q) `isInfixOf` (toLowerCase (show (getUrl item))) | q <- queries]
 
 focusNextForm = undefined
 -- focusNextForm :: Event -> Ref Int -> Fay ()
@@ -314,50 +317,66 @@ start = do
 
   chromeExtensionSendMessage "{\"mes\": \"makeSelectorConsole\"}" $ \is -> do
     putStrLn "extension.sendMessage"
-    items <- fromJSON $ show is
+    items <- toItemsfromJSON $ show is
+--     putStrLn $ show $ items
     writeRef listRef items
     select "body" >>= append "<div id=\"selectorConsole\"><form id=\"selectorForm\"><input id=\"selectorInput\" type=\"text\" /></form></div>"
-    items' <- arrToStr $ "<table id=\"selectorList\">" ++ concat ["<tr itemType=" ++ show (getType t) ++ " itemId=" ++ show (getId t) ++ "><td><span class=\"title\">[" ++ show (getType t) ++ "] " ++ show (getTitle t) ++ " </span><span class=\"url\"> " ++ show (getUrl t) ++ "</span></td></tr>" | t <- (take 10 items)] ++ "</table>"
-    makeSelectorConsole items'
---     makeSelectorConsole' items
+    makeSelectorConsole items
+
+    -----------------
+    -----------------
+    hoge <- readRef listRef
+    putStrLn "--------- hoge ---------"
+    putStrLn $ show $ length hoge -- 235
+    putStrLn $ show $ hoge!!0   -- {"getId":10,"getTitle":"ガントチャート - 季節情報スマートフォン対応 - Redmine","getUrl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%E…
+    putStrLn $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - Redmine"
+    putStrLn $ toLowerCase $ show $ hoge!!0 -- {"getid":10,"gettitle":"ガントチャート - 季節情報スマートフォン対応 - redmine","geturl":"https://redmine.transnet.ne.jp/projects/jrs-kisetsu-sp/issues/gantt?utf8=%e…
+    putStrLn $ toLowerCase $ show $ getTitle $ hoge!!0 -- "ガントチャート - 季節情報スマートフォン対応 - redmine"
+    putStrLn $ show  $ "min" `isInfixOf` (toLowerCase $ show $ getTitle $ hoge!!0) -- true
+    -----------------
+    -----------------
+
     return ()
 
   isFocus <- isFocusingForm
-  if isFocus then writeRef modeRef FormFocusMode else return ()
-
-  return ()
+  if isFocus
+    then do
+      writeRef modeRef FormFocusMode
+      return ()
+    else return ()
 
 decideSelector :: Ref Mode -> Ref (Maybe Int) -> Ref [Item] -> Event -> Fay ()
 decideSelector modeRef firstKeyCodeRef listRef e = do
   putStrLn "decideSelector"
   preventDefault e
-  (typ, id) <- getTypeAndId
-  url <- select "#selectorList tr.selected span.url" >>= jqText
-  query <- select "#selectorInput" >>= jqVal
+  (id, typ, url, query) <- idTypeUrlQuery
   putStrLn $ typ ++ ":" ++ id ++ ":" ++ url ++ ":" ++ query
-  id' <- arrToStr id
-  typ' <- arrToStr typ
-  url' <- arrToStr url
-  query' <- arrToStr query
-  putStrLn $ typ' ++ ":" ++ id' ++ ":" ++ url' ++ ":" ++ query'
   cancel modeRef firstKeyCodeRef e
-  let jsonStr' = jsonStr id' typ' url' query'
+  let jsonStr' = jsonStr id typ url query
   putStrLn "jsonStr'"
   putStrLn jsonStr'
 --   chromeExtensionSendMessage (jsonStr id typ url query) $ \list -> do
   chromeExtensionSendMessage jsonStr' $ \list -> do
     putStrLn "decideSelector callback"
-    items <- fromJSON $ show list
+    items <- toItemsfromJSON $ show list
+--     items <- fromJSON $ show list
     writeRef listRef items
+    makeSelectorConsole items
     return ()
 
   select "#selectorInput" >>= jqVal
   return ()
   where
-    getTypeAndId :: Fay (String, String)
-    getTypeAndId = do
+    idTypeUrlQuery :: Fay (String, String, String, String)
+    idTypeUrlQuery = do
       j <- select "#selectorList tr.selected"
-      return $ (attr "itemtype" j, attr "itemid" j)
+      url <- select "#selectorList tr.selected span.url" >>= jqText
+      query <- select "#selectorInput" >>= jqVal
+      id' <- arrToStr $ attr "itemid" j
+      typ' <- arrToStr $ attr "itemtype" j
+      url' <- arrToStr url
+      query' <- arrToStr query
+      return $ (id', typ', url', query')
 
     jsonStr :: String -> String -> String -> String -> String
     jsonStr id typ url query = "{\"mes\": \"decideSelector\", \"item\":{\"id\":\"" ++ id ++ "\", \"url\":" ++ url ++ ", \"type\":\"" ++ typ ++ "\", \"query\":\"" ++ query ++ "\"}}"
@@ -365,3 +384,6 @@ decideSelector modeRef firstKeyCodeRef listRef e = do
 -- fromJSON :: String -> Fay [Item]
 fromJSON :: String -> Fay [a]
 fromJSON = ffi "JSON.parse(%1)"
+
+toItemsfromJSON :: String -> Fay [Item]
+toItemsfromJSON = ffi "JSON.parse(%1)"
