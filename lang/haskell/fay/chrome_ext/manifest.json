@@ -1,15 +1,13 @@
 {
     "name": "xxx",
     "description" : "fay test",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
             "css": ["hitahint.css"],
             "js": [
                 "jquery-1.9.0.min.js",
-//                 "prelude.min.js",
-//                 "keymap.js",
                 "ChromeExtFay.js"
             ],
             "all_frames": false
@@ -17,7 +15,8 @@
     ],
     "background": {
         "page": "background.html",
-        "persistent": false
+        "persistent": true
+//         "persistent": false
     },
 //     "options_page": "options.html",
     "permissions": [ "history", "tabs", "bookmarks", "storage" ],

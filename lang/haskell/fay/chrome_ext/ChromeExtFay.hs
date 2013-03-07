@@ -350,7 +350,7 @@ decideSelector modeRef firstKeyCodeRef listRef e = do
       return $ (id', typ', url', query')
 
     jsonStr :: String -> String -> String -> String -> String
-    jsonStr id typ url query = "{\"mes\": \"decideSelector\", \"item\":{\"id\":\"" ++ id ++ "\", \"url\":" ++ url ++ ", \"type\":\"" ++ typ ++ "\", \"query\":\"" ++ query ++ "\"}}"
+    jsonStr id typ url query = "{\"mes\": \"decideSelector\", \"item\":{\"id\":\"" ++ id ++ "\", \"url\":" ++ url ++ ", \"type\":\"" ++ typ ++ "\"}, \"query\":\"" ++ query ++ "\"}"
 
 -- fromJSON :: String -> Fay [Item]
 fromJSON :: String -> Fay [a]

@@ -11,6 +11,9 @@ instance Show JQuery
 
 data Element
 
+data Deferred
+instance Show Deferred
+
 printArg :: a -> Fay ()
 printArg = ffi "console.log(\"%%o\",%1)"
 
