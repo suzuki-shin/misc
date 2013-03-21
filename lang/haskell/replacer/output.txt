@@ -1,0 +1,25 @@
+IMP Control.Monad.IO.Class (liftIO)
+# IMP Data.ByteString
+# IMP Data.Conduit
+# IMP qualified Data.Conduit.Binary as CB
+# IMP Network.HTTP.Conduit
+# IMP Web.Authenticate.OAuth
+IMP Network.HTTP
+
+IMP Network.URI
+IMP Data.Maybe
+
+httpPost @ String ===> String ===>IO ()
+httpPost url body = do
+  res <- simpleHTTP req
+  case res of
+    Left x ===> return ()
+    Right r ===> return ()
+  where req = Request {
+          rqURI = fromJust $ parseURI url,
+          rqMethod = POST,
+          rqHeaders = [
+            mkHeader HdrContentType "application/x-www-form-urlencoded",
+            mkHeader HdrContentLength (show $ Prelude.length body)
+            ],
+          rqBody = body}
