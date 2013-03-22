@@ -10,7 +10,14 @@ import Data.List
 import Data.List.Split (splitOn)
 
 -- | 文字列中の文字列を置換する
+-- >>> replace "hoge" "HOGE" "jkgehoge fuho geHo hohogerk"
+-- "jkgeHOGE fuho geHo hoHOGErk"
+-- >>> replace "hoge" "" "jkgehoge fuho geHo hohogerk"
+-- "jkge fuho geHo hork"
+-- >>> replace "" "HOge" "hohoge"
+-- "hohoge"
 replace :: String -> String -> String -> String
+replace "" _  = id
 replace searchStr replaceStr  = intercalate replaceStr . splitOn searchStr
 
 -- | (検索文字列, 置換文字列)というタプルのリストと対象文字列を受け取って、対象文字列中の検索文字列をすべて対応する置換文字列で置き換えた文字列を返す
