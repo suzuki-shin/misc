@@ -9,6 +9,7 @@ import Control.Monad.IO.Class
 import Database.HDBC
 import Database.HDBC.Sqlite3
 
+dbname :: FilePath
 dbname = "gymmemo.db"
 
 main :: IO ()
@@ -19,14 +20,22 @@ site =
     ifTop (writeBS "hello world") <|>
     route [ ("foo", writeBS "bar")
           , ("echo/:echoparam", echoHandler)
+          , ("user/:name/:age", userHandler)
           ] <|>
     dir "static" (serveDirectory ".")
 
 echoHandler :: Snap ()
 echoHandler = do
     param <- getParam "echoparam"
-    maybe (writeBS "must specify echo/param in URL")
-          writeBS param
+    writeBS $ case param of
+      Nothing -> "error"
+      Just p ->  p
+
+userHandler :: Snap ()
+userHandler = do
+    param <- getParams
+    liftIO $ print param
+    writeBS "param"
 
 storeHandler :: Snap ()
 storeHandler = do
