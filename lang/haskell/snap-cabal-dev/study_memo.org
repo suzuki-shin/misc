@@ -1,0 +1,23 @@
+* snapの勉強メモ
+** snap api tutorial
+*** EXAMINING HELLO WORLD
+http://snapframework.com/docs/tutorials/snap-api
+
+**** snapは以下の4つのコンポーネントからできている
+- snap-core
+  webサーバのインタフェースと型定義とサーバにとらわれないすべてのコードを定義している
+
+- snap-server
+  snap-coreで定義されたインタフェースをサポートするhttpサーバライブラリ
+
+- heist
+  HTMLテンプレートライブラリ。
+
+- snap
+  上記3つのパッケージの上に構築されるライブラリ。複雑なウェブサイトを構築するための高レベルな抽象を提供する。
+  また、さまざまなスケルトンプロジェクトを生成できるsnap実行ファイルを提供する。
+
+*** HELLO, SNAP!
+
+** snap-core
+http://hackage.haskell.org/packages/archive/snap-core/0.9.3.1/doc/html/Snap-Core.html
