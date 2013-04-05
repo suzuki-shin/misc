@@ -1,25 +1,16 @@
 {
-    "name": "hoge",
-    "description" : "hoge",
+    "name": "timer",
+    "description" : "timer",
     "version": "0.0.1",
-//     "content_scripts": [
-//         {
-//             "matches": ["<all_urls>"],
-//             "exclude_matches": [ "*://mail.google.com/*", "*://*.google.com/calendar/*" ],
-//             "css": [".css"],
-//             "js": [
-//                 "jquery-1.9.0.min.js",
-//                 "prelude.min.js",
-//                 "config.js",
-//                 "content_script.js"
-//             ],
-//             "all_frames": false
-//         }
-//     ],
     "background": {
         "page": "background.html",
         "persistent": false
     },
+	"browser_action": {
+		"default_icon":"icon.png",
+		"default_title": "timer",
+		"default_popup": "popup.html"
+	},
 //     "options_page": "options.html",
     "permissions": ["notifications"],
 	"web_accessible_resources": [
