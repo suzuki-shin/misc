@@ -128,3 +128,22 @@ mはconvert6で処理する
 > combine10 (m,a)
 >   | m >= 1 && a >= 1 = convert3 m ++ " million and " ++ convert6 a
 >   | otherwise = error "error"
+
+5.1.3
+
+0や負の数を扱えるようにするにはどうすればよいか？
+
+> convert10' :: Int -> String
+> convert10' n
+>   | n >  0 = convert10 n
+>   | n == 0 = "zero"
+>   | n <  0 = "minus " ++ convert10' (-n)
+
+5.1.4
+
+はまあいいか
+
+5.1.5
+
+convertの逆を行う関数
+
