@@ -1,4 +1,10 @@
 <?php
+print implode(',', array_map(function($a){return '"'.$a.'"';},$target_affs));
+
+
+print_r(array_map(function($a,$b){return array($a,$b);}, range(1,5), array('a','b','c','d')));
+exit;
+
 echo "[isset]\n";
 
 echo "未定義\n> ";

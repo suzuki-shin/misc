@@ -1,11 +1,4 @@
-var minToMilSec, startTimer, finishTimer;
-minToMilSec = function(minutes){
-  return minutes * 60 * 1000;
-};
-startTimer = function(minutes){
-  console.log('startTimer');
-  return setTimeout(finishTimer, minToMilSec(minutes));
-};
+var finishTimer, startTimer;
 finishTimer = function(){
   var n;
   console.log('finishTimer');
@@ -23,4 +16,9 @@ finishTimer = function(){
     return console.log("Notifications are not supported for this Browser/OS version yet.");
   }
 };
-startTimer(1);
+startTimer = function(minutes){
+  chrome.alarms.create("xxtest", {
+    delayInMinutes: minutes
+  });
+  return chrome.alarms.onAlarm.addListener(finishTimer);
+};

@@ -24,8 +24,8 @@ data LogLine = LogLine {
   , getJphoneUid :: String
   , getMoappsCarrier :: String
   , getSpUk :: String
-  , getSpSecc :: String
-  , getSec :: String
+  -- , getSpSecc :: String
+  -- , getSec :: String
   } deriving (Ord, Eq, Show)
 
 plainValue :: Parser String
@@ -78,11 +78,12 @@ logLine = do
   moappscarrier <- quotedValue
   space
   spuk <- quotedValue
-  space
-  spsecc <- quotedValue
-  space
-  sec <- quotedValue
-  return $ LogLine ip ident user date req status bytes ref ua dcmguid upsubno jphoneuid moappscarrier spuk spsecc sec
+  return $ LogLine ip ident user date req status bytes ref ua dcmguid upsubno jphoneuid moappscarrier spuk
+  -- space
+  -- spsecc <- quotedValue
+  -- space
+  -- sec <- quotedValue
+  -- return $ LogLine ip ident user date req status bytes ref ua dcmguid upsubno jphoneuid moappscarrier spuk spsecc sec
 
 logLines :: Parser [LogLine]
 logLines = endBy1 logLine eol
@@ -106,11 +107,12 @@ uniqueElementList elem = map (\uaList -> uaList!!0) . group . sort . map (\log -
 --   Left err -> print err
 --   Right res -> print res
 
+main :: IO ()
 main = do
   c <- getContents
   case parse logLines "(test)" c of
     Left err -> print err
-    Right res -> mapM_ print res
+    Right res -> mapM_ (print . getUA) res
 
 -- main = do
 --   file <- readFile "logfile.txt"

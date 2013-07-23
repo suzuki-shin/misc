@@ -12,7 +12,7 @@
 		"default_popup": "popup.html"
 	},
 //     "options_page": "options.html",
-    "permissions": ["notifications"],
+    "permissions": ["notifications", "alarms"],
 	"web_accessible_resources": [
 		"icon.png"
 	],

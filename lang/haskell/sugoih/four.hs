@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wall #-}
+
 maximum' :: (Ord a) => [a] -> a
 maximum' [] = error "empty!"
 maximum' [x] = x

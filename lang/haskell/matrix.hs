@@ -36,4 +36,4 @@ printHeader items = do
 -- >>> listToTsv ["hoge","fuga","bar"]
 -- "hoge\tfuga\tbar"
 listToTsv :: [String] -> String
-listToTsv items = intercalate "\t" items
+listToTsv = intercalate "\t"

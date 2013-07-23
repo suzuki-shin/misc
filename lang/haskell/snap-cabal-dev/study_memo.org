@@ -21,3 +21,41 @@ http://snapframework.com/docs/tutorials/snap-api
 
 ** snap-core
 http://hackage.haskell.org/packages/archive/snap-core/0.9.3.1/doc/html/Snap-Core.html
+
+** snaplet tutorial
+http://snapframework.com/docs/tutorials/snaplets-tutorial
+
+まず最初に状態を保持するデータ型を定義する。
+このデータ型はアプリケーションでしようされているsnaplets(それはSnapletでラップされている)を含んでいる。
+
+> data App = App
+>     { _heist       :: Snaplet (Heist App)
+>     , _foo         :: Snaplet Foo
+>     , _bar         :: Snaplet Bar
+>     , _companyName :: IORef B.ByteString
+>     }
+>
+> makeLenses ''App
+
+次に、initializerを定義する必要がある。
+
+> appInit :: SnapletInit App App
+> appInit = makeSnaplet "myapp" "My example application" Nothing $ do
+>     hs <- nestSnaplet "heist" heist $ heistInit "templates"
+>     fs <- nestSnaplet "foo" foo $ fooInit
+>     bs <- nestSnaplet "" bar $ nameSnaplet "newname" $ barInit foo
+>     addRoutes [ ("/hello", writeText "hello world")
+>               , ("/fooname", with foo namePage)
+>               , ("/barname", with bar namePage)
+>               , ("/company", companyHandler)
+>               ]
+>     wrapSite (<|> heistServe)
+>     ref <- liftIO $ newIORef "fooCorp"
+>     return $ App hs fs bs ref
+
+ここでの基本的アイデアはアプリケーションを初期化するために、
+まずsnapletsの一つ一つを初期化して
+いくつかのrouteを追加して
+すべてのrouteにラップしている関数を実行して
+結果状態データを返却する
+

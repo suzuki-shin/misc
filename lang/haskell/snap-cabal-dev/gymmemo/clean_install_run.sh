@@ -1,2 +1,2 @@
 #!/bin/sh
-cabal-dev clean && cabal-dev install && ./cabal-dev/bin/gymmemo
+cabal-dev clean && cabal-dev install -fdevelopment && ./cabal-dev/bin/gymmemo
