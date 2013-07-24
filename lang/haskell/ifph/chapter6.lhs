@@ -1,5 +1,5 @@
-第６章 木
-6.1 二分木
+* 第６章 木
+** 6.1 二分木
 
 > data Btree a = Leaf a | Fork (Btree a) (Btree a)
 Btree a型の値はa型の値をもつ葉であるか、部分木を２つ持つ分岐節点であるかのどちらかである。
@@ -20,7 +20,7 @@ Btree a型の値はa型の値をもつ葉であるか、部分木を２つ持つ
 
 異なるBtree a型の値は、本質的にその木が持つ値を並べた時の括弧のくくり方の違いを表す。
 
-6.1.1 木の帰納法
+*** 6.1.1 木の帰納法
 
 任意の二分木xtで命題P(xt)が成り立つことを示すためには、以下を示せば十分である。
 ===
@@ -34,7 +34,7 @@ Fork xt ytの場合：
  P(xt)とP(yt)が共に成り立てば、P(Fork xt yt)も成り立つ
 ===
 
-6.1.2 木の大きさと高さ
+*** 6.1.2 木の大きさと高さ
 
 大きさ(size)は葉の数
 > size :: Btree a -> Int
@@ -192,3 +192,52 @@ A complete binary tree is a binary tree in which every level, except possibly th
 かつ
 > height xt = ceil (log n)
 
+空ではないリストを入力とし、これを真ん中で二つに分割し、半分ずつに対して再帰的に
+最小高さの木を作り上げれば、最小高さの木が一つ得られる。
+> mkBtree :: [a] -> Btree a
+> mkBtree xs
+>   | m == 0    = Leaf (unwrap xs)
+>   | otherwise = Fork (mkBtree ys) (mkBtree zs)
+>    where
+>      m        = (length xs) `div` 2
+>      (ys, zs) = splitAt m xs
+> splitAt n xs = (take n xs, drop n xs)
+> unwrap [x] = x
+
+
+*** 6.1.3 写像と畳み込み
+
+map
+> mapBtree :: (a -> b) -> Btree a -> Btree b
+> mapBtree f (Leaf x)     = Leaf (f x)
+> mapBtree f (Fork xt yt) = Fork (mapBtree f xt) (mapBtree f yt)
+
+このmapBtreeはmapの規則と同様の規則を満たす。
+> mapBtree id = id
+> mapBtree (f . g) = mapBtree f . mapBtree g
+
+また、以下も成り立つ
+> map f . flatten = flatten . mapBtree f
+
+fold
+> foldBtree :: (a -> b) -> (b -> b -> b) -> Btree a -> b
+> foldBtree f g (Leaf x)     = f x
+> foldBtree f g (Fork xt yt) = g (foldBtree f g xt) (foldBtree f g yt)
+
+二分木上の多くの演算はfoldBtreeを使って定義できる
+> size = foldBtree (const 1) (+)
+> height = foldBtree (const 0) `op`
+>   where m `op` n = 1 + (m `max` n)
+> flatten = foldBtree wrap (++)
+> maxBtree = foldBtree id (max)
+> mapBtree f = foldBtree (Leaf . f) Fork
+
+size関数について考える。
+Leaf xの場合
+> size (Leaf xt) = foldBtree (const 1) (+) (Leaf xt)
+>                = const 1 (Leaf xt)
+>                = 1
+Fork xt ytの場合
+> size (Fork xt yt) = foldBtree (const 1) (+) (Fork xt yt)
+>                   = (foldBtree (const 1) (+) xt) + (foldBtree (const 1) (+) yt)
+>                   = ...
