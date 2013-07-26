@@ -241,3 +241,49 @@ Fork xt ytの場合
 > size (Fork xt yt) = foldBtree (const 1) (+) (Fork xt yt)
 >                   = (foldBtree (const 1) (+) xt) + (foldBtree (const 1) (+) yt)
 >                   = ...
+
+height関数について考えてみる
+Leaf xtの場合
+> height (Leaf xt) = foldBtree (const 0) `op` (Leaf xt) where m `op` n = 1 + (m `max` n)
+>                  = (const 0) xt
+>                  = 0
+Fork xt ytの場合
+> height (Fork xt yt) = foldBtree (const 0) `op` (Fork xt yt) where m `op` n = 1 + (m `max` n)
+>                     = (foldBtree (const 0) `op` xt) `op` (foldBtree (const 0) `op` yt)
+> (xtがFork a bだったら) = ((foldBtree (const 0) `op` a) `op` (foldBtree (const 0) `op` a)) `op` (foldBtree (const 0) `op` yt)
+>                      = 
+
+
+*** 6.1.4 拡張二分木
+
+内部節点にも情報を載せるようにした変種
+
+> data Atree a = Leaf a | Fork Int (Atree a) (Atree a)
+
+Fork n xt yt の整数n がn = size xt という条件を満たすことを利用するのが基本的な考え方である
+-> ?
+
+  1
+ / \
+0   2
+   / \
+  2   0
+ / \
+0   0
+こういうこと？
+
+> fork :: Atree a -> Atree a -> Atree a
+> fork xt yt = Fork (lsize xt) xt yt
+
+> lsize :: Atree a -> Int
+> lsize (Leaf x) = 1
+> lsize (Fork n xt yt) = n + lsize yt -- ?これよくわからない
+
+値の並びから高さ最小の拡張木を組み立てる
+> mkAtree :: [a] -> Atree a
+> mkAtree xs
+>   | (m == 0)  = Leaf (unwrap xs)
+>   | otherwise = fork (mkAtree ys) (mkAtree zs)
+>    where m       = (length xs) `div` 2
+>          (ys,zs) = splitAt m xs
+
