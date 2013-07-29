@@ -311,3 +311,27 @@ retrieve関数はリストにおける(!!)と同じようなことをする
 
 後述するある条件のもとで、以下のデータ型は二分探索木
 > data (Ord a) => Stree a = Null | Fork (Stree a) a (Stree a)
+
+以下のflatten関数は、木を左から右に辿ったときのラベルのリストを返す
+> flatten :: (Ord a) => Stree a -> [a]
+> flatten Null = []
+> flatten (Fork xt x yt) flatten xt ++ [x] ++ flatten yt
+
+『Stree aの要素に対して、flattenが要素が昇順に並んだリストを返す場合に、Stree aは二分探索木として機能する。』
+
+> inordered :: (Ord a) => Stree a -> Bool
+> inordered = ordered . flatten -- ordered xsはxsが昇順になっているという条件
+
+member関数 与えられた値が二分木のどこかの節点ラベルとして現れるかどうかを判定するもの
+> member :: (Ord a) => a -> Stree a -> Bool
+> member x Null = False
+> member x (Fork xt y yt)
+>   | (x < y)  = member x xt
+>   | (x == y) = True
+>   | (x > y)  = member x yt
+最悪の場合、member x xtを評価するコストはxtの高さに比例する
+
+> height :: (Ord a) => Stree a -> Integer
+> height Null = 0
+> height (Fork xt x yt) = 1 + (height xt `max` height yt)
+
