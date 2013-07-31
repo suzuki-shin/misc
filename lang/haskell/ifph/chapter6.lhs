@@ -335,3 +335,76 @@ member関数 与えられた値が二分木のどこかの節点ラベルとし�
 > height Null = 0
 > height (Fork xt x yt) = 1 + (height xt `max` height yt)
 
+二分探索木の大きさ(size)は木に含まれるラベルの数で、任意の二分探索木tの大きさと高さの基本関係は
+> height t <= size t < 2^(height t)
+同じ事で
+> ceil( log (n+1) ) <= h < n+1
+
+> mkStree :: Ord a => [a] -> Stree a
+> mkStree [] = Null
+> mkStree (x:xs) = Fork (mkStree ys) x (mkStree zs)
+>   where (ys,zs) = partition (<= x) xs
+
+> partition :: (a -> Bool) -> [a] -> ([a],[a])
+> partition p xs = (filter p xs, filter (not . p) xs)
+
+mkStreeとmkBtreeの違いは、mkStreeは結果が最小の高さになることを保証しない点
+mkBtreeは線形時間で計算できるように実装できるが、mkStreeは入力リストの長さをnとすれば、少なくともn log nステップかかる
+
+mkStreeでsort関数が実装できる
+> sort :: (Ord a) => [a] -> [a]
+> sort = flatten . mkStree
+
+*** 6.2.1 挿入と削除
+二分探索木は集合を効率よく表現するのに便利
+
+> insert :: (Ord a) => a -> Stree a -> Stree a
+> insert x Null = Fork Null x Null
+> insert x (Fork xt y yt)
+>   | (x < y)  = Fork (insert x xt) y yt
+>   | (x == y) = Fork xt y yt -- ラベルがすでに対象の木に存在していれば、何も追加されない
+>   | (x > y)  = Fork xt y (insert x yt)
+
+> delete :: (Ord a) => a -> Stree a -> Stree a
+> delete x Null = Null
+> delete x (Fork xt y yt)
+>   | (x < y)  = Fork (delete x xt) y yt
+>   | (x == y) = Fork join xt yt
+>   | (x > y)  = Fork xt y (delete x yt)
+補助関数joinは以下の等式を満たすように二つの木を結合しなければならない
+> flatten (join xt yt) = flatten xt ++ flatten yt
+考えられる実装一つは、一つ目の引数の木(xt)で一番右にある空の部分木を、二つ目の引数の木(yt)で置き換える事
+-> 意味がよくわからない、、
+--> 末端は必ずNullなので、xtの右端のNullをytで置き換えるという意味。(1to100penさんから教えてもらった)
+> join :: (Ord a) => Stree a -> Stree a -> Stree a
+> join Null yt = yt
+> join (Fork ut x vt) yt = Fork ut x (join vt yt)
+(xt)
+    4
+   / \
+  2   5
+ / \   \
+1   3   6
+
+(yt)
+    3
+   / \
+  2   5
+ /   / \
+1   4   6
+とすると
+
+(join xt yt)
+    4
+   / \
+  2   5
+ / \   \
+1   3   8
+       / \
+      7   10
+     /   / \
+    6   9   11
+こんなイメージか
+
+この定義では結果が必要以上に高い木になるためうれしくない
+
