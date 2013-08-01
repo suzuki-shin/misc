@@ -407,4 +407,26 @@ mkStreeでsort関数が実装できる
 こんなイメージか
 
 この定義では結果が必要以上に高い木になるためうれしくない
+木の要素に含まれているかの判定や木への挿入の効率は操作する木の高さに依存する
+
+もう一つの実装方法は、二つ目の引数の木で一番左にあるラベル(もしあれば)、を結合した木の新しいラベルにすること
+すなわち、以下の等式をうまく利用する
+
+> xs ++ ys = xs ++ [head ys] ++ tail ys
+
+以下で規定されるheadTreeとtailTreeがあるとする
+> headTree :: (Ord a) => Stree a -> a
+> headTree = head . flatten
+> tailTree :: (Ord a) => Stree a -> a
+> flatten . tailTree = tail . flatten -- こんな書き方できるのか？ => だめっぽい。「規定される」ってかいてあるのはそういう事か。
+
+そうすると以下のようにjoinを定義できる
+> join xt yt = if empty yt then xt else Fork xt (headTree yt) (tailTree yt)
+> empty :: (Ord a) => Stree a -> Bool
+> empty Null = True
+> empty (Fork xt x yt) = False
+
+
+
+
 
