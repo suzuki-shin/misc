@@ -426,7 +426,47 @@ mkStreeでsort関数が実装できる
 > empty Null = True
 > empty (Fork xt x yt) = False
 
+joinの定義を検証するための論証
+> flatten (join xt yt)
+ {joinの定義、not (empty yt)であることを仮定}
+> = flatten (Fork xt (headTree yt) (tailTree yt))
+ {flattenの定義}
+> = flatten xt ++ [headTree yt] ++ flatten (tailTree yt)
+ {headTreeおよびtailTreeの仕様}
+> = flatten xt ++ [head (flatten yt)] ++ tail (flatten yt)
+ {並びに関する恒等式}
+> = flatten xt ++ flatten yt
 
 
+> splitTree :: (Ord a) => Stree a -> (a, Stree a)
+> splitTree = pair (headTree, tailTree)
+
+> splitTree (Fork xt y yt) = if empty xt then (y,yt) else (x,Fork wt y yt)
+>                              where (x,wt) = splitTree xt
 
 
+** 6.3 二分ヒープ木
+> data (Ord a) => Htree a = Null | Fork a (Htree a) (Htree a)
+が、それぞれの節点にあるラベルはどちらの部分木のラベルより大きくなる事はない、という条件を満たせは二分ヒープ木になる。
+つまり、木を頂上から下へ辿るどの道筋でもラベルが昇順に並ぶ。
+
+    1
+   / \
+  2   7
+ / \   \
+3   5   10
+ \     / \
+  7   20  24
+
+こんなやつか？
+
+
+> flatten :: (Ord a) => Htree a -> [a]
+> flatten Null = []
+> flatten (Fork x xt yt) = x:merge (flatten xt) (flatten yt)
+
+> merge :: (Ord a) => [a] -> [a] -> [a]
+> merge [] ys = ys
+> merge (x:xs) [] = x:xs
+> merge (x:xs) (y:ys) = if x <= y then x:merge xs (y:ys)
+>                                 else y:merge (x:xs) ys
