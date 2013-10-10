@@ -3,6 +3,7 @@
 import Control.Applicative ((<$>))
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
+import Data.List (tails)
 import Stock
 
 data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Float, sprPer20 :: Maybe Float} deriving (Show, Eq)
@@ -22,7 +23,8 @@ main = do
   -- print dbList
   putStrLn header
   mapM_ (putStrLn . toRow) dbList
-  -- mapM_ (putStrLn . (\db' -> ((show . date . dailyBuy) db') ++ "\t" ++ ((show . buyNum) db') ++ "\t" ++ ((show . sellNum) db'))) dbList
+  -- print $ (spr . take 5) dbList
+  print $ sprList 5 dbList
 
 -- 入力文字列を日ごとのデータのリストに変換する(カンマを削除して、タブで分割する)
 conv :: String -> [[String]]
@@ -42,3 +44,14 @@ toRow db' = ((show . date . dailyBuy) db') ++ "\t" ++ ((show . buyNum) db') ++ "
 
 header :: String
 header = "日付\t買い枚数\t売り枚数"
+
+spr :: [DailyBuy'] -> Float
+spr dbs = (sellSum dbs) / ((buySum dbs) + (sellSum dbs))
+  where
+    buySum :: [DailyBuy'] -> Float
+    buySum = sum . (map buyNum)
+    sellSum :: [DailyBuy'] -> Float
+    sellSum = sum . (map sellNum)
+
+sprList :: Int -> [DailyBuy'] -> [Float]
+sprList num dbs = map (spr . (take num)) $ tails dbs
