@@ -1,4 +1,9 @@
 module Stock (
+    readDay
+  , toDailyBuy
+  , mNum
+  , mSPR
+  , DailyBuy (date, mLastdayEnd, start, end, high, low, quantity, mUpType)
 ) where
 
 import Data.List.Split
