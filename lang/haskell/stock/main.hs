@@ -4,6 +4,7 @@ import Control.Applicative ((<$>))
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
 import Data.List (tails)
+import Data.Time.Calendar
 import Stock
 
 data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Float, sprPer20 :: Maybe Float} deriving (Show, Eq)
@@ -24,7 +25,7 @@ main = do
   putStrLn header
   mapM_ (putStrLn . toRow) dbList
   -- print $ (spr . take 5) dbList
-  print $ sprList 5 dbList
+  mapM_ print $ zip (sprList 20 dbList) (sprList 5 dbList)
 
 -- 入力文字列を日ごとのデータのリストに変換する(カンマを削除して、タブで分割する)
 conv :: String -> [[String]]
@@ -40,18 +41,24 @@ toDailyBuy' yesterday today = toDailyBuy (readDay (today!!0))
                                          (read (today!!5))
 
 toRow :: DailyBuy' -> String
-toRow db' = ((show . date . dailyBuy) db') ++ "\t" ++ ((show . buyNum) db') ++ "\t" ++ ((show . sellNum) db')
+toRow db' = ((show . date . dailyBuy) db') ++ "\t" ++
+            ((show . buyNum) db') ++ "\t" ++
+            ((show . sellNum) db')
+
+toTable :: [DailyBuy'] -> [String]
+toTable dbs' = undefined
 
 header :: String
 header = "日付\t買い枚数\t売り枚数"
 
-spr :: [DailyBuy'] -> Float
-spr dbs = (sellSum dbs) / ((buySum dbs) + (sellSum dbs))
+mSpr :: [DailyBuy'] -> Maybe (Day, Float)
+mSpr [] = Nothing
+mSpr dbs = Just (date (dailyBuy (head dbs)), (sellSum dbs) / (buySum dbs))
   where
     buySum :: [DailyBuy'] -> Float
     buySum = sum . (map buyNum)
     sellSum :: [DailyBuy'] -> Float
     sellSum = sum . (map sellNum)
 
-sprList :: Int -> [DailyBuy'] -> [Float]
-sprList num dbs = map (spr . (take num)) $ tails dbs
+sprList :: Int -> [DailyBuy'] -> [(Day, Float)]
+sprList num = catMaybes . map (mSpr . (take num)) . filter ((>= num) . length) . tails
