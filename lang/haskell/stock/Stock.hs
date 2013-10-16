@@ -2,14 +2,18 @@ module Stock (
     readDay
   , toDailyBuy
   , mNum
-  , mSPR
+  -- , mSPR
   , DailyBuy (date, mLastdayEnd, start, end, high, low, quantity, mUpType)
 ) where
 
 import Data.List.Split
 import Data.Time.Calendar
 
-data Uptype = DownDown | UpDown | DownUp | UpUp deriving (Show, Eq)
+data Uptype = DownDown          -- 前日終値より始値が下がり、始値より終値が下がる
+            | UpDown            -- 前日終値より始値が上がり、始値より終値が下がる
+            | DownUp            -- 前日終値より始値が下がり、始値より終値が上がる
+            | UpUp              -- 前日終値より始値が上がり、始値より終値が上がり
+            deriving (Show, Eq)
 
 data DailyBuy = DailyBuy {
     date :: Day
@@ -53,11 +57,11 @@ mNum db = case (mSpread db) of
     sellNum :: Float -> Float -> Float -> Float
     sellNum bsp ssp qua = qua * ssp / (bsp+ssp)
 
--- 売り圧力レシオ
-mSPR :: DailyBuy -> Maybe Float
-mSPR db = case mNum db of
-  Nothing -> Nothing
-  Just (buyN, sellN) -> Just $ sellN / buyN
+-- -- 売り圧力レシオ
+-- mSPR :: DailyBuy -> Maybe Float
+-- mSPR db = case mNum db of
+--   Nothing -> Nothing
+--   Just (buyN, sellN) -> Just $ sellN / buyN
 
 readDay :: String -> Day
 readDay day = fromGregorian yyyy mm dd

@@ -4,28 +4,19 @@ import Control.Applicative ((<$>))
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
 import Data.List (tails)
-import Data.Time.Calendar
+-- import Data.Time.Calendar
 import Stock
 
-data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Float, sprPer20 :: Maybe Float} deriving (Show, Eq)
+data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Float, spr20 :: Maybe Float} deriving (Show, Eq)
 
 main :: IO ()
 main = do
   d <- conv <$> readFile "data.tsv"
   let d' = zipWith toDailyBuy' d (tail d)
       buySells = tail $ catMaybes $ map mNum d'
-      -- buyN = sum $ map fst buySells
-      -- sellN = sum $ map snd buySells
       dbList = zipWith (\db (b, s) -> DailyBuy' db b s Nothing) d' buySells
-  -- print $ head dates
-  -- print $ last dates
-  -- print sprt
-  -- print buySells
-  -- print dbList
   putStrLn header
-  mapM_ (putStrLn . toRow) dbList
-  -- print $ (spr . take 5) dbList
-  mapM_ print $ zip (sprList 20 dbList) (sprList 5 dbList)
+  mapM_ (putStrLn . toRow) $ sprList 20 dbList
 
 -- 入力文字列を日ごとのデータのリストに変換する(カンマを削除して、タブで分割する)
 conv :: String -> [[String]]
@@ -40,25 +31,35 @@ toDailyBuy' yesterday today = toDailyBuy (readDay (today!!0))
                                          (read (today!!3))
                                          (read (today!!5))
 
-toRow :: DailyBuy' -> String
-toRow db' = ((show . date . dailyBuy) db') ++ "\t" ++
-            ((show . buyNum) db') ++ "\t" ++
-            ((show . sellNum) db')
+toRow :: (DailyBuy', Maybe Float) -> String
+toRow (db', mSpr20) = ((show . date . dailyBuy) db') ++ "\t" ++
+                      ((show . start . dailyBuy) db') ++ "\t" ++
+                      ((show . end . dailyBuy) db') ++ "\t" ++
+                      ((show . high . dailyBuy) db') ++ "\t" ++
+                      ((show . low . dailyBuy) db') ++ "\t" ++
+                      ((show . quantity . dailyBuy) db') ++ "\t" ++
+                      spr20'
+  where
+    spr20' = case mSpr20 of
+      Just spr -> show spr
+      Nothing  -> ""
 
 toTable :: [DailyBuy'] -> [String]
 toTable dbs' = undefined
 
 header :: String
-header = "日付\t買い枚数\t売り枚数"
+header = "日付\t始値\t終値\t高値\t安値\t出来高\tSPR20"
 
-mSpr :: [DailyBuy'] -> Maybe (Day, Float)
+mSpr :: [DailyBuy'] -> Maybe Float
 mSpr [] = Nothing
-mSpr dbs = Just (date (dailyBuy (head dbs)), (sellSum dbs) / (buySum dbs))
+mSpr dbs = case buySum of
+  0 -> Nothing
+  _ -> Just $ sellSum/buySum
   where
-    buySum :: [DailyBuy'] -> Float
-    buySum = sum . (map buyNum)
-    sellSum :: [DailyBuy'] -> Float
-    sellSum = sum . (map sellNum)
+    buySum :: Float
+    buySum = sum . (map buyNum) $ dbs
+    sellSum :: Float
+    sellSum = sum . (map sellNum) $ dbs
 
-sprList :: Int -> [DailyBuy'] -> [(Day, Float)]
-sprList num = catMaybes . map (mSpr . (take num)) . filter ((>= num) . length) . tails
+sprList :: Int -> [DailyBuy'] -> [(DailyBuy', Maybe Float)]
+sprList num dbs' = zip dbs' $ (map (mSpr . (take num)) . filter ((>= num) . length) . tails) dbs'
