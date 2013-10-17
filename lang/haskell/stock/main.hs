@@ -11,7 +11,8 @@ data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Fl
 
 main :: IO ()
 main = do
-  d <- conv <$> readFile "data.tsv"
+  -- d <- conv <$> readFile "data.tsv"
+  d <- conv <$> getContents
   let d' = zipWith toDailyBuy' d (tail d)
       buySells = tail $ catMaybes $ map mNum d'
       dbList = zipWith (\db (b, s) -> DailyBuy' db b s Nothing) d' buySells

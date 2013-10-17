@@ -6,8 +6,8 @@ module Stock (
   , DailyBuy (date, mLastdayEnd, start, end, high, low, quantity, mUpType)
 ) where
 
-import Data.List.Split
-import Data.Time.Calendar
+import Data.List.Split (splitOn)
+import Data.Time.Calendar (Day, fromGregorian)
 
 data Uptype = DownDown          -- 前日終値より始値が下がり、始値より終値が下がる
             | UpDown            -- 前日終値より始値が上がり、始値より終値が下がる
