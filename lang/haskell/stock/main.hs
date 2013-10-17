@@ -14,7 +14,7 @@ main = do
   -- d <- conv <$> readFile "data.tsv"
   d <- conv <$> getContents
   let d' = zipWith toDailyBuy' d (tail d)
-      buySells = tail $ catMaybes $ map mNum d'
+      buySells = catMaybes $ map mNum d'
       dbList = zipWith (\db (b, s) -> DailyBuy' db b s Nothing) d' buySells
   putStrLn header
   mapM_ (putStrLn . toRow) $ sprList 20 dbList
