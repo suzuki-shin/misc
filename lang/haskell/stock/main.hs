@@ -24,7 +24,8 @@ conv :: String -> [[String]]
 conv = tail . map (splitOn "\t") . lines . filter (/=',')
 
 toDailyBuy' :: [String] -> [String] -> DailyBuy
-toDailyBuy' yesterday today = toDailyBuy (readDay (today!!0))
+-- toDailyBuy' yesterday today = toDailyBuy (readDay (today!!0))
+toDailyBuy' today yesterday = toDailyBuy (readDay (today!!0))
                                          (Just (read (yesterday!!3)))
                                          (read (today!!1))
                                          (read (today!!4))
