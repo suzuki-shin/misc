@@ -43,7 +43,7 @@ upType la (DailyBuy _ st _ _ en _)
   | la >  st && st <= en = DownUp
   | la <= st && st <= en = UpUp
 
--- | (買値幅, 売値幅)
+-- | 買値幅
 buySpread :: Float -> DailyBuy -> Float
 buySpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
   DownDown -> hi-st+en-lo
@@ -51,6 +51,7 @@ buySpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
   DownUp   -> hi-lo
   UpUp     -> st-la+hi-lo
 
+-- | 売値幅
 sellSpread :: Float -> DailyBuy -> Float
 sellSpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
   DownDown -> la-st+hi-lo
@@ -58,14 +59,21 @@ sellSpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
   DownUp   -> la-lo
   UpUp     -> st-lo+hi-en
 
+-- | 買い枚数
 buyNum :: Float -> Float -> Float -> Float
 buyNum buySpread sellSpread quantity = quantity * buySpread / (buySpread+sellSpread)
 
+-- | 売り枚数
 sellNum :: Float -> Float -> Float -> Float
 sellNum buySpread sellSpread quantity = quantity * sellSpread / (buySpread+sellSpread)
 
+-- | 売り圧力レシオ
 spr :: Int -> [DailyBuy] -> [(Day, Float)]
-spr days dbs = [(date (dbs_!!0), sellNumSum days dbs_ / buyNumSum days dbs_) | dbs_ <- tails dbs, length dbs_ >= days]
+spr days dbs = [(date (dbs_!!0), sellNumSum dbs_ / buyNumSum dbs_) | dbs_ <- tails dbs, length dbs_ >= days]
   where
-    buyNumSum days' dbs'  = sum [buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today) | today <- (take days' dbs'), yesterday <- (tail (take days' dbs'))]
-    sellNumSum days' dbs' = sum [sellNum (sellSpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today) | today <- (take days' dbs'), yesterday <- (tail (take days' dbs'))]
+    buyNumSum dbs'  = sum [
+      buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+      | today <- dbs', yesterday <- (tail (take days dbs'))]
+    sellNumSum dbs' = sum [
+      sellNum (sellSpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+      | today <- dbs', yesterday <- (tail (take days dbs'))]
