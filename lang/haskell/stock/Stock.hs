@@ -1,12 +1,12 @@
 module Stock (
     readDay
-  , toDailyBuy
-  , mNum
-  -- , mSPR
-  , DailyBuy (date, mLastdayEnd, start, end, high, low, quantity, mUpType)
+  , upType
+  , spr
+  , DailyBuy (DailyBuy, date, start, high, low, end, quantity)
 ) where
 
 import Data.List.Split (splitOn)
+import Data.List (tails)
 import Data.Time.Calendar (Day, fromGregorian)
 
 data Uptype = DownDown          -- 前日終値より始値が下がり、始値より終値が下がる
@@ -17,51 +17,13 @@ data Uptype = DownDown          -- 前日終値より始値が下がり、始値
 
 data DailyBuy = DailyBuy {
     date :: Day
-  , mLastdayEnd :: Maybe Float
   , start :: Float
-  , end :: Float
   , high :: Float
   , low :: Float
+  , end :: Float
   , quantity :: Float
-  , mUpType :: Maybe Uptype
 } deriving (Show, Eq)
 
-toDailyBuy :: Day -> Maybe Float -> Float -> Float -> Float -> Float -> Float -> DailyBuy
-toDailyBuy date mL st en hi lo qu =
-  DailyBuy date mL st en hi lo qu (mType mL st en)
-    where
-      mType :: Maybe Float -> Float -> Float -> Maybe Uptype
-      mType Nothing _ _ = Nothing
-      mType (Just la) st' en'
-        | la >  st' && st' >  en' = Just DownDown
-        | la <= st' && st' >  en' = Just UpDown
-        | la >  st' && st' <= en' = Just DownUp
-        | la <= st' && st' <= en' = Just UpUp
-
--- (買値幅, 売値幅)
-mSpread :: DailyBuy -> Maybe (Float, Float)
-mSpread (DailyBuy _ _ _ _ _ _ _ Nothing) = Nothing
-mSpread (DailyBuy _ (Just la) st en hi lo qu (Just DownDown)) = Just (hi - st + en - lo, la - st + hi - lo)
-mSpread (DailyBuy _ (Just la) st en hi lo qu (Just UpDown))   = Just (hi - la + en - lo, hi - lo)
-mSpread (DailyBuy _ (Just la) st en hi lo qu (Just DownUp))   = Just (hi - lo, la - lo)
-mSpread (DailyBuy _ (Just la) st en hi lo qu (Just UpUp))     = Just (st - la + hi - lo, st - lo + hi - en)
-
--- (買い枚数, 売り枚数)
-mNum :: DailyBuy -> Maybe (Float, Float)
-mNum db = case (mSpread db) of
-  Nothing -> Nothing
-  Just (buySp, sellSp) -> Just ((buyNum buySp sellSp (quantity db)), (sellNum buySp sellSp (quantity db)))
-  where
-    buyNum :: Float -> Float -> Float -> Float
-    buyNum bsp ssp qua = qua * bsp / (bsp+ssp)
-    sellNum :: Float -> Float -> Float -> Float
-    sellNum bsp ssp qua = qua * ssp / (bsp+ssp)
-
--- -- 売り圧力レシオ
--- mSPR :: DailyBuy -> Maybe Float
--- mSPR db = case mNum db of
---   Nothing -> Nothing
---   Just (buyN, sellN) -> Just $ sellN / buyN
 
 readDay :: String -> Day
 readDay day = fromGregorian yyyy mm dd
@@ -73,3 +35,37 @@ readDay day = fromGregorian yyyy mm dd
     mm = read $ day'!!1
     dd :: Int
     dd = read $ day'!!2
+
+upType :: Float -> DailyBuy -> Uptype
+upType la (DailyBuy _ st _ _ en _)
+  | la >  st && st >  en = DownDown
+  | la <= st && st >  en = UpDown
+  | la >  st && st <= en = DownUp
+  | la <= st && st <= en = UpUp
+
+-- | (買値幅, 売値幅)
+buySpread :: Float -> DailyBuy -> Float
+buySpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
+  DownDown -> hi-st+en-lo
+  UpDown   -> hi-la+en-lo
+  DownUp   -> hi-lo
+  UpUp     -> st-la+hi-lo
+
+sellSpread :: Float -> DailyBuy -> Float
+sellSpread la db@(DailyBuy _ st hi lo en _) = case upType la db of
+  DownDown -> la-st+hi-lo
+  UpDown   -> hi-lo
+  DownUp   -> la-lo
+  UpUp     -> st-lo+hi-en
+
+buyNum :: Float -> Float -> Float -> Float
+buyNum buySpread sellSpread quantity = quantity * buySpread / (buySpread+sellSpread)
+
+sellNum :: Float -> Float -> Float -> Float
+sellNum buySpread sellSpread quantity = quantity * sellSpread / (buySpread+sellSpread)
+
+spr :: Int -> [DailyBuy] -> [(Day, Float)]
+spr days dbs = [(date (dbs_!!0), sellNumSum days dbs_ / buyNumSum days dbs_) | dbs_ <- tails dbs, length dbs_ >= days]
+  where
+    buyNumSum days' dbs'  = sum [buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today) | today <- (take days' dbs'), yesterday <- (tail (take days' dbs'))]
+    sellNumSum days' dbs' = sum [sellNum (sellSpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today) | today <- (take days' dbs'), yesterday <- (tail (take days' dbs'))]
