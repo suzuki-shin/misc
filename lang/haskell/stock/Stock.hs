@@ -3,6 +3,7 @@ module Stock (
   , upType
   , spr
   , DailyBuy (DailyBuy, date, start, high, low, end, quantity)
+  , Day
 ) where
 
 import Data.List.Split (splitOn)

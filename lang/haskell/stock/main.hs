@@ -2,19 +2,14 @@
 
 import Control.Applicative ((<$>))
 import Data.List.Split (splitOn)
-import Data.Maybe (catMaybes)
--- import Data.List (tails)
--- import Data.Time.Calendar
 import Stock
-
--- data DailyBuy' = DailyBuy' {dailyBuy :: DailyBuy, buyNum :: Float, sellNum :: Float, spr20 :: Maybe Float} deriving (Show, Eq)
 
 main :: IO ()
 main = do
   -- d <- (map toDailyBuy . conv) <$> readFile "data.tsv"
   d <- (map toDailyBuy . conv) <$> getContents
   putStrLn header
-  mapM_ (putStrLn . (\(d,s,e,h,l,q,sp) -> show d ++ "\t" ++ show s ++ "\t" ++ show e ++ "\t" ++ show h ++ "\t" ++ show l ++ "\t"++  show q ++ "\t" ++ show sp)) $ zipWith (\a b -> (date a, start a, end a, high a, low a, quantity a, snd b)) d (spr 20 d)
+  mapM_ putStrLn $ toTable d
 
 toDailyBuy :: [String] -> DailyBuy
 toDailyBuy ss = DailyBuy (readDay (ss!!0)) (read (ss!!1)) (read (ss!!2)) (read (ss!!3)) (read (ss!!4)) (read (ss!!5))
@@ -25,3 +20,12 @@ conv = tail . map (splitOn "\t") . lines . filter (/=',')
 
 header :: String
 header = "日付\t始値\t終値\t高値\t安値\t出来高\tSPR20"
+
+toRow :: (Day, Float, Float, Float, Float, Float, Float) -> String
+toRow (d,s,e,h,l,q,sp) = show d ++ "\t" ++ show s ++ "\t" ++ show e ++ "\t" ++ show h ++ "\t" ++ show l ++ "\t"++  show q ++ "\t" ++ show sp
+
+toTable :: [DailyBuy] -> [String]
+toTable dbs = map toRow $ reverse $ mergeSPR 20 dbs
+  where
+    mergeSPR days d = zipWith (\a b -> (date a, start a, end a, high a, low a, quantity a, snd b)) d (spr days d)
+
