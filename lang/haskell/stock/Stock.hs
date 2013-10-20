@@ -2,6 +2,7 @@ module Stock (
     readDay
   , upType
   , spr
+  , spr_
   , DailyBuy (DailyBuy, date, start, high, low, end, quantity)
   , Day
 ) where
@@ -70,11 +71,29 @@ sellNum buySpread sellSpread quantity = quantity * sellSpread / (buySpread+sellS
 
 -- | 売り圧力レシオ
 spr :: Int -> [DailyBuy] -> [(Day, Float)]
-spr days dbs = [(date (dbs_!!0), sellNumSum dbs_ / buyNumSum dbs_) | dbs_ <- tails dbs, length dbs_ >= days]
+spr days dbs = [(date (dbs_!!0), sellNumSum (take days dbs_) / buyNumSum (take (days + 1) dbs_))
+               | dbs_ <- tails dbs, length dbs_ >= days + 1]
   where
-    buyNumSum dbs'  = sum [
-      buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
-      | today <- dbs', yesterday <- (tail (take days dbs'))]
-    sellNumSum dbs' = sum [
-      sellNum (sellSpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
-      | today <- dbs', yesterday <- (tail (take days dbs'))]
+    buyNum' today yesterday = buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+    sellNum' today yesterday = sellNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+    buyNumSum dbs'  = sum [buyNum' today yesterday | today <- dbs', yesterday <- (tail dbs')]
+    sellNumSum dbs' = sum [sellNum' today yesterday | today <- dbs', yesterday <- (tail dbs')]
+--     buyNumSum dbs'  = sum [
+--       buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+--       | today <- dbs', yesterday <- (tail (take days dbs'))]
+--     sellNumSum dbs' = sum [
+--       sellNum (sellSpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+--       | today <- dbs', yesterday <- (tail (take days dbs'))]
+
+spr_ :: Int -> [DailyBuy] -> [(Day, Float, Float, Uptype, Float)]
+spr_ days dbs = [ ( date (dbs_!!0)
+                  , buyNum' (dbs_!!0) (dbs_!!1)
+                  , sellNum' (dbs_!!0) (dbs_!!1)
+                  , upType (end (dbs_!!1)) (dbs_!!0)
+                  , sellNumSum (take days dbs_) / buyNumSum (take (days + 1) dbs_))
+                | dbs_ <- tails dbs, length dbs_ >= days + 1]
+  where
+    buyNum' today yesterday = buyNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+    sellNum' today yesterday = sellNum (buySpread (end yesterday) today) (sellSpread (end yesterday) today) (quantity today)
+    buyNumSum dbs'  = sum [buyNum' today yesterday | today <- dbs', yesterday <- (tail dbs')]
+    sellNumSum dbs' = sum [sellNum' today yesterday | today <- dbs', yesterday <- (tail dbs')]
