@@ -2,11 +2,9 @@
 import Control.Monad (guard)
 import Data.Array (Array, listArray, assocs, (!), elems, (//))
 
-
 data Direction = E | W | S | N deriving (Show, Eq)
 type Pos = (Int,Int) -- (y,x)
 type Tile = Char
--- type MapData = Array Pos Tile
 data MapData = MapData {mapData :: Array Pos Tile, height :: Int, width :: Int}
 
 -- | 読み込んだ文字列を2次元Arrayに変換する
@@ -15,9 +13,7 @@ stringTo2DArray h w input = MapData (listArray ((0,0), (h,w)) $ filter (/='\n') 
 
 printMapData :: MapData -> IO ()
 printMapData (MapData m _ w) = do
-  let mStr = elems m
-  printMapData' w mStr
-  return ()
+  printMapData' w $ elems m
   where
     printMapData' :: Int -> String -> IO ()
     printMapData' _ "" = return ()
@@ -47,12 +43,14 @@ nextPoss (MapData m h w) p = do
   guard $ (m ! p') /= '*'
   return p'
 
+-- | １マス移動する
 move :: Direction -> Pos -> Pos
 move E (y,x) = (y,x+1)
 move W (y,x) = (y,x-1)
 move S (y,x) = (y+1,x)
 move N (y,x) = (y-1,x)
 
+-- | ゴールに到達する経路をすべて返す (ただし一度通ったところは通らない)
 searchRoute :: MapData -> [Pos] -> Pos -> [[Pos]]
 searchRoute m tracks currentP = do
   if ((mapData m) ! currentP) == 'G'
@@ -64,14 +62,24 @@ searchRoute m tracks currentP = do
            nextP <- nextPoss m currentP
            searchRoute m (currentP:tracks) nextP
 
+-- | ゴールへの最短経路を返す
+shortestRoute :: MapData -> Maybe [Pos]
+shortestRoute mData =
+  let routes = searchRoute mData [] $ startPos mData
+      minLen = minimum $ map length routes
+      minRoutes = filter (\r -> length r == minLen) routes
+  in if length minRoutes == 0 then Nothing else Just $ head minRoutes
+
+-- | マップに経路を重ねる
+mergeRoute :: MapData -> [Pos] -> MapData
+mergeRoute (MapData m h w) route = MapData (m // init (map (\p -> (p,'$')) $ route)) (h+1) (w+1)
+
 main :: IO ()
 main = do
   c <- getContents
   let h = length $ lines c
       w  = length $ head $ lines c
       mData = stringTo2DArray (h - 1) (w - 1) c
-      routes = searchRoute mData [] $ startPos mData
-      minlen = minimum $ map length routes
-      minRoutes = filter (\r -> length r == minlen) routes
-      minRoute = if length minRoutes == 0 then [] else head minRoutes
-  printMapData $ MapData ((mapData mData) // init (map (\p -> (p,'$')) $ minRoute)) h w
+  case shortestRoute mData of
+    Just route -> printMapData $ mergeRoute mData $ route
+    Nothing -> error "There is no route."
