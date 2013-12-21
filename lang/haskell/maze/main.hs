@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 import Control.Monad (guard)
+import Control.Applicative ((<$>))
 import Data.Array (Array, listArray, assocs, (!), elems, (//))
 
 data Direction = E | W | S | N deriving (Show, Eq)
@@ -24,43 +25,35 @@ printMapData (MapData m _ w) = do
 -- | start位置座標を返す
 startPos :: MapData -> Pos
 startPos = posOf 'S'
-
--- | goal位置座標を返す
-goalPos :: MapData -> Pos
-goalPos = posOf 'G'
-
-posOf :: Tile -> MapData -> Pos
-posOf tile (MapData ar _ _) = fst $ head $ filter (\(_,t) -> t == tile) $ assocs ar
+  where
+    posOf :: Tile -> MapData -> Pos
+    posOf tile (MapData ar _ _) = fst $ head $ filter (\(_,t) -> t == tile) $ assocs ar
 
 -- | 指定した位置から移動した次の位置のリストを返す (壁'*'には移動できない)
 nextPoss :: MapData -> Pos -> [Pos]
 nextPoss (MapData m h w) p = do
-  d <- [E,W,S,N]
-  let p' = move d p
-      y' = fst p'
-      x' = snd p'
+  (y',x') <- (move p) <$> [E,W,S,N]
   guard $ (y' >= 0) && (y' < h) && (x' >= 0) && (x' < w)
-  guard $ (m ! p') /= '*'
-  return p'
+  guard $ (m ! (y',x')) /= '*'
+  return (y',x')
 
 -- | １マス移動する
-move :: Direction -> Pos -> Pos
-move E (y,x) = (y,x+1)
-move W (y,x) = (y,x-1)
-move S (y,x) = (y+1,x)
-move N (y,x) = (y-1,x)
+move :: Pos -> Direction -> Pos
+move (y,x) E = (y,x+1)
+move (y,x) W = (y,x-1)
+move (y,x) S = (y+1,x)
+move (y,x) N = (y-1,x)
 
 -- | ゴールに到達する経路をすべて返す (ただし一度通ったところは通らない)
 searchRoute :: MapData -> [Pos] -> Pos -> [[Pos]]
 searchRoute m tracks currentP = do
   if ((mapData m) ! currentP) == 'G'
      then return tracks
-     else do
-       if currentP `elem` tracks
-         then []
-         else do
-           nextP <- nextPoss m currentP
-           searchRoute m (currentP:tracks) nextP
+     else if currentP `elem` tracks
+            then []
+            else do
+              nextP <- nextPoss m currentP
+              searchRoute m (currentP:tracks) nextP
 
 -- | ゴールへの最短経路を返す
 shortestRoute :: MapData -> Maybe [Pos]
@@ -78,8 +71,8 @@ main :: IO ()
 main = do
   c <- getContents
   let h = length $ lines c
-      w  = length $ head $ lines c
-      mData = stringTo2DArray (h - 1) (w - 1) c
+      w = length $ head $ lines c
+      mData = stringTo2DArray (h-1) (w-1) c
   case shortestRoute mData of
     Just route -> printMapData $ mergeRoute mData $ route
     Nothing -> error "There is no route."
