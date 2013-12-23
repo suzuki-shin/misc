@@ -8,9 +8,8 @@ type Pos = (Int,Int) -- (y,x)
 type Tile = Char
 data MapData = MapData {mapData :: Array Pos Tile, height :: Int, width :: Int}
 
--- | 読み込んだ文字列を2次元Arrayに変換する
-stringTo2DArray :: Int -> Int -> String -> MapData
-stringTo2DArray h w input = MapData (listArray ((0,0), (h,w)) $ filter (/='\n') input) h w
+strToMapData :: Int -> Int -> String -> MapData
+strToMapData h w input = MapData (listArray ((0,0), (h,w)) $ filter (/='\n') input) h w
 
 printMapData :: MapData -> IO ()
 printMapData (MapData m _ w) = do
@@ -22,7 +21,6 @@ printMapData (MapData m _ w) = do
       putStrLn $ take w' s
       printMapData' w' $ drop w' s
 
--- | start位置座標を返す
 startPos :: MapData -> Pos
 startPos = posOf 'S'
   where
@@ -72,7 +70,7 @@ main = do
   c <- getContents
   let h = length $ lines c
       w = length $ head $ lines c
-      mData = stringTo2DArray (h-1) (w-1) c
+      mData = strToMapData (h-1) (w-1) c
   case shortestRoute mData of
     Just route -> printMapData $ mergeRoute mData $ route
     Nothing -> error "There is no route."
