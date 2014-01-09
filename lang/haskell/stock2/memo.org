@@ -1,0 +1,20 @@
+* 開発メモ
+** 設計
+*** DB
+create table company(
+  id integer primary key autoincrement,
+  code integer not null,
+  name text not null,
+  price real
+);
+
+create table daily(
+  companyCode integer not null,
+  adjustedPrice real not null,
+  startPrice real not null,
+  finishPrice real not null,
+  highPrice real not null,
+  lowPrice real not null,
+  volume integer not null,
+  date date not null
+);
