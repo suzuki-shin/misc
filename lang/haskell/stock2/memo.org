@@ -4,8 +4,7 @@
 create table company(
   id integer primary key autoincrement,
   code integer not null,
-  name text not null,
-  price real
+  name text not null
 );
 
 create table daily(
