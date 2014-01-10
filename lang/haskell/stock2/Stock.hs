@@ -1,9 +1,12 @@
+{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}
+
 module Stock (
   insertCompany
  ,connect
  ,disconnect
  ,commit
- ,hoge
+ ,getDaily
 ) where
 
 import qualified Database.HDBC as H
@@ -11,6 +14,9 @@ import Database.HDBC (disconnect, commit)
 import qualified Database.HDBC.Sqlite3 as H
 import Database.HDBC.Types (IConnection)
 import Data.Time.Calendar
+import Text.XML.HXT.Core
+import Text.XML.HXT.Curl
+import Control.Arrow
 
 connect = H.connectSqlite3
 
@@ -46,3 +52,25 @@ hoge = do
   print cs
   H.commit conn
   H.disconnect conn
+
+
+-- getGuest = deep (isElem >>> hasName "guest") >>> 
+--   proc x -> do
+--     fname <- getText <<< getChildren <<< deep (hasName "fname") -< x
+--     lname <- getText <<< getChildren <<< deep (hasName "lname") -< x
+--     returnA -< Guest { firstName = fname, lastName = lname }
+
+fuga = deep (isElem >>> hasName "guest") >>> 
+  proc x -> do
+    fname <- getText <<< getChildren <<< deep (hasName "fname") -< x
+    lname <- getText <<< getChildren <<< deep (hasName "lname") -< x
+    returnA -< (fname, lname)
+
+getDaily = deep (isElem >>> hasName "daily") >>>
+  proc d -> do
+    date_   <- getText <<< getChildren <<< deep (hasName "date") -< d
+    stPrice <- getText <<< getChildren <<< deep (hasName "opening_price") <<< deep (hasName "values") -< d
+    hiPrice <- getText <<< getChildren <<< deep (hasName "high_price") <<<  deep (hasName "values") -< d
+    loPrice <- getText <<< getChildren <<< deep (hasName "low_price") <<<  deep (hasName "values") -< d
+    fiPrice <- getText <<< getChildren <<< deep (hasName "closing_price") <<<  deep (hasName "values") -< d
+    returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice)
