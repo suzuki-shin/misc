@@ -7,6 +7,7 @@ module Stock (
  ,disconnect
  ,commit
  ,getDaily
+ ,hoge
 ) where
 
 import qualified Database.HDBC as H
@@ -53,24 +54,14 @@ hoge = do
   H.commit conn
   H.disconnect conn
 
+atTag tag = deep (isElem >>> hasName tag)
+text = getChildren >>> getText
 
--- getGuest = deep (isElem >>> hasName "guest") >>> 
---   proc x -> do
---     fname <- getText <<< getChildren <<< deep (hasName "fname") -< x
---     lname <- getText <<< getChildren <<< deep (hasName "lname") -< x
---     returnA -< Guest { firstName = fname, lastName = lname }
-
-fuga = deep (isElem >>> hasName "guest") >>> 
-  proc x -> do
-    fname <- getText <<< getChildren <<< deep (hasName "fname") -< x
-    lname <- getText <<< getChildren <<< deep (hasName "lname") -< x
-    returnA -< (fname, lname)
-
-getDaily = deep (isElem >>> hasName "daily") >>>
+getDaily = atTag "daily" >>>
   proc d -> do
-    date_   <- getText <<< getChildren <<< deep (hasName "date") -< d
-    stPrice <- getText <<< getChildren <<< deep (hasName "opening_price") <<< deep (hasName "values") -< d
-    hiPrice <- getText <<< getChildren <<< deep (hasName "high_price") <<<  deep (hasName "values") -< d
-    loPrice <- getText <<< getChildren <<< deep (hasName "low_price") <<<  deep (hasName "values") -< d
-    fiPrice <- getText <<< getChildren <<< deep (hasName "closing_price") <<<  deep (hasName "values") -< d
+    date_   <- text <<< atTag "date" -< d
+    stPrice <- text <<< atTag "opening_price" <<< atTag "values" -< d
+    hiPrice <- text <<< atTag "high_price"    <<< atTag "values" -< d
+    loPrice <- text <<< atTag "low_price"     <<< atTag "values" -< d
+    fiPrice <- text <<< atTag "closing_price" <<< atTag "values" -< d
     returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice)
