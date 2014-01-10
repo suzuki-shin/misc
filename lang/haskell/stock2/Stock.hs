@@ -60,8 +60,9 @@ text = getChildren >>> getText
 getDaily = atTag "daily" >>>
   proc d -> do
     date_   <- text <<< atTag "date" -< d
-    stPrice <- text <<< atTag "opening_price" <<< atTag "values" -< d
-    hiPrice <- text <<< atTag "high_price"    <<< atTag "values" -< d
-    loPrice <- text <<< atTag "low_price"     <<< atTag "values" -< d
-    fiPrice <- text <<< atTag "closing_price" <<< atTag "values" -< d
+    vs <- atTag "values" -< d
+    stPrice <- text <<< atTag "opening_price" -< vs
+    hiPrice <- text <<< atTag "high_price"    -< vs
+    loPrice <- text <<< atTag "low_price"     -< vs
+    fiPrice <- text <<< atTag "closing_price" -< vs
     returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice)
