@@ -5,6 +5,8 @@ module MyUtil (
   , splitOn                     -- Data.List.Split.splitOn
   , isIn
   , toCoordsAndValue
+  , to2DArray
+  , groupn
   ) where
 
 import Data.List
@@ -60,3 +62,11 @@ to2DArray ss = listArray ((0,0),(width - 1 ,height - 1)) $ concat ss
   where
     height = length $ ss
     width = length $ head $ ss
+
+-- http://d.hatena.ne.jp/ha-tan/20061021/1161442240
+-- | リストを定数個ごとに分割する
+groupn :: Int -> [a] -> [[a]]
+groupn _ [] = []
+groupn n xs =
+  let (xs1, xs2) = splitAt n xs
+  in xs1 : groupn n xs2
