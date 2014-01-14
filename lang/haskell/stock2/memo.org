@@ -2,8 +2,7 @@
 ** 設計
 *** DB
 create table company(
-  id integer primary key autoincrement,
-  code integer not null,
+  code integer primary key,
   name text not null
 );
 
@@ -15,5 +14,6 @@ create table daily(
   highPrice real not null,
   lowPrice real not null,
   volume integer not null,
-  date date not null
+  date date not null,
+  unique(companyCode, date)
 );
