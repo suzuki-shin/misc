@@ -3,10 +3,12 @@
 
 module Stock (
   insertCompany
+ ,insertDaily
  ,connect
  ,disconnect
  ,commit
- ,getDaily
+ -- ,getDaily
+ ,getDailyYF
  ,hoge
 ) where
 
@@ -63,8 +65,8 @@ hoge = do
   --   (_, st, hi, lo, fi, vol) <- getDaily_ (show code)
   --   print $ Daily code (read st) (read fi) (read hi) (read lo) (read vol) (fromGregorian 2014 1 10)
   --   ) codes
-  r <- getDaily_ $ (show . head) codes
-  print r
+  -- r <- getDaily_ $ (show . head) codes
+  -- print r
   print codes
   H.commit conn
   H.disconnect conn
@@ -72,20 +74,20 @@ hoge = do
 atTag tag = deep (isElem >>> hasName tag)
 text = getChildren >>> getText
 
-getDaily = atTag "daily" >>>
-  proc d -> do
-    date_   <- text <<< atTag "date" -< d
-    vs <- atTag "values" -< d
-    stPrice <- text <<< atTag "opening_price" -< vs
-    hiPrice <- text <<< atTag "high_price"    -< vs
-    loPrice <- text <<< atTag "low_price"     -< vs
-    fiPrice <- text <<< atTag "closing_price" -< vs
-    volume  <- text <<< atTag "turnover" -< vs
-    returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice, volume)
+-- getDaily = atTag "daily" >>>
+--   proc d -> do
+--     date_   <- text <<< atTag "date" -< d
+--     vs <- atTag "values" -< d
+--     stPrice <- text <<< atTag "opening_price" -< vs
+--     hiPrice <- text <<< atTag "high_price"    -< vs
+--     loPrice <- text <<< atTag "low_price"     -< vs
+--     fiPrice <- text <<< atTag "closing_price" -< vs
+--     volume  <- text <<< atTag "turnover" -< vs
+--     returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice, volume)
 
-getDaily_ code = runX (readDocument [withCurl []] url >>> getDaily)
-  where
-    url = "http://ikachi.sub.jp/kabuka/api/d/xml.php?stdate=20100104&eddate=20100107&code=" ++ code
+-- getDaily_ code = runX (readDocument [withCurl []] url >>> getDaily)
+--   where
+--     url = "http://ikachi.sub.jp/kabuka/api/d/xml.php?stdate=20100104&eddate=20100107&code=" ++ code
 
 getDailyYF code = do
   let doc = fromUrl $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
