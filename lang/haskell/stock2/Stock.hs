@@ -9,6 +9,7 @@ module Stock (
  ,commit
  -- ,getDaily
  ,getDailyYF
+ ,getDailyYFByUrl
  ,hoge
 ) where
 
@@ -89,8 +90,13 @@ text = getChildren >>> getText
 --   where
 --     url = "http://ikachi.sub.jp/kabuka/api/d/xml.php?stdate=20100104&eddate=20100107&code=" ++ code
 
-getDailyYF code = do
-  let doc = fromUrl $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
+getDailyYF code = getDailyYFByUrl code $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
+  -- let doc = fromUrl $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
+  -- r <- runX $ doc >>> css "td" //> getText
+  -- return $ map (toDaily code) $ groupn 7 $ (drop 3) . (takeWhile (/="\n")) $ r
+
+getDailyYFByUrl code url = do
+  let doc = fromUrl url
   r <- runX $ doc >>> css "td" //> getText
   return $ map (toDaily code) $ groupn 7 $ (drop 3) . (takeWhile (/="\n")) $ r
 
