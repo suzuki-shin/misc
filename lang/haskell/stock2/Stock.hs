@@ -98,7 +98,7 @@ getDailyYF code = getDailyYFByUrl code $ "http://info.finance.yahoo.co.jp/histor
 getDailyYFByUrl code url = do
   let doc = fromUrl url
   r <- runX $ doc >>> css "td" //> getText
-  return $ map (toDaily code) $ groupn 7 $ (drop 3) . (takeWhile (/="\n")) $ r
+  return $ catMaybes $ map (toDaily code) $ groupn 7 $ (drop 3) . (takeWhile (/="\n")) $ r
 
 -- http://www.sampou.org/cgi-bin/haskell.cgi?Programming%3a%E7%8E%89%E6%89%8B%E7%AE%B1%3a%E3%83%AA%E3%82%B9%E3%83%88#H-3w0gini39h96e
 -- groupn n = unfoldr phi
@@ -112,8 +112,10 @@ groupn n xs =
   let (xs1, xs2) = splitAt n xs
   in xs1 : groupn n xs2
 
-toDaily :: Int -> [String] -> Daily
-toDaily code (dt_:st_:hi_:lo_:fi_:vol_:adj_:[]) = Daily code adj st fi hi lo vol dt
+toDaily :: Int -> [String] -> Maybe Daily
+toDaily code params
+  | length params == 7 = Just $ Daily code adj st fi hi lo vol dt
+  | otherwise          = Nothing
   where
     fromNenGappi :: String -> String
     fromNenGappi = (map _fromNenGetsu) . _delHi
@@ -121,11 +123,11 @@ toDaily code (dt_:st_:hi_:lo_:fi_:vol_:adj_:[]) = Daily code adj st fi hi lo vol
     _fromNenGetsu '月' = '-'
     _fromNenGetsu c = c
     _delHi = filter (/='日')
-    dt = fromNenGappi dt_
+    dt = fromNenGappi (params!!0)
     delComma = filter (/=',')
-    st  = (read . delComma) st_
-    hi  = (read . delComma) hi_
-    lo  = (read . delComma) lo_
-    fi  = (read . delComma) fi_
-    vol = (read . delComma) vol_
-    adj = (read . delComma) adj_
+    adj = (read . delComma) (params!!6)
+    st  = (read . delComma) (params!!1)
+    hi  = (read . delComma) (params!!3)
+    lo  = (read . delComma) (params!!4)
+    fi  = (read . delComma) (params!!2)
+    vol = (read . delComma) (params!!5)
