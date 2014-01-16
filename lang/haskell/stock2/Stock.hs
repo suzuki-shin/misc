@@ -4,13 +4,14 @@
 module Stock (
   insertCompany
  ,insertDaily
+ ,selectDaily
  ,connect
  ,disconnect
  ,commit
  -- ,getDaily
  ,getDailyYF
  ,getDailyYFByUrl
- ,hoge
+ ,xxx
 ) where
 
 import qualified Database.HDBC as H
@@ -28,6 +29,9 @@ import Control.Monad (forM_)
 import Data.List
 import Data.Maybe
 import Data.Char
+import Data.Time
+import Data.List.Split (splitOn)
+-- import Data.ByteString (ByteString)
 
 connect = H.connectSqlite3
 
@@ -40,8 +44,8 @@ data Daily = Daily {
  ,highPrice :: Double
  ,lowPrice :: Double
  ,volume :: Integer
- ,date :: String
- -- ,date :: Day
+ -- ,date :: String
+ ,date :: Day
 } deriving (Show, Eq)
 
 insertCompany :: IConnection conn => conn -> Stock.Company -> IO Integer
@@ -123,7 +127,7 @@ toDaily code params
     _fromNenGetsu '月' = '-'
     _fromNenGetsu c = c
     _delHi = filter (/='日')
-    dt = fromNenGappi (params!!0)
+    dt = strToDay $ fromNenGappi (params!!0)
     delComma = filter (/=',')
     adj = (read . delComma) (params!!6)
     st  = (read . delComma) (params!!1)
@@ -131,3 +135,23 @@ toDaily code params
     lo  = (read . delComma) (params!!4)
     fi  = (read . delComma) (params!!2)
     vol = (read . delComma) (params!!5)
+
+selectDaily conn = H.quickQuery' conn "select date, startPrice, finishPrice, highPrice, lowPrice, volume, adjustedPrice  from daily order by julianday(date) desc;" []
+
+xxx conn = do
+  codes <- selectDaily conn
+  let vs :: [(String, [String])]
+      vs = map (\c -> ((H.fromSql . head) c , ((map H.fromSql) . tail) c)) codes
+      vs' = map ((toDaily 3668) . (\v -> fst v:snd v)) vs
+      vs'' = catMaybes vs'
+  return vs''
+  -- return $ map (catMaybes . (toDaily 3668) . (map (H.fromSql::H.SqlValue -> Int))) codes
+
+strToDay :: String -> Day
+strToDay s = fromGregorian yyyy mm dd
+  where
+    listToTuple3 :: [String] -> (Integer, Int, Int)
+    listToTuple3 [x,y,z] = (read x, read y, read z)
+    listToTuple3 _ = error "xxx"
+    (yyyy, mm, dd) = listToTuple3 (splitOn "-" s)
+
