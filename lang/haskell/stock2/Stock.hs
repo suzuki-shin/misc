@@ -11,7 +11,7 @@ module Stock (
  -- ,getDaily
  ,getDailyYF
  ,getDailyYFByUrl
- ,xxx
+ -- ,xxx
 ) where
 
 import qualified Database.HDBC as H
@@ -44,9 +44,32 @@ data Daily = Daily {
  ,highPrice :: Double
  ,lowPrice :: Double
  ,volume :: Integer
- -- ,date :: String
  ,date :: Day
 } deriving (Show, Eq)
+
+data DailyPlus = DailyPlus {
+  daily :: Daily
+ ,lastFinishPrice :: Double
+ ,movementType :: MovementType
+} deriving (Show, Eq)
+
+data MovementType = DownDown | DownUp | UpDown | UpUp deriving (Show, Eq)
+
+toDailyPlus :: Daily -> Double -> DailyPlus
+toDailyPlus d@(Daily _ _ startP finishP _ _ _ _) lastFP = DailyPlus d lastFP mType
+  where
+    mType
+      | lastFP <= startP && startP <= finishP = UpUp
+      | lastFP <= startP && startP >  finishP = UpDown
+      | lastFP >  startP && startP <= finishP = DownUp
+      | lastFP >  startP && startP >  finishP = DownDown
+
+buySellNum :: DailyPlus -> (Double, Double)
+buySellNum (DailyPlus (Daily _ _ st fi hi lo vo _) lFi DownDown) = ((hi-lo)*(fromInteger vo), (lFi-lo+hi-fi)*(fromInteger vo))
+buySellNum (DailyPlus (Daily _ _ st fi hi lo vo _) lFi DownUp)   = ((hi-lo)*(fromInteger vo), (lFi-lo+hi-fi)*(fromInteger vo))
+buySellNum (DailyPlus (Daily _ _ st fi hi lo vo _) lFi UpDown)   = ((lFi-lo+hi-fi)*(fromInteger vo), (hi-lo)*(fromInteger vo))
+buySellNum (DailyPlus (Daily _ _ st fi hi lo vo _) lFi UpUp)     = ((lFi-lo+hi-fi)*(fromInteger vo), (hi-lo)*(fromInteger vo))
+
 
 insertCompany :: IConnection conn => conn -> Stock.Company -> IO Integer
 insertCompany conn (Company code name) = H.run conn "insert into company (code, name) values (?,?);" [H.toSql code, H.toSql name]
@@ -56,48 +79,10 @@ insertDaily conn (Daily companyCode adjustedPrice startPrice finishPrice highPri
   = H.run conn "insert into daily (companyCode, adjustedPrice, startPrice, finishPrice, highPrice, lowPrice, volume, date) values (?,?,?,?,?,?,?,?)"
                [H.toSql companyCode,H.toSql adjustedPrice,H.toSql startPrice,H.toSql finishPrice,H.toSql highPrice,H.toSql lowPrice,H.toSql volume,H.toSql date]
 
-hoge :: IO ()
-hoge = do
-  conn <- H.connectSqlite3 "test1.db"
-  -- H.run conn "insert into company (code, name) values (?,?);" [H.toSql (3::Int), H.toSql "xxhoge"]
-  -- insertCompany conn (Company 122 "あああ" (Just 235.5))
-  -- insertDaily conn (Daily 122 200.0 291.0 200.0 299.1 190.9 2000008 (fromGregorian 2014 1 9))
-  codes <- map ((H.fromSql::H.SqlValue -> Int) . head) <$> H.quickQuery' conn "select code from company;" []
-  -- cs <- H.quickQuery' conn "select * from daily;" []
-  -- mapM_ print codes
-  -- forM_ codes $ \code -> do
-  -- mapM_ (\code -> do
-  --   (_, st, hi, lo, fi, vol) <- getDaily_ (show code)
-  --   print $ Daily code (read st) (read fi) (read hi) (read lo) (read vol) (fromGregorian 2014 1 10)
-  --   ) codes
-  -- r <- getDaily_ $ (show . head) codes
-  -- print r
-  print codes
-  H.commit conn
-  H.disconnect conn
-
 atTag tag = deep (isElem >>> hasName tag)
 text = getChildren >>> getText
 
--- getDaily = atTag "daily" >>>
---   proc d -> do
---     date_   <- text <<< atTag "date" -< d
---     vs <- atTag "values" -< d
---     stPrice <- text <<< atTag "opening_price" -< vs
---     hiPrice <- text <<< atTag "high_price"    -< vs
---     loPrice <- text <<< atTag "low_price"     -< vs
---     fiPrice <- text <<< atTag "closing_price" -< vs
---     volume  <- text <<< atTag "turnover" -< vs
---     returnA -< (date_, stPrice, hiPrice, loPrice, fiPrice, volume)
-
--- getDaily_ code = runX (readDocument [withCurl []] url >>> getDaily)
---   where
---     url = "http://ikachi.sub.jp/kabuka/api/d/xml.php?stdate=20100104&eddate=20100107&code=" ++ code
-
 getDailyYF code = getDailyYFByUrl code $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
-  -- let doc = fromUrl $ "http://info.finance.yahoo.co.jp/history/?code=" ++ (show code)
-  -- r <- runX $ doc >>> css "td" //> getText
-  -- return $ map (toDaily code) $ groupn 7 $ (drop 3) . (takeWhile (/="\n")) $ r
 
 getDailyYFByUrl code url = do
   let doc = fromUrl url
@@ -138,15 +123,6 @@ toDaily code params
 
 selectDaily conn = H.quickQuery' conn "select date, startPrice, finishPrice, highPrice, lowPrice, volume, adjustedPrice  from daily order by julianday(date) desc;" []
 
-xxx conn = do
-  codes <- selectDaily conn
-  let vs :: [(String, [String])]
-      vs = map (\c -> ((H.fromSql . head) c , ((map H.fromSql) . tail) c)) codes
-      vs' = map ((toDaily 3668) . (\v -> fst v:snd v)) vs
-      vs'' = catMaybes vs'
-  return vs''
-  -- return $ map (catMaybes . (toDaily 3668) . (map (H.fromSql::H.SqlValue -> Int))) codes
-
 strToDay :: String -> Day
 strToDay s = fromGregorian yyyy mm dd
   where
@@ -154,4 +130,35 @@ strToDay s = fromGregorian yyyy mm dd
     listToTuple3 [x,y,z] = (read x, read y, read z)
     listToTuple3 _ = error "xxx"
     (yyyy, mm, dd) = listToTuple3 (splitOn "-" s)
+
+
+
+-- xxx conn = do
+--   codes <- selectDaily conn
+--   let vs :: [(String, [String])]
+--       vs = map (\c -> ((H.fromSql . head) c , ((map H.fromSql) . tail) c)) codes
+--       vs' = map ((toDaily 3668) . (\v -> fst v:snd v)) vs
+--       vs'' = catMaybes vs'
+--   return vs''
+
+
+-- hoge :: IO ()
+-- hoge = do
+--   conn <- H.connectSqlite3 "test1.db"
+--   -- H.run conn "insert into company (code, name) values (?,?);" [H.toSql (3::Int), H.toSql "xxhoge"]
+--   -- insertCompany conn (Company 122 "あああ" (Just 235.5))
+--   -- insertDaily conn (Daily 122 200.0 291.0 200.0 299.1 190.9 2000008 (fromGregorian 2014 1 9))
+--   codes <- map ((H.fromSql::H.SqlValue -> Int) . head) <$> H.quickQuery' conn "select code from company;" []
+--   -- cs <- H.quickQuery' conn "select * from daily;" []
+--   -- mapM_ print codes
+--   -- forM_ codes $ \code -> do
+--   -- mapM_ (\code -> do
+--   --   (_, st, hi, lo, fi, vol) <- getDaily_ (show code)
+--   --   print $ Daily code (read st) (read fi) (read hi) (read lo) (read vol) (fromGregorian 2014 1 10)
+--   --   ) codes
+--   -- r <- getDaily_ $ (show . head) codes
+--   -- print r
+--   print codes
+--   H.commit conn
+--   H.disconnect conn
 
