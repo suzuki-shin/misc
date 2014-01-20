@@ -162,3 +162,9 @@ strToDay s = fromGregorian yyyy mm dd
 --   H.commit conn
 --   H.disconnect conn
 
+-- kenmile_utf8.htmlは curl -O http://www.miller.co.jp/applications/cgi-bin/cv0/rnk20/01/cv0rnk20c.cgi;cat cv0rnk20c.cgi nkf -u > kenmile_utf8.html
+kenmile = do
+  c <- readFile "kenmile_utf8.html"
+  let doc = readString [withParseHTML yes, withWarnings no] c
+  as <- runX $ doc >>> css "table" >>> hasAttrValue "id" (=="dataTable") //> css "td" //> css "a" //> getText
+  mapM_ putStrLn as
