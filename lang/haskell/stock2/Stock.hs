@@ -168,4 +168,5 @@ kenmile = do
   c <- readFile "kenmile_utf8.html"
   let doc = readString [withParseHTML yes, withWarnings no] c
   as <- runX $ doc >>> css "table" >>> hasAttrValue "id" (=="dataTable") //> css "td" //> css "a" //> getText
-  mapM_ putStrLn as
+  -- mapM_ putStrLn as
+  return $ map (splitOn " ") as
