@@ -162,7 +162,8 @@ strToDay s = fromGregorian yyyy mm dd
 --   H.commit conn
 --   H.disconnect conn
 
--- kenmile_utf8.htmlは curl -O http://www.miller.co.jp/applications/cgi-bin/cv0/rnk20/01/cv0rnk20c.cgi;cat cv0rnk20c.cgi nkf -u > kenmile_utf8.html
+-- kenmile_utf8.htmlは
+-- curl -O http://www.miller.co.jp/applications/cgi-bin/cv0/rnk20/01/cv0rnk20c.cgi -X POST -d "rankid=4" -d "p_kbn=0" -d "id=4" -d "page=1" -d "divl=010000000" -d "ind_code=0";cat cv0rnk20c.cgi nkf -u > kenmile_utf8.html
 kenmile = do
   c <- readFile "kenmile_utf8.html"
   let doc = readString [withParseHTML yes, withWarnings no] c
