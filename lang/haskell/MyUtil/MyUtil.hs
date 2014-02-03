@@ -7,11 +7,17 @@ module MyUtil (
   , toCoordsAndValue
   , to2DArray
   , groupn
+  , traverseDir
   ) where
 
 import Data.List
 import Data.List.Split (splitOn)
 import Data.Array (Array, listArray)
+import System.Directory (getDirectoryContents)
+import System.Posix.Files (getFileStatus, isDirectory)
+import Control.Monad (forM)
+import Control.Applicative ((<$>))
+import System.FilePath ((</>))
 
 -- | 文字列中の文字列を置換する
 -- >>> replace "hoge" "HOGE" "jkgehoge fuho geHo hohogerk"
@@ -70,3 +76,15 @@ groupn _ [] = []
 groupn n xs =
   let (xs1, xs2) = splitAt n xs
   in xs1 : groupn n xs2
+
+-- | 指定したディレクトリを走査して、ファイルならactionを実行し、ディレクトリなら再帰的に走査する
+traverseDir :: FilePath -> (FilePath -> IO ()) -> IO ()
+traverseDir dirPath action = do
+  files <- filter (\f -> not (f `elem` [".",".."])) <$> getDirectoryContents dirPath
+  forM files $ \f -> do
+    let fullfilePath = dirPath </> f
+    st <- getFileStatus fullfilePath
+    if (isDirectory st)
+      then traverseDir fullfilePath action
+      else action fullfilePath
+  return ()
