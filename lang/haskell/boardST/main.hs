@@ -21,6 +21,9 @@ instance Show Mark where
 type Pos = (Int,Int)
 type Board = Array Pos Mark
 data Result = Lose | Draw | Win
+data Player = P1 | P2
+-- type GameState = (Player, Board)
+type GameState = (Mark, Board)
 
 -- | 2次元配列を(座標, 値)のarrayに変換(array版)
 -- >>> to2DArray [["0","0","0","0","0","0"],["0","1","1","0","0","0"],["0","1","0","0","0","0"],["0","0","0","0","1","0"],["0","0","0","1","0","0"],["0","0","0","0","0","0"]]
@@ -69,3 +72,21 @@ bound _ = (3,3)
 
 isEmpty :: Pos -> Board -> Bool
 isEmpty pos board = (board ! pos) == E
+
+play :: StateT GameState IO ()
+play = do
+  x <- read <$> liftIO getLine
+  y <- read <$> liftIO getLine
+  -- putMark O (read y,read x)
+  (mark, board) <- get
+  put $ (next mark,  board // [((y,x), mark)])
+  -- put $ (next mark, board // [((y,x), (mark player))])
+  return ()
+
+next :: Mark -> Mark
+next O = X
+next X = O
+
+mark :: Player -> Mark
+mark P1 = O
+mark P2 = X
