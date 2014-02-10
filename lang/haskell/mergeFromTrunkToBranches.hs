@@ -3,7 +3,7 @@ import System.Process (readProcess)
 import System.FilePath ((</>))
 import System.Directory
 -- import System.Posix.Files
--- import System.Environment (getArgs)
+import System.Environment (getArgs)
 import Control.Applicative ((<$>))
 import Control.Monad (forM)
 import Data.List (intersperse)
@@ -12,11 +12,8 @@ import Data.List (intersperse)
     仕事用
     trunkからbranchesの下の各プロジェクトのbranchにマージするスクリプト
     --- 現状はコンフリクトした場合に対応してない ---
-    $ mergeFromTrunkToBranches
+    $ mergeFromTrunkToBranches "https://example.jp/hoge" hoge.config
 -}
-
-rootUrl :: FilePath
-rootUrl = "https://example.jp/hoge"
 
 tmpDirPath :: FilePath
 tmpDirPath = "__tmp_for_merge"
@@ -27,11 +24,9 @@ svnPath = "/usr/local/bin/svn"
 rmPath :: FilePath
 rmPath = "/bin/rm"
 
-targetBranchesFile :: FilePath
-targetBranchesFile = "hoge.config"
-
 main :: IO ()
 main = do
+  (rootUrl:targetBranchesFile:_) <- getArgs
   putStrLn "[start]"
 
   targetBranches <- lines <$> readFile targetBranchesFile
@@ -40,28 +35,29 @@ main = do
   targetRevs <- getLine
 
   let (br:brs) = targetBranches
-  svnCo (branchUrl br) tmpDirPath
+  svnCo (branchUrl rootUrl br) tmpDirPath
   setCurrentDirectory tmpDirPath
 
-  mergeFromTrunk targetRevs
+  mergeFromTrunk rootUrl targetRevs
 
   forM brs $ \b -> do
-    svnSwitch (branchUrl b)
-    mergeFromTrunk targetRevs
+    svnSwitch (branchUrl rootUrl b)
+    mergeFromTrunk rootUrl targetRevs
 
+  setCurrentDirectory ".."
   rmDir tmpDirPath
 
   putStrLn "[finish]"
 
-branchUrl :: String -> FilePath
-branchUrl name = rootUrl </> "branches" </> name
+branchUrl :: FilePath -> String -> FilePath
+branchUrl rootUrl name = rootUrl </> "branches" </> name
 
-trunkUrl :: FilePath
-trunkUrl = rootUrl </> "trunk"
+trunkUrl :: FilePath -> FilePath
+trunkUrl rootUrl = rootUrl </> "trunk"
 
-mergeFromTrunk :: String -> IO ()
-mergeFromTrunk revs = do
-  svnMerge trunkUrl revs
+mergeFromTrunk :: FilePath -> String -> IO ()
+mergeFromTrunk rootUrl revs = do
+  svnMerge (trunkUrl rootUrl) revs
   svnDi
   putStrLn "CHECK IN OK? [y/N]"
   ans <- getLine
