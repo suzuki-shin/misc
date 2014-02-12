@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 import Data.Array
 import Data.List
+import Data.Tree
 
 input :: [String]
 input =
@@ -77,6 +78,18 @@ paddingFrontSpace n = paddingFront n ' '
 paddingFront :: Int -> a ->[a] -> [a]
 paddingFront n pad = reverse . take n . (++ (cycle [pad])) . reverse
 
+-- | となり合った座標を返す
 neigbors :: Pos -> [Pos]
 neigbors (x,y) = [(x',y')|(x',y') <- [(x+1,y),(x-1,y),(x,y+1),(x,y-1)], 0 <= x', x' < width, 0 <= y', y' < height]
 
+-- | 指定した座標のとなりで同色の座標リストを返す
+connects :: Board -> Pos -> [Pos]
+connects b p = (sameColors b p) `intersect` (neigbors p)
+
+sameColors :: Board -> Pos -> [Pos]
+sameColors b p = map fst $ filter (\(_,m) -> m == (b!p)) $ assocs b
+
+-- | 繋がったマークのPosリストをツリーにして返す
+-- 未完成(再帰的にやるようにしないといかん)
+connectTree :: Board -> Pos -> Tree Pos
+connectTree b p = Node p $ foldr (\a b -> (Node a []:b)) [] $ connects b p
