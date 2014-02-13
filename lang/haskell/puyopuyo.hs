@@ -2,6 +2,7 @@
 import Data.Array
 import Data.List
 import Data.Tree
+import Data.Maybe
 
 input :: [String]
 input =
@@ -90,6 +91,18 @@ sameColors :: Board -> Pos -> [Pos]
 sameColors b p = map fst $ filter (\(_,m) -> m == (b!p)) $ assocs b
 
 -- | 繋がったマークのPosリストをツリーにして返す
--- 未完成(再帰的にやるようにしないといかん)
-connectTree :: Board -> Pos -> Tree Pos
-connectTree b p = Node p $ foldr (\a b -> (Node a []:b)) [] $ connects b p
+-- >>> connectTree a [] (1,1)
+-- Just (Node {rootLabel = (1,1), subForest = [Node {rootLabel = (1,2), subForest = []},Node {rootLabel = (2,1), subForest = [Node {rootLabel = (3,1), subForest = []}]}]})
+connectTree :: Board -> [Pos] -> Pos -> Maybe (Tree Pos)
+connectTree b passed p = if p `elem` passed
+  then Nothing
+  else Just $ Node p $ subTs $ connects b p
+  where
+    subTs :: [Pos] -> [Tree Pos]
+    subTs = catMaybes . map (connectTree b (p:passed))
+
+
+-- mergeT :: (Eq a) => a -> Tree a -> Tree a -> Tree a
+-- mergeT targetElm (Node a subT) insertedT = if targetElm == a
+--   then Node a (insertedT:subT)
+--   else Node a $ map (\t -> mergeT targetElm t insertedT) subT
