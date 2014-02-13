@@ -42,9 +42,9 @@ puyo b = fall $ deleteMark b $ concat $ deletable b [] $ map fst $ assocs b
 
 -- | 状態のリストを返す
 puyopuyo :: Board -> [Board]
-puyopuyo b = case filter (\(_,m) -> m /= ' ') $ assocs b of
-  [] -> []
-  _  -> (b : puyopuyo (puyo b))
+puyopuyo b = if b == puyo b
+  then []
+  else (b : puyopuyo (puyo b))
 
 -- | 入力[String]をArrayに変換する
 toBoard :: [String] -> Board
@@ -59,7 +59,7 @@ deletable :: Board -> [Pos] -> [Pos] -> [[Pos]]
 deletable b passed ps = filter ((>=4).length) $ map flatten $ catMaybes $ deletable' b passed ps
   where
     deletable' _ _ [] = []
-    deletable' b' passed (p':ps') = (connectTree b' passed p') : (deletable' b' (p':passed) ps')
+    deletable' b' passed' (p':ps') = (connectTree b' passed' p') : (deletable' b' (p':passed') ps')
 
 deleteMark :: Board -> [Pos] -> Board
 deleteMark board ps = board // [(p,' ')|p<-ps]
