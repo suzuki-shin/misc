@@ -52,8 +52,11 @@ fromBoard :: Board -> [String]
 fromBoard = groupn width . map snd . assocs
 
 -- | 4つ以上同色で連なっているものの座標を返す
-deletable :: Board -> [Pos]
-deletable board = [(1,1),(1,2),(2,1),(3,1)] -- 仮
+deletable :: Board -> [Pos] -> [Pos] -> [[Pos]]
+deletable b passed ps = filter ((>=4).length) $ map flatten $ catMaybes $ deletable' b passed ps
+  where
+    deletable' _ _ [] = []
+    deletable' b' passed (p':ps') = (connectTree b' passed p') : (deletable' b' (p':passed) ps')
 
 delete :: Board -> [Pos] -> Board
 delete board ps = board // [(p,' ')|p<-ps]
@@ -90,7 +93,7 @@ connects b p = (sameColors b p) `intersect` (neigbors p)
 sameColors :: Board -> Pos -> [Pos]
 sameColors b p = map fst $ filter (\(_,m) -> m == (b!p)) $ assocs b
 
--- | 繋がったマークのPosリストをツリーにして返す
+-- | 繋がったマークのPosリストをツリーにして返す(一度通ったところは除外する)
 -- >>> connectTree a [] (1,1)
 -- Just (Node {rootLabel = (1,1), subForest = [Node {rootLabel = (1,2), subForest = []},Node {rootLabel = (2,1), subForest = [Node {rootLabel = (3,1), subForest = []}]}]})
 connectTree :: Board -> [Pos] -> Pos -> Maybe (Tree Pos)
