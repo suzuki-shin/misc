@@ -32,16 +32,19 @@ type Mark = Char
 type Pos = (Int,Int)            -- (x,y)
 
 main :: IO ()
-main = mapM_ print $ puyopuyo input
+-- main = mapM_ print $ puyopuyo input
+main = undefined
+  
 
 -- | 次の状態を返す
-puyo :: [String] -> [String]
-puyo = tail
+puyo :: Board -> Board
+puyo b = fall $ deleteMark b $ concat $ deletable b [] $ map fst $ assocs b
 
 -- | 状態のリストを返す
-puyopuyo :: [String] -> [[String]]
-puyopuyo [] = [[]]
-puyopuyo x = (x : puyopuyo (puyo x))
+puyopuyo :: Board -> [Board]
+puyopuyo b = case filter (\(_,m) -> m /= ' ') $ assocs b of
+  [] -> []
+  _  -> (b : puyopuyo (puyo b))
 
 -- | 入力[String]をArrayに変換する
 toBoard :: [String] -> Board
@@ -58,8 +61,8 @@ deletable b passed ps = filter ((>=4).length) $ map flatten $ catMaybes $ deleta
     deletable' _ _ [] = []
     deletable' b' passed (p':ps') = (connectTree b' passed p') : (deletable' b' (p':passed) ps')
 
-delete :: Board -> [Pos] -> Board
-delete board ps = board // [(p,' ')|p<-ps]
+deleteMark :: Board -> [Pos] -> Board
+deleteMark board ps = board // [(p,' ')|p<-ps]
 
 -- | 落下(' 'を下に詰める)した状態を返す
 fall :: Board -> Board
