@@ -1,16 +1,11 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -XRankNTypes #-}
 import Control.Monad.State
 import Control.Applicative ((<$>),(<*>))
+import Data.List (isInfixOf, intersect)
 import Data.List.Split (splitOn)
-import Data.Array (Array, listArray, (//), (!))
+import Data.Array (Array, listArray, assocs, (//), (!))
 import Data.Maybe (fromJust)
-
-main :: IO ()
-main = do
-  print "xxx"
-  let (a,b) = runState (putMark O (1,1)) emptyBoard
-  print "yyy"
-  -- print b
+import Data.Set (isSubsetOf, fromList)
 
 data Mark = E | X | O deriving (Eq)
 instance Show Mark where
@@ -20,10 +15,16 @@ instance Show Mark where
 
 type Pos = (Int,Int)
 type Board = Array Pos Mark
-data Result = Lose | Draw | Win
+data Result = Lose | Draw | Win deriving Show
 data Player = P1 | P2
--- type GameState = (Player, Board)
-type GameState = (Mark, Board)
+data GameState = Finished Result | InPlay deriving Show
+type GameData = (GameState, Mark, Board)
+
+main :: IO ()
+main = do
+  putStrLn "start"
+  runStateT play $ (InPlay, O, emptyBoard)
+  putStrLn "finish"
 
 -- | 2次元配列を(座標, 値)のarrayに変換(array版)
 -- >>> to2DArray [["0","0","0","0","0","0"],["0","1","1","0","0","0"],["0","1","0","0","0","0"],["0","0","0","0","1","0"],["0","0","0","1","0","0"],["0","0","0","0","0","0"]]
@@ -39,28 +40,21 @@ emptyBoard :: Board
 emptyBoard = to2DArray $ replicate 3 $ replicate 3 E
 
 {-
--}
 putMark :: Mark -> Pos -> State Board ()
 putMark mark pos = do
   board <- get
   put $ board // [(pos,mark)]
 
--- putMark :: Mark -> Pos -> Maybe (State Board ())
--- putMark mark pos = do
---   board <- get
---   if canPut mark pos board
---     then Just $ put $ board // [(pos,mark)]
---     else Nothing
+putMark2 :: Mark -> Pos -> StateT Board Maybe ()
+putMark2 mark pos = do
+  board <- get
+  if canPut mark pos board
+    then put $ board // [(pos,mark)]
+    else StateT $ const Nothing
+-}
 
 canPut :: Mark -> Pos -> Board -> Bool
 canPut mark pos board = (pos `isOn` board) && (pos `isEmpty` board)
-  -- state $ \s -> posIsOnBoard
-  -- where
-  --   posIsOnBoard = if isOnBoard pos
-  --     then if isEmptyPos pos
-  --            then True
-  --            else False
-  --     else False
 
 isOn :: Pos -> Board -> Bool
 isOn (y,x) board = (y <= maxY) && (x <= maxX)
@@ -73,15 +67,68 @@ bound _ = (3,3)
 isEmpty :: Pos -> Board -> Bool
 isEmpty pos board = (board ! pos) == E
 
-play :: StateT GameState IO ()
+play :: StateT GameData IO ()
 play = do
-  x <- read <$> liftIO getLine
-  y <- read <$> liftIO getLine
-  -- putMark O (read y,read x)
-  (mark, board) <- get
-  put $ (next mark,  board // [((y,x), mark)])
-  -- put $ (next mark, board // [((y,x), (mark player))])
+  (st,m,_) <- get
+  case st of
+    Finished res -> liftIO $ putStrLn $ "game over. player of " ++ show m ++ " " ++ show res
+    InPlay       -> play'
+  where
+    play' :: StateT GameData IO ()
+    play' = do
+      (st, mark, board) <- get
+      liftIO $ putStrLn $ show mark ++ " side turn."
+      liftIO $ putStrLn "input x. 0~2"
+      x <- read <$> liftIO getLine
+      liftIO $ putStrLn "input y. 0~2"
+      y <- read <$> liftIO getLine
+      if canPut mark (y,x) board
+        then do
+          put $ (st, mark, board // [((y,x), mark)])
+          judge
+          (st',m',b') <- get
+          put $ (st', next m', b')
+        else liftIO $ putStrLn "can't put there."
+      play
+
+judge :: StateT GameData IO ()
+judge = do
+  (_,m,b) <- get
+  liftIO $ print m
+  printBoard
+  if win winningPatterns (positionsOf b m)
+    then do
+      liftIO $ print "win;;;;"
+      put $ (Finished Win,m,b)
+    else do
+      liftIO $ print "continue;;;;"
+      put $ (InPlay,m,b)
   return ()
+  where
+    win :: [[Pos]] -> [Pos] -> Bool
+    win winningPtns ps = any id $ map (`isOccupied` ps) winningPtns
+
+-- | targetPsの要素をすべてpsが含んでいるか
+isOccupied :: [Pos] -> [Pos] -> Bool
+isOccupied targetPs ps = targetPs' `isSubsetOf` ps'
+  where
+    ps' = fromList ps
+    targetPs' = fromList targetPs
+
+winningPatterns :: [[Pos]]
+winningPatterns = [
+  [(0,0),(0,1),(0,2)]
+ ,[(1,0),(1,1),(1,2)]
+ ,[(2,0),(2,1),(2,2)]
+ ,[(0,0),(1,0),(2,0)]
+ ,[(0,1),(1,1),(2,1)]
+ ,[(0,2),(1,2),(2,2)]
+ ,[(0,0),(1,1),(2,2)]
+ ,[(0,2),(1,1),(2,0)]
+ ]
+
+positionsOf :: Board -> Mark -> [Pos]
+positionsOf b m = map fst $ filter (\(_,m') -> m == m') $ assocs b
 
 next :: Mark -> Mark
 next O = X
@@ -90,3 +137,19 @@ next X = O
 mark :: Player -> Mark
 mark P1 = O
 mark P2 = X
+
+fromBoard :: forall a. Array Pos a -> [[a]]
+fromBoard = groupn 3 . map snd . assocs
+
+printBoard :: StateT GameData IO ()
+printBoard = do
+  (_,_,b) <- get
+  liftIO $ mapM_ print $ fromBoard b
+  liftIO $ putStrLn ""
+
+-- | リストを定数個ごとに分割する
+groupn :: Int -> [a] -> [[a]]
+groupn _ [] = []
+groupn n xs =
+  let (xs1, xs2) = splitAt n xs
+  in xs1 : groupn n xs2
