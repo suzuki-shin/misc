@@ -39,20 +39,6 @@ to2DArray ss = listArray ((0,0),(width - 1 ,height - 1)) $ concat ss
 emptyBoard :: Board
 emptyBoard = to2DArray $ replicate 3 $ replicate 3 E
 
-{-
-putMark :: Mark -> Pos -> State Board ()
-putMark mark pos = do
-  board <- get
-  put $ board // [(pos,mark)]
-
-putMark2 :: Mark -> Pos -> StateT Board Maybe ()
-putMark2 mark pos = do
-  board <- get
-  if canPut mark pos board
-    then put $ board // [(pos,mark)]
-    else StateT $ const Nothing
--}
-
 canPut :: Mark -> Pos -> Board -> Bool
 canPut mark pos board = (pos `isOn` board) && (pos `isEmpty` board)
 
@@ -76,7 +62,7 @@ play = do
   where
     play' :: StateT GameData IO ()
     play' = do
-      (st, mark, board) <- get
+      (_, mark, board) <- get
       liftIO $ putStrLn $ show mark ++ " side turn."
       liftIO $ putStrLn "input x. 0~2"
       x <- read <$> liftIO getLine
@@ -84,12 +70,21 @@ play = do
       y <- read <$> liftIO getLine
       if canPut mark (y,x) board
         then do
-          put $ (st, mark, board // [((y,x), mark)])
+          updateBoard (y,x)
           judge
-          (st',m',b') <- get
-          put $ (st', next m', b')
+          updateMark
         else liftIO $ putStrLn "can't put there."
       play
+
+updateBoard :: Pos -> StateT GameData IO ()
+updateBoard p = do
+  (s, m, b) <- get
+  put $ (s, m, b // [(p, m)])
+
+updateMark :: StateT GameData IO ()
+updateMark = do
+  (s,m,b) <- get
+  put $ (s, next m, b)
 
 judge :: StateT GameData IO ()
 judge = do
@@ -97,12 +92,8 @@ judge = do
   liftIO $ print m
   printBoard
   if win winningPatterns (positionsOf b m)
-    then do
-      liftIO $ print "win;;;;"
-      put $ (Finished Win,m,b)
-    else do
-      liftIO $ print "continue;;;;"
-      put $ (InPlay,m,b)
+    then put $ (Finished Win,m,b)
+    else put $ (InPlay,m,b)
   return ()
   where
     win :: [[Pos]] -> [Pos] -> Bool
@@ -133,10 +124,6 @@ positionsOf b m = map fst $ filter (\(_,m') -> m == m') $ assocs b
 next :: Mark -> Mark
 next O = X
 next X = O
-
-mark :: Player -> Mark
-mark P1 = O
-mark P2 = X
 
 fromBoard :: forall a. Array Pos a -> [[a]]
 fromBoard = groupn 3 . map snd . assocs
