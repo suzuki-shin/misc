@@ -1,0 +1,24 @@
+[color]
+	ui = auto
+[user]
+	name = Shinichiro Suzuki
+	email = shinichiro.su@gmail.com
+[alias]
+  co = checkout # checkout長い…
+  st = status -sb # シンプルなstatus
+  pr = pull --rebase # pull するときにmergeコミットを作らない
+  fo = fetch origin
+  ro = rebase origin # branchでfoしてroすればmasterにrebaseできる
+  rc = rebase --continue
+  wd = diff --word-diff # 単語単位のdiff
+  gp = grep -n # grepに行番号を付ける
+  lg = log --graph --pretty=oneline --decorate --date=short --abbrev-commit --branches
+  # ログをtreeで表示(簡易tig) via http://webtech-walker.com/archive/2010/03/04034601.html
+  ci = commit
+  di = diff --color-words
+  br = branch
+[core]
+  autocrlf = false
+  quotepath = false
+  whitespace = cr-at-eol
+  attributesfile = ~/.gitattributes
