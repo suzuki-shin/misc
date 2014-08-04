@@ -12,6 +12,8 @@ import Data.List
 -- data Move = Move {getToPos :: String, getFromPos :: Maybe String, getPiece :: String} deriving (Eq, Show)
 -- data Action = Lose | Move deriving (Eq, Show)
 
+pieces = ["歩","香","桂","銀","金","玉","角","飛","馬","竜","と","成香","成桂","成銀"]
+
 data KifLine = KifLine {
     getNO :: String
   , getAction :: String
@@ -55,16 +57,25 @@ quotedValue = do
   char '"'
   return content
 
+fromPos :: Parser String
+fromPos = do
+  pos <- string "打" <|> do
+    string "("
+    pos <- many1 digit
+    string ")"
+    return pos
+  return pos
+
 -- hoge ５八玉(68) みたいなやつをparseする
 hoge :: Parser String
--- hoge = string "５八玉(68)"
 hoge = do
   col <- many1 (oneOf "１２３４５６７８９")
   row <- many1 (oneOf "一二三四五六七八九")
   piece <- many (noneOf "(")
-  string "("
-  pos <- many1 digit
-  string ")"
+  pos <- fromPos
+--   string "("
+--   pos <- many1 digit
+--   string ")"
   return $ col ++ row ++ piece ++ "(" ++ pos ++ ")"
 
 -- fuga 同　飛(89) みたいなやつをparseする
