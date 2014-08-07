@@ -3,19 +3,18 @@
 module ParserPractice where
 
 import Text.Parsec
+import qualified Text.ParserCombinators.Parsec.Token as P
+import Text.ParserCombinators.Parsec.Language
 import Text.Parsec.String
 import Data.List
 -- import Data.Char
 -- import Control.Monad
 
--- data Lose = Resign | Timeup | Foul deriving (Eq, Show)
--- data Move = Move {getToPos :: String, getFromPos :: Maybe String, getPiece :: String} deriving (Eq, Show)
--- data Action = Lose | Move deriving (Eq, Show)
-
+pieces :: [String]
 pieces = ["歩","香","桂","銀","金","角","飛","玉","と","成香","成桂","成銀","馬","竜"]
 
 data KifLine = KifLine {
-    getNO :: String
+    getNumber :: String
   , getAction :: String
   , getTime :: String
   } deriving (Eq, Show)
@@ -43,28 +42,23 @@ data LogLine = LogLine {
 plainValue :: Parser String
 plainValue = many1 (noneOf " \n")
 
-bracketedValue :: Parser String
-bracketedValue = do
-  char '['
-  content <- many (noneOf "]")
-  char ']'
-  return content
+-- bracketedValue :: Parser String
+-- bracketedValue = do
+--   char '['
+--   content <- many (noneOf "]")
+--   char ']'
+--   return content
 
-quotedValue :: Parser String
-quotedValue = do
-  char '"'
-  content <- many (noneOf "\"")
-  char '"'
-  return content
+-- quotedValue :: Parser String
+-- quotedValue = do
+--   char '"'
+--   content <- many (noneOf "\"")
+--   char '"'
+--   return content
 
-fromPos :: Parser String
-fromPos = do
-  pos <- string "打" <|> do
-    string "("
-    pos <- many1 digit
-    string ")"
-    return pos
-  return pos
+lexer  = P.makeTokenParser emptyDef
+parens = P.parens lexer
+
 
 col :: Parser String
 col = many1 $ oneOf "１２３４５６７８９"
@@ -76,39 +70,27 @@ row = many1 $ oneOf "一二三四五六七八九"
 piece :: Parser String
 piece = foldl1' (<|>)  $ map string pieces
 
-pos :: Parser String
-pos = do
+toPos :: Parser String
+toPos = do
   c <- col
   r <- row
   return $ c ++ r
 
+
+fromPos :: Parser String
+fromPos = parens $ many1 $ oneOf "123456789"
+
 -- move ５八玉(68) みたいなやつをparseする
 move :: Parser String
 move = do
---   col <- many1 (oneOf "１２３４５６７８９")
---   row <- many1 (oneOf "一二三四五六七八九")
   c <- col
   r <- row
   p <- many (noneOf "(")
   pos <- fromPos
---   string "("
---   pos <- many1 digit
---   string ")"
   return $ c ++ r ++ p ++ "(" ++ pos ++ ")"
 
 dou :: Parser String
 dou = string "同　"
-
--- dou 同　飛(89) みたいなやつをparseする
--- dou2 :: Parser String
--- dou2 = do
---   string "同"
---   space
---   piece <- many1 (noneOf "(")
---   string "("
---   pos <- many1 digit
---   string ")"
---   return $ "同" ++ piece ++ "(" ++ pos ++ ")"
 
 -- tohryo 投了 みたいなやつをparseする
 tohryo :: Parser String
@@ -117,87 +99,27 @@ tohryo = string "投了"
 -- ９八玉(97)や同　桂(89)をparseする
 action :: Parser String
 action = do
-  a <- pos <|> dou
+  a <- toPos <|> dou
   p <- piece
-  string "("
-  fromPos <- many1 $ oneOf "123456789"
-  string ")"
-  return $ a ++ p ++ " " ++ fromPos
+  fromPos_ <- fromPos
+  return $ a ++ p ++ " " ++ fromPos_
 
 kifLine :: Parser KifLine
 kifLine = do
   number <- many1 digit
   space
---   action <- move <|> dou <|> tohryo
   a <- action
-  space
-  time <- many1 (noneOf "\n")
+--   space
+  time <- many (noneOf "\n")
   return $ KifLine number a time
-
-logLine :: Parser LogLine
-logLine = do
-  ip <- plainValue
-  space
-  ident <- plainValue
-  space
-  user <- plainValue
-  space
-  date <- bracketedValue
-  space
-  req <- quotedValue
-  space
-  status <- plainValue
-  space
-  bytes <- plainValue
-  space
-  ref <- quotedValue
-  space
-  ua <- quotedValue
-  space
-  char '-'
-  space
-  char '-'
-  space
-  dcmguid <- quotedValue
-  space
-  upsubno <- quotedValue
-  space
-  jphoneuid <- quotedValue
-  space
-  moappscarrier <- quotedValue
-  space
-  spuk <- quotedValue
-  return $ LogLine ip ident user date req status bytes ref ua dcmguid upsubno jphoneuid moappscarrier spuk
-  -- space
-  -- spsecc <- quotedValue
-  -- space
-  -- sec <- quotedValue
-  -- return $ LogLine ip ident user date req status bytes ref ua dcmguid upsubno jphoneuid moappscarrier spuk spsecc sec
 
 kifLines :: Parser [KifLine]
 kifLines = endBy1 kifLine eol
-
-logLines :: Parser [LogLine]
-logLines = endBy1 logLine eol
 
 eol =     try (string "\n\r")
       <|> try (string "\r\n")
       <|> string "\n"
       <|> string "\r"
-
-
-uniqueUAList :: [LogLine] -> [String]
-uniqueUAList = map (\uaList -> uaList!!0) . group . sort . map (\log -> getUA log)
-
-uniqueElementList :: (LogLine -> String) ->  [LogLine] -> [String]
-uniqueElementList elem = map (\uaList -> uaList!!0) . group . sort . map (\log -> elem log)
-
-
--- testLine = "192.168.1.80 - - [18/Feb/2011:20:21:30 +0100] \"GET / HTTP/1.0\" 503 2682 \"-\" \"-\""
-
--- main = case parse logLine "(test)" testLine of
---   Left err -> print err
---   Right res -> print res
 
 main :: IO ()
 main = do
@@ -206,12 +128,6 @@ main = do
     Left err -> print err
     Right res -> print res
 
--- main = do
---   file <- readFile "logfile.txt"
---   let logLines = lines file
---   result <- map (parse logLine "(test)") logLines
---   return ()
---   mapM_ (either print print) result
 
 {--
 開始日時：2014/06/30 10:05:29
