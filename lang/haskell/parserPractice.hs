@@ -7,61 +7,52 @@ import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language
 import Text.Parsec.String
 import Data.List
+import Control.Applicative ((<*>), (<$>))
 -- import Data.Char
 -- import Control.Monad
 
 pieces :: [String]
 pieces = ["歩","香","桂","銀","金","角","飛","玉","と","成香","成桂","成銀","馬","竜"]
 
+data Action = Action {
+    getPiece :: String
+  , getFromPos :: String
+  , getToPos :: String
+  , getNari :: Bool
+  } | Tohryo deriving (Eq, Show)
+
 data KifLine = KifLine {
     getNumber :: String
-  , getAction :: String
-  , getTime :: String
+  , getAction :: Action
+  , getTime :: Maybe String
   } deriving (Eq, Show)
-
--- "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" - - \"%{X-DCMGUID}i\" \"%{X-Up-Subno}i\" \"%{x-jphone-uid}i\" \"%{MOAPPS_CARRIER}e\" \"%{sp_uk}C\" \"%{sp_sess}C\" \"%Tsec\""
-data LogLine = LogLine {
-    getIP :: String
-  , getIdent :: String
-  , getUser :: String
-  , getDate :: String
-  , getReq :: String
-  , getStatus :: String
-  , getBytes :: String
-  , getRef :: String
-  , getUA :: String
-  , getDCMGUID :: String
-  , getUpSubno :: String
-  , getJphoneUid :: String
-  , getMoappsCarrier :: String
-  , getSpUk :: String
-  -- , getSpSecc :: String
-  -- , getSec :: String
-  } deriving (Ord, Eq, Show)
-
-plainValue :: Parser String
-plainValue = many1 (noneOf " \n")
-
--- bracketedValue :: Parser String
--- bracketedValue = do
---   char '['
---   content <- many (noneOf "]")
---   char ']'
---   return content
-
--- quotedValue :: Parser String
--- quotedValue = do
---   char '"'
---   content <- many (noneOf "\"")
---   char '"'
---   return content
 
 lexer  = P.makeTokenParser emptyDef
 parens = P.parens lexer
 
-
 col :: Parser String
 col = many1 $ oneOf "１２３４５６７８９"
+
+toInt :: String -> Int
+toInt "１" = 1
+toInt "２" = 2
+toInt "３" = 3
+toInt "４" = 4
+toInt "５" = 5
+toInt "６" = 6
+toInt "７" = 7
+toInt "８" = 8
+toInt "９" = 9
+toInt "一" = 1
+toInt "二" = 2
+toInt "三" = 3
+toInt "四" = 4
+toInt "五" = 5
+toInt "六" = 6
+toInt "七" = 7
+toInt "八" = 8
+toInt "九" = 9
+
 
 row :: Parser String
 row = many1 $ oneOf "一二三四五六七八九"
@@ -80,38 +71,31 @@ toPos = do
 fromPos :: Parser String
 fromPos = parens $ many1 $ oneOf "123456789"
 
--- move ５八玉(68) みたいなやつをparseする
-move :: Parser String
-move = do
-  c <- col
-  r <- row
-  p <- many (noneOf "(")
-  pos <- fromPos
-  return $ c ++ r ++ p ++ "(" ++ pos ++ ")"
-
 dou :: Parser String
 dou = string "同　"
 
 -- tohryo 投了 みたいなやつをparseする
-tohryo :: Parser String
-tohryo = string "投了"
+tohryo :: Parser Action
+tohryo = string "投了" >> return Tohryo
 
 -- ９八玉(97)や同　桂(89)をparseする
-action :: Parser String
+-- action :: Parser String
+action :: Parser Action
 action = do
-  a <- toPos <|> dou
+  toPos_ <- toPos <|> dou
   p <- piece
+  nari <- string "成" <|> string ""
   fromPos_ <- fromPos
-  return $ a ++ p ++ " " ++ fromPos_
+  return $ Action toPos_ p fromPos_ (nari == "成")
 
 kifLine :: Parser KifLine
 kifLine = do
   number <- many1 digit
   space
-  a <- action
+  a <- action <|> tohryo
 --   space
-  time <- many (noneOf "\n")
-  return $ KifLine number a time
+  time <- many (noneOf "\n") <|> string ""
+  return $ KifLine number a (if time == "" then Nothing else Just time)
 
 kifLines :: Parser [KifLine]
 kifLines = endBy1 kifLine eol
