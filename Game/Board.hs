@@ -39,6 +39,8 @@ deployPiece x y ps = emptyBoard x y // ps
 
 
 -- | リストを定数個ごとに分割する
+-- >>> groupn 3 [0..15]
+-- [[0,1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14],[15]]
 groupn :: Int -> [a] -> [[a]]
 groupn _ [] = []
 groupn n xs = let (xs1, xs2) = splitAt n xs
